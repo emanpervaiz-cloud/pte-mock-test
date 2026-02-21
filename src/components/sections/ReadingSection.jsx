@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useExam } from '../context/ExamContext';
-import ProgressBar from '../components/common/ProgressBar';
-import Timer from '../components/common/Timer';
-import ReadingWritingFillBlanks from '../components/questions/ReadingWritingFillBlanks';
-import MultipleChoice from '../components/questions/MultipleChoice';
-import ReorderParagraph from '../components/questions/ReorderParagraph';
-import ReadingFillBlanks from '../components/questions/ReadingFillBlanks';
+import { useExam } from '../../context/ExamContext';
+import ProgressBar from '../common/ProgressBar';
+import Timer from '../common/Timer';
+import ReadingWritingFillBlanks from '../questions/ReadingWritingFillBlanks';
+import MultipleChoice from '../questions/MultipleChoice';
+import ReorderParagraph from '../questions/ReorderParagraph';
+import ReadingFillBlanks from '../questions/ReadingFillBlanks';
+import ReadingMultipleChoiceAudio from '../questions/ReadingMultipleChoiceAudio';
 import { useNavigate } from 'react-router-dom';
 
 const ReadingSection = () => {
@@ -71,6 +72,21 @@ const ReadingSection = () => {
         { blank: 1, correct: 'increase' },
         { blank: 2, correct: 'suggest' }
       ]
+    },
+    {
+      id: 'rq5_audio',
+      type: 'reading_multiple_choice_audio',
+      audioUrl: '/assets/reading/reading_audio_1.wav',
+      prompt: 'Listen to the audio note and answer the question below.',
+      question: 'What is the speaker mainly discussing in the audio?',
+      options: [
+        { id: 'rao1', text: 'The importance of consistent practice' },
+        { id: 'rao2', text: 'The new grading criteria' },
+        { id: 'rao3', text: 'A technical issue with the software' },
+        { id: 'rao4', text: 'The schedule for the next exam' }
+      ],
+      correct: 'rao1',
+      multiple: false
     }
   ];
 
@@ -104,7 +120,7 @@ const ReadingSection = () => {
         <div className="container">
           <h1 className="exam-title">PTE Academic Mock Test</h1>
           <div className="timer-display">
-            <Timer initialTime={900} /> {/* 15 minutes for reading section */}
+            <Timer initialTime={600} /> {/* 10 minutes for reading section */}
           </div>
         </div>
       </header>
@@ -113,17 +129,17 @@ const ReadingSection = () => {
         <div className="container">
           <div className="exam-section">
             <h2>Reading Section</h2>
-            
-            <ProgressBar 
-              current={currentQuestion + 1} 
-              total={readingQuestions.length} 
+
+            <ProgressBar
+              current={currentQuestion + 1}
+              total={readingQuestions.length}
             />
 
             <div className="exam-question">
               <div className="question-number">
                 Question {currentQuestion + 1} of {readingQuestions.length}
               </div>
-              
+
               <div className="exam-instructions">
                 <p>{currentQuestionData.prompt}</p>
               </div>
@@ -141,18 +157,21 @@ const ReadingSection = () => {
               {currentQuestionData.type === 'reading_fill_blanks' && (
                 <ReadingFillBlanks question={currentQuestionData} onNext={handleNextQuestion} />
               )}
+              {currentQuestionData.type === 'reading_multiple_choice_audio' && (
+                <ReadingMultipleChoiceAudio question={currentQuestionData} onNext={handleNextQuestion} />
+              )}
             </div>
 
             <div className="navigation-buttons">
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={handlePreviousQuestion}
                 disabled={currentQuestion === 0}
               >
                 Previous
               </button>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={handleNextQuestion}
               >
                 {currentQuestion === readingQuestions.length - 1 ? 'Finish Section' : 'Next'}

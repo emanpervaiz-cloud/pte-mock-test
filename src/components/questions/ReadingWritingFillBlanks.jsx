@@ -15,10 +15,12 @@ const ReadingWritingFillBlanks = ({ question, onNext }) => {
   const handleSubmit = () => {
     // Save the answers
     saveAnswer(question.id, {
-      type: 'fill_blanks',
+      questionId: question.id,
+      section: 'reading',
+      type: 'reading_writing_fill_blanks',
       responses: answers
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -26,13 +28,13 @@ const ReadingWritingFillBlanks = ({ question, onNext }) => {
   const renderPassageWithBlanks = () => {
     const parts = question.passage.split(/(\{\{|\}\})/);
     let blankCounter = 0;
-    
+
     return parts.map((part, index) => {
       if (part === '{{') {
         blankCounter++;
         const blankId = question.questions.find(q => q.position === blankCounter)?.id;
         const options = question.questions.find(q => q.position === blankCounter)?.options || [];
-        
+
         return (
           <select
             key={`blank-${blankCounter}`}
@@ -60,14 +62,14 @@ const ReadingWritingFillBlanks = ({ question, onNext }) => {
           {renderPassageWithBlanks()}
         </div>
       </div>
-      
+
       <div className="instructions">
         <p><strong>Instructions:</strong> For each blank, select the most appropriate word from the dropdown menu.</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={Object.keys(answers).length !== question.questions.length}
         >

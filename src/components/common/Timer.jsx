@@ -24,15 +24,27 @@ const Timer = ({ initialTime, onComplete, autoSubmit = true }) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getTimerColor = () => {
-    if (timeLeft <= 30) return '#f44336'; // Red when 30 seconds or less
-    if (timeLeft <= 60) return '#ff9800'; // Orange when 1 minute or less
-    return '#4caf50'; // Green otherwise
-  };
+  const isLowTime = timeLeft <= 60;
+  const isCriticalTime = timeLeft <= 30;
 
   return (
-    <div className="timer" style={{ borderColor: getTimerColor(), color: getTimerColor() }}>
-      {formatTime(timeLeft)}
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '8px 16px',
+      background: isCriticalTime ? '#fee2e2' : (isLowTime ? '#fff3e0' : '#f8f9fe'),
+      borderRadius: 10,
+      border: `1.5px solid ${isCriticalTime ? '#fecaca' : (isLowTime ? '#ffe0b2' : '#eef2f6')}`,
+      color: isCriticalTime ? '#dc2626' : (isLowTime ? '#fb8c00' : '#1a1f36'),
+      fontWeight: 700,
+      fontSize: 16,
+      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+      boxShadow: isCriticalTime ? '0 0 10px rgba(220, 38, 38, 0.1)' : 'none',
+      transition: 'all 0.3s ease'
+    }}>
+      <span style={{ fontSize: 18 }}>{isCriticalTime ? '⏰' : '⏱️'}</span>
+      <span>{formatTime(timeLeft)}</span>
     </div>
   );
 };

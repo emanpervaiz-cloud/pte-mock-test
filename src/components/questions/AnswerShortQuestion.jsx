@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
+import audioService from '../../services/audioService';
 import AudioPlayer from '../common/AudioPlayer';
 
 const AnswerShortQuestion = ({ question, onNext }) => {
@@ -7,101 +8,198 @@ const AnswerShortQuestion = ({ question, onNext }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [questionPlayed, setQuestionPlayed] = useState(false);
+  const [micReady, setMicReady] = useState(false);
+  const [micError, setMicError] = useState(false);
+  const [hasRecorded, setHasRecorded] = useState(false);
   const recordingInterval = useRef(null);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    const initMic = async () => {
+      const ok = await audioService.initRecording();
+      setMicReady(ok);
+      if (!ok) setMicError(true);
+    };
+    initMic();
+
+    return () => {
+      if (recordingInterval.current) clearInterval(recordingInterval.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      audioService.cancelRecording();
+    };
+  }, []);
 
   const handleQuestionEnd = () => {
     setQuestionPlayed(true);
-    // Start recording automatically after question ends
-    startRecording();
   };
 
-  const startRecording = () => {
+  const startRecording = async () => {
+    if (!micReady) {
+      const ok = await audioService.initRecording();
+      if (!ok) { setMicError(true); return; }
+      setMicReady(true);
+    }
+
+    const started = audioService.startRecording();
+    if (!started) return;
+
     setIsRecording(true);
     setRecordingTime(0);
-    
+
     recordingInterval.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
-    
-    // Stop recording after 10 seconds (standard PTE time limit for answer short question)
-    setTimeout(stopRecording, 10000);
+
+    timeoutRef.current = setTimeout(() => stopRecording(), 10000);
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
+    if (recordingInterval.current) clearInterval(recordingInterval.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    const blob = await audioService.stopRecording();
     setIsRecording(false);
-    if (recordingInterval.current) {
-      clearInterval(recordingInterval.current);
-    }
-    
-    // Save the recording
+    setHasRecorded(true);
+
     saveAnswer(question.id, {
-      type: 'audio',
-      response: 'recorded_audio_blob',
-      duration: recordingTime
+      questionId: question.id,
+      section: 'speaking',
+      type: 'answer_short_question',
+      response: blob,
+      meta: { duration: recordingTime, hasAudio: !!blob, blobSize: blob?.size || 0 }
     });
   };
 
-  const handleNext = () => {
-    if (isRecording) {
-      stopRecording();
-    }
+  const handleNext = async () => {
+    if (isRecording) await stopRecording();
     onNext();
   };
 
   return (
-    <div className="answer-short-question">
-      <div className="question-section">
-        {!questionPlayed ? (
-          <div>
-            <h3>Listen to the question</h3>
-            <AudioPlayer 
-              src={question.audioUrl || '/placeholder-audio.mp3'} 
-              title="Question Audio"
-              onPlay={() => console.log('Question started')}
-              onPause={() => console.log('Question paused')}
-            />
-            <p className="instructions">Please listen to the question carefully.</p>
-          </div>
-        ) : (
-          <div>
-            <h3>Your Answer</h3>
-            <p>{question.prompt}</p>
-            <div className="recording-section">
-              <div className="audio-controls">
-                <button 
-                  className={`record-button ${isRecording ? 'recording' : ''}`}
-                  onClick={isRecording ? stopRecording : startRecording}
-                  disabled={recordingTime >= 10}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '10px 0' }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: 20,
+        padding: '32px',
+        border: '1px solid #eef2f6',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+        position: 'relative'
+      }}>
+        <div style={{ position: 'absolute', top: 16, left: 24, fontSize: 12, fontWeight: 700, color: '#673ab7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          ❓ Answer Short Question
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          {!questionPlayed ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1f36' }}>Phase 1: Listening</div>
+              <AudioPlayer
+                src={question.audioUrl || '/placeholder-audio.mp3'}
+                title="Listen to the question carefully"
+              />
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+                <button
+                  onClick={handleQuestionEnd}
+                  style={{
+                    padding: '10px 24px', borderRadius: 10, border: '1.5px solid #673ab7',
+                    background: '#f8f9fe', color: '#673ab7', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#ede7f6'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#f8f9fe'}
                 >
-                  {isRecording ? '●' : '●'}
+                  I've heard the question — Record Answer
                 </button>
-                <span>Click to record your answer</span>
               </div>
-              
-              {isRecording && (
-                <div className="recording-timer">
-                  Recording: {recordingTime}s / 10s
-                </div>
-              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1f36' }}>Phase 2: Answering</div>
+              <p style={{ margin: 0, fontSize: 16, color: '#3e4e68', fontStyle: 'italic', background: '#f8f9fe', padding: '12px 16px', borderRadius: 8 }}>
+                "{question.prompt}"
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {micError && (
+        <div style={{ background: '#fee2e2', color: '#dc2626', padding: '12px 16px', borderRadius: 12, fontSize: 14, fontWeight: 500 }}>
+          ⚠️ Microphone access denied.
+        </div>
+      )}
+
+      {questionPlayed && (
+        <div style={{
+          background: '#fff', borderRadius: 16, padding: '24px 32px', border: '1px solid #eef2f6',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={recordingTime >= 10 || micError}
+              style={{
+                width: 64, height: 64, borderRadius: '50%',
+                background: isRecording ? '#dc2626' : (hasRecorded ? '#10b981' : '#673ab7'),
+                color: '#fff', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
+                boxShadow: isRecording ? '0 0 0 6px rgba(220, 38, 38, 0.15)' : '0 4px 12px rgba(103, 58, 183, 0.2)',
+                transition: 'all 0.3s ease',
+                animation: isRecording ? 'pulse 1.5s infinite' : 'none'
+              }}
+            >
+              {isRecording ? '⏹' : (hasRecorded ? '✓' : '🎤')}
+            </button>
+
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#1a1f36', marginBottom: 4 }}>
+                {isRecording ? 'Recording answer...' : (hasRecorded ? 'Answer recorded' : 'Ready to answer')}
+              </div>
+              <div style={{ fontSize: 14, color: '#5a6270' }}>
+                {isRecording ? `Time: ${recordingTime}s / 10s` : (hasRecorded ? 'You can proceed to next question' : 'Click the microphone to speak your answer')}
+              </div>
             </div>
           </div>
-        )}
-      </div>
-      
-      <div className="instructions">
-        <p><strong>Question:</strong> Listen to the question once.</p>
-        <p><strong>Response time:</strong> You will have 10 seconds to answer the question.</p>
-      </div>
-      
-      <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+
+          {isRecording && (
+            <div style={{
+              height: 10, width: 120, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%', background: '#dc2626', width: `${(recordingTime / 10) * 100}%`,
+                transition: 'width 1s linear'
+              }} />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+        <button
           onClick={handleNext}
-          disabled={questionPlayed && !isRecording}
+          style={{
+            padding: '12px 32px', borderRadius: 12,
+            background: isRecording ? '#fff' : 'linear-gradient(135deg, #673ab7, #5e35b1)',
+            color: isRecording ? '#673ab7' : '#fff',
+            border: isRecording ? '1.5px solid #673ab7' : 'none',
+            fontWeight: 700, fontSize: 15, cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            boxShadow: isRecording ? 'none' : '0 4px 12px rgba(103, 58, 183, 0.2)'
+          }}
+          onMouseEnter={e => { if (!isRecording) e.currentTarget.style.transform = 'translateY(-2px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
         >
-          {isRecording ? 'Stop and Continue' : questionPlayed ? 'Finish Answer' : 'Wait for Question to Finish'}
+          {isRecording ? 'Stop & Next' : (questionPlayed ? 'Continue' : 'Skip Listening')} →
         </button>
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+      `}</style>
     </div>
   );
 };

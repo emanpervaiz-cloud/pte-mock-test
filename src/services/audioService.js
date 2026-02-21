@@ -1,116 +1,161 @@
-// Audio service for recording and playback functionality
+/**
+ * AudioService — Real browser audio recording using MediaRecorder API
+ * Handles microphone permission, recording, stopping, and blob creation
+ */
+
 class AudioService {
   constructor() {
     this.mediaRecorder = null;
     this.audioChunks = [];
     this.stream = null;
     this.isRecording = false;
+    this.audioContext = null;
+    this.analyser = null;
   }
 
-  // Check if the browser supports required APIs
+  /**
+   * Check if browser supports MediaRecorder
+   */
   static isSupported() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   }
 
-  // Initialize the audio recording
-  async initRecording(constraints = { audio: true }) {
+  /**
+   * Request microphone permission and initialize the stream
+   * @returns {Promise<boolean>} true if permission granted
+   */
+  async initRecording() {
+    if (!AudioService.isSupported()) {
+      console.warn('MediaRecorder not supported in this browser');
+      return false;
+    }
+
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-      this.mediaRecorder = new MediaRecorder(this.stream);
-      
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          this.audioChunks.push(event.data);
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
         }
-      };
-
-      this.mediaRecorder.onstop = () => {
-        this.isRecording = false;
-      };
-
+      });
       return true;
     } catch (error) {
-      console.error('Error initializing audio recording:', error);
+      console.error('Microphone permission denied or error:', error.message);
       return false;
     }
   }
 
-  // Start recording
+  /**
+   * Start recording audio
+   * @returns {boolean} true if recording started
+   */
   startRecording() {
-    if (!this.mediaRecorder) {
-      throw new Error('Audio recorder not initialized. Call initRecording() first.');
+    if (!this.stream) {
+      console.error('No stream available — call initRecording() first');
+      return false;
     }
 
     this.audioChunks = [];
-    this.mediaRecorder.start();
-    this.isRecording = true;
+
+    try {
+      // Use webm/opus for best browser compatibility
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4';
+
+      this.mediaRecorder = new MediaRecorder(this.stream, { mimeType });
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          this.audioChunks.push(event.data);
+        }
+      };
+
+      this.mediaRecorder.start(250); // Collect data every 250ms for responsive UI
+      this.isRecording = true;
+      return true;
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      return false;
+    }
   }
 
-  // Stop recording and return the blob
-  async stopRecording() {
-    return new Promise((resolve, reject) => {
-      if (!this.mediaRecorder || !this.isRecording) {
-        reject(new Error('Recorder not started or already stopped'));
+  /**
+   * Stop recording and return the audio Blob
+   * @returns {Promise<Blob|null>} audio blob or null on error
+   */
+  stopRecording() {
+    return new Promise((resolve) => {
+      if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+        this.isRecording = false;
+        resolve(null);
         return;
       }
 
       this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
+        const mimeType = this.mediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(this.audioChunks, { type: mimeType });
+        this.audioChunks = [];
         this.isRecording = false;
-        
-        // Clean up the stream
-        this.stream.getTracks().forEach(track => track.stop());
-        
         resolve(audioBlob);
       };
 
+      this.mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event.error);
+        this.isRecording = false;
+        resolve(null);
+      };
+
       this.mediaRecorder.stop();
     });
   }
 
-  // Cancel recording without saving
+  /**
+   * Cancel recording without returning data
+   */
   cancelRecording() {
-    if (this.mediaRecorder && this.isRecording) {
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.onstop = () => { };
       this.mediaRecorder.stop();
-      this.audioChunks = [];
-      this.isRecording = false;
-      
-      // Clean up the stream
-      if (this.stream) {
-        this.stream.getTracks().forEach(track => track.stop());
-      }
     }
+    this.audioChunks = [];
+    this.isRecording = false;
   }
 
-  // Play an audio blob or URL
-  async playAudio(audioSource) {
-    return new Promise((resolve, reject) => {
-      const audio = new Audio();
-      
-      if (audioSource instanceof Blob) {
-        audio.src = URL.createObjectURL(audioSource);
-      } else {
-        audio.src = audioSource;
-      }
-
-      audio.onended = () => {
-        // Clean up the object URL if it was created from a blob
-        if (audioSource instanceof Blob) {
-          URL.revokeObjectURL(audio.src);
-        }
-        resolve();
-      };
-
-      audio.onerror = (error) => {
-        reject(error);
-      };
-
-      audio.play().catch(reject);
-    });
+  /**
+   * Release the microphone stream
+   */
+  releaseStream() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+    this.isRecording = false;
+    this.mediaRecorder = null;
+    this.audioChunks = [];
   }
 
-  // Convert blob to base64
-  async blobToBase64(blob) {
+  /**
+   * Play an audio blob
+   * @param {Blob} blob
+   * @returns {HTMLAudioElement}
+   */
+  playBlob(blob) {
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.play();
+    return audio;
+  }
+
+  /**
+   * Convert blob to base64 string (for API submission)
+   * @param {Blob} blob
+   * @returns {Promise<string>}
+   */
+  static blobToBase64(blob) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
@@ -118,26 +163,9 @@ class AudioService {
       reader.readAsDataURL(blob);
     });
   }
-
-  // Get recording status
-  getRecordingStatus() {
-    return {
-      isRecording: this.isRecording,
-      isInitialized: !!this.mediaRecorder
-    };
-  }
-
-  // Get supported audio MIME types
-  static getSupportedMimeTypes() {
-    const types = [
-      'audio/webm',
-      'audio/ogg',
-      'audio/mp4',
-      'audio/wav'
-    ];
-    
-    return types.filter(type => MediaRecorder.isTypeSupported(type));
-  }
 }
 
-export default AudioService;
+// Export singleton instance
+const audioService = new AudioService();
+export default audioService;
+export { AudioService };

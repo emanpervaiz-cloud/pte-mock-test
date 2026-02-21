@@ -28,11 +28,13 @@ const ListeningMultipleChoice = ({ question, onNext }) => {
   const handleSubmit = () => {
     // Save the answer
     saveAnswer(question.id, {
+      questionId: question.id,
+      section: 'listening',
       type: 'multiple_choice',
-      response: question.multiple ? selectedOption : selectedOption,
-      audioPlayed: audioPlayed
+      response: selectedOption,
+      meta: { audioPlayed: audioPlayed }
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -40,26 +42,25 @@ const ListeningMultipleChoice = ({ question, onNext }) => {
   return (
     <div className="listening-multiple-choice-question">
       <div className="audio-section">
-        <AudioPlayer 
-          src={question.audioUrl} 
+        <AudioPlayer
+          src={question.audioUrl}
           title="Listen to the question"
           onPlay={handleAudioPlay}
         />
       </div>
-      
+
       <div className="question-text">
         <h3>{question.question}</h3>
       </div>
-      
+
       <div className="options-container">
         {question.options.map((option) => (
           <div
             key={option.id}
-            className={`option-item ${
-              (question.multiple && selectedOption?.includes(option.id)) ||
-              (!question.multiple && selectedOption === option.id) 
+            className={`option-item ${(question.multiple && selectedOption?.includes(option.id)) ||
+                (!question.multiple && selectedOption === option.id)
                 ? 'selected' : ''
-            }`}
+              }`}
             onClick={() => handleOptionSelect(option.id)}
           >
             <input
@@ -68,7 +69,7 @@ const ListeningMultipleChoice = ({ question, onNext }) => {
                 (question.multiple && selectedOption?.includes(option.id)) ||
                 (!question.multiple && selectedOption === option.id)
               }
-              onChange={() => {}}
+              onChange={() => { }}
               className="option-input"
             />
             <div className="option-text">
@@ -77,15 +78,15 @@ const ListeningMultipleChoice = ({ question, onNext }) => {
           </div>
         ))}
       </div>
-      
+
       <div className="instructions">
         <p><strong>Instructions:</strong> {question.multiple ? 'Select all that apply.' : 'Select one answer.'}</p>
         <p><strong>Note:</strong> You will only be able to play the audio once.</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={selectedOption === null || selectedOption.length === 0 || !audioPlayed}
         >

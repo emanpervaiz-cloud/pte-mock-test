@@ -19,11 +19,13 @@ const WriteEssay = ({ question, onNext }) => {
   const handleSubmit = () => {
     // Save the answer
     saveAnswer(question.id, {
-      type: 'text',
+      questionId: question.id,
+      section: 'writing',
+      type: 'write_essay',
       response: essay,
-      wordCount: wordCount
+      meta: { wordCount: wordCount }
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -36,7 +38,7 @@ const WriteEssay = ({ question, onNext }) => {
           <p>{question.prompt}</p>
         </div>
       </div>
-      
+
       <div className="answer-section">
         <h3>Write your essay here:</h3>
         <textarea
@@ -52,16 +54,16 @@ const WriteEssay = ({ question, onNext }) => {
           {wordCount > 300 && <span className="error"> Maximum 300 words exceeded</span>}
         </div>
       </div>
-      
+
       <div className="instructions">
         <p><strong>Time allowed:</strong> 20 minutes</p>
         <p><strong>Word limit:</strong> 200-300 words</p>
         <p><strong>Guidelines:</strong> Organize your essay with an introduction, body paragraphs, and conclusion. Support your ideas with examples.</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={wordCount < 200}
         >

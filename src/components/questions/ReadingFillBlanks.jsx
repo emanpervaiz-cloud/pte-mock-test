@@ -7,6 +7,8 @@ const ReadingFillBlanks = ({ question, onNext }) => {
   const [availableOptions, setAvailableOptions] = useState([...question.options]);
 
   const handleOptionSelect = (blankNumber, selectedOption) => {
+    const prevSelection = answers[blankNumber];
+
     // Update the answer for this blank
     setAnswers(prev => ({
       ...prev,
@@ -15,24 +17,29 @@ const ReadingFillBlanks = ({ question, onNext }) => {
 
     // Update available options
     if (selectedOption) {
-      // Remove selected option from available options
-      setAvailableOptions(prev => prev.filter(opt => opt !== selectedOption));
-    } else {
+      // Remove selected option and add back previous selection if any
+      setAvailableOptions(opts => {
+        let newOpts = opts.filter(opt => opt !== selectedOption);
+        if (prevSelection && prevSelection !== selectedOption) {
+          newOpts = [...newOpts, prevSelection];
+        }
+        return newOpts;
+      });
+    } else if (prevSelection) {
       // If clearing the selection, add back the previous selection
-      const prevSelection = prev[blankNumber];
-      if (prevSelection) {
-        setAvailableOptions(prev => [...prev, prevSelection]);
-      }
+      setAvailableOptions(opts => [...opts, prevSelection]);
     }
   };
 
   const handleSubmit = () => {
     // Save the answers
     saveAnswer(question.id, {
+      questionId: question.id,
+      section: 'reading',
       type: 'reading_fill_blanks',
       responses: answers
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -40,14 +47,14 @@ const ReadingFillBlanks = ({ question, onNext }) => {
   const renderPassageWithBlanks = () => {
     // Split the passage by blank markers like ___1___, ___2___, etc.
     const parts = question.passage.split(/(___\d+___)/);
-    
+
     return parts.map((part, index) => {
       const blankMatch = part.match(/___(\d+)___/);
-      
+
       if (blankMatch) {
         const blankNumber = blankMatch[1];
         const currentAnswer = answers[blankNumber] || '';
-        
+
         return (
           <select
             key={`blank-${blankNumber}`}
@@ -77,7 +84,7 @@ const ReadingFillBlanks = ({ question, onNext }) => {
           {renderPassageWithBlanks()}
         </div>
       </div>
-      
+
       <div className="options-bank">
         <h3>Available Options:</h3>
         <div className="options-list">
@@ -88,14 +95,14 @@ const ReadingFillBlanks = ({ question, onNext }) => {
           ))}
         </div>
       </div>
-      
+
       <div className="instructions">
         <p><strong>Instructions:</strong> Complete the text with the most appropriate words from the options bank. Each word can only be used once.</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
         >
           Submit Answers

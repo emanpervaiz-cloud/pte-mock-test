@@ -4,15 +4,26 @@ const ProgressBar = ({ current, total, showPercentage = true }) => {
   const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
 
   return (
-    <div className="progress-container">
-      <div className="question-counter">
-        Question {current} of {total} {showPercentage && `(${percentage}%)`}
+    <div style={{ margin: '12px 0 24px' }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+        marginBottom: 8, fontSize: 13, fontWeight: 600, color: '#5a6270'
+      }}>
+        <span>Question <span style={{ color: '#1a1f36', fontSize: 15, fontWeight: 700 }}>{current}</span> of {total}</span>
+        {showPercentage && <span style={{ color: '#673ab7' }}>{percentage}% Complete</span>}
       </div>
-      <div className="section-progress">
-        <div 
-          className="section-progress-bar" 
-          style={{ width: `${percentage}%` }}
-        ></div>
+      <div style={{
+        height: 6, width: '100%', background: '#e2e8f0', borderRadius: 10, overflow: 'hidden'
+      }}>
+        <div
+          style={{
+            height: '100%',
+            background: 'linear-gradient(90deg, #673ab7, #9575cd)',
+            width: `${percentage}%`,
+            borderRadius: 10,
+            transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        />
       </div>
     </div>
   );

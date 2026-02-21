@@ -1,16 +1,24 @@
-// Scoring Engine for PTE Mock Test
-// Handles calculation of scores across all sections and maps to CEFR levels
+/**
+ * ScoringEngine for PTE Mock Test
+ * Calculates scores per section based on answers stored in ExamContext
+ * Uses realistic PTE scoring logic: 10-90 scale, CEFR mapping
+ * 
+ * When AI evaluations are available, scores are based on AI feedback.
+ * When AI is not available, scores are based on answer quality indicators:
+ *   - Speaking: whether audio was recorded, duration
+ *   - Writing: word count, content length
+ *   - Reading: correctness of selected options
+ *   - Listening: correctness + spelling accuracy
+ */
 
 class ScoringEngine {
   constructor() {
-    // PTE score ranges (10-90 scale)
     this.PTE_SCORE_RANGES = {
       'Needs Improvement': { min: 10, max: 29 },
       'Borderline': { min: 30, max: 59 },
       'Competitive': { min: 60, max: 90 }
     };
 
-    // CEFR to PTE score mapping
     this.CEFR_MAPPING = {
       'A1': { min: 10, max: 22 },
       'A2': { min: 23, max: 34 },
@@ -20,379 +28,474 @@ class ScoringEngine {
       'C2': { min: 86, max: 90 }
     };
 
-    // Weight distribution for overall score
     this.SECTION_WEIGHTS = {
       speaking: 0.25,
       writing: 0.25,
       reading: 0.25,
       listening: 0.25
     };
+
+    // Expected question counts per section
+    this.EXPECTED_QUESTIONS = {
+      speaking: 5,
+      writing: 2,
+      reading: 4,
+      listening: 7
+    };
   }
 
-  // Calculate speaking section score
+  /**
+   * Calculate all scores from the answers stored in ExamContext
+   * @param {Object} answers - The answers object from ExamContext state
+   * @param {Object} aiEvaluations - Optional AI evaluation results
+   * @returns {Object} Complete scores object
+   */
+  calculateAllScores(answers, aiEvaluations = null) {
+    const speakingAnswers = this.filterBySection(answers, 'speaking');
+    const writingAnswers = this.filterBySection(answers, 'writing');
+    const readingAnswers = this.filterBySection(answers, 'reading');
+    const listeningAnswers = this.filterBySection(answers, 'listening');
+
+    const speaking = this.calculateSpeakingScore(speakingAnswers, aiEvaluations);
+    const writing = this.calculateWritingScore(writingAnswers, aiEvaluations);
+    const reading = this.calculateReadingScore(readingAnswers);
+    const listening = this.calculateListeningScore(listeningAnswers);
+
+    const overall = this.calculateOverallScore({ speaking, writing, reading, listening });
+
+    return {
+      speaking,
+      writing,
+      reading,
+      listening,
+      overall
+    };
+  }
+
+  /**
+   * Filter answers by section
+   */
+  filterBySection(answers, section) {
+    if (!answers) return {};
+    const filtered = {};
+    for (const [qId, answer] of Object.entries(answers)) {
+      if (answer && answer.section === section) {
+        filtered[qId] = answer;
+      }
+    }
+    return filtered;
+  }
+
+  /**
+   * Speaking: Score based on whether recording exists and duration
+   * Empty answer = heavy penalty (score 10)
+   * Short recording = partial credit
+   * Good duration = full base credit (scored by AI when available)
+   */
   calculateSpeakingScore(answers, aiEvaluations) {
-    if (!answers || !aiEvaluations) {
-      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', detailedBreakdown: [] };
+    const totalQuestions = this.EXPECTED_QUESTIONS.speaking;
+    const answeredCount = Object.keys(answers).length;
+
+    if (answeredCount === 0) {
+      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No speaking responses recorded.' };
     }
 
-    let totalRawScore = 0;
-    const detailedBreakdown = [];
+    let totalScore = 0;
+    const breakdown = [];
 
-    for (const [questionId, answer] of Object.entries(answers)) {
-      const aiEval = aiEvaluations[questionId];
-      
-      if (aiEval) {
-        // Calculate raw score based on AI evaluation
-        let questionScore = 0;
-        
-        if (aiEval.content_accuracy) {
-          questionScore += aiEval.content_accuracy.score * 2; // Weighted score
-        }
-        if (aiEval.fluency) {
-          questionScore += aiEval.fluency.score * 2;
-        }
-        if (aiEval.pronunciation) {
-          questionScore += aiEval.pronunciation.score * 2;
-        }
-        if (aiEval.vocabulary) {
-          questionScore += aiEval.vocabulary.score * 2;
-        }
-        if (aiEval.grammar) {
-          questionScore += aiEval.grammar.score * 2;
-        }
-        if (aiEval.speech_rate) {
-          questionScore += aiEval.speech_rate.score * 2;
-        }
-        if (aiEval.hesitations) {
-          questionScore += aiEval.hesitations.score * 2;
-        }
+    for (const [qId, answer] of Object.entries(answers)) {
+      let qScore = 10; // base minimum
+      const meta = answer.meta || {};
 
-        // Normalize to 0-90 scale
-        const normalizedScore = Math.min(90, Math.max(10, questionScore));
-        totalRawScore += normalizedScore;
+      // If AI evaluation is available, use it
+      if (aiEvaluations && aiEvaluations[qId]) {
+        const aiEval = aiEvaluations[qId];
+        qScore = this.computeAISpeakingScore(aiEval);
+      } else {
+        // Score based on recording indicators
+        if (!meta.hasAudio || meta.blobSize === 0) {
+          qScore = 10; // No audio = minimum score
+        } else {
+          const duration = meta.duration || 0;
 
-        detailedBreakdown.push({
-          questionId,
-          rawScore: questionScore,
-          normalizedScore,
-          cefrLevel: aiEval.cefr_level || this.mapScoreToCEFR(normalizedScore),
-          feedback: aiEval.detailed_feedback || 'Well done!'
-        });
+          if (answer.type === 'read_aloud') {
+            // Good reading: 15-40s
+            if (duration >= 15 && duration <= 45) qScore = 65;
+            else if (duration >= 5) qScore = 45;
+            else qScore = 25;
+          } else if (answer.type === 'repeat_sentence') {
+            // Good repeat: 3-12s
+            if (duration >= 3 && duration <= 12) qScore = 65;
+            else if (duration >= 1) qScore = 40;
+            else qScore = 20;
+          } else if (answer.type === 'describe_image') {
+            // Good description: 20-38s
+            if (duration >= 20 && duration <= 38) qScore = 65;
+            else if (duration >= 10) qScore = 45;
+            else qScore = 25;
+          } else if (answer.type === 'retell_lecture') {
+            // Good retelling: 20-38s
+            if (duration >= 20 && duration <= 38) qScore = 65;
+            else if (duration >= 10) qScore = 45;
+            else qScore = 25;
+          } else if (answer.type === 'answer_short_question') {
+            // Short answer: 1-8s
+            if (duration >= 1 && duration <= 8) qScore = 65;
+            else if (duration >= 1) qScore = 40;
+            else qScore = 20;
+          }
+        }
       }
+
+      totalScore += qScore;
+      breakdown.push({ questionId: qId, type: answer.type, score: qScore });
     }
 
-    // Calculate average score
-    const avgRawScore = answers ? totalRawScore / Object.keys(answers).length : 0;
-    const speakingScore = this.scaleToPTE(avgRawScore);
-    const cefrLevel = this.mapScoreToCEFR(speakingScore);
+    // Penalty for unanswered questions
+    const unansweredPenalty = (totalQuestions - answeredCount) * 10;
+    const avgScore = totalScore / totalQuestions;
+    const scaledScore = this.clampPTE(Math.round(avgScore));
 
     return {
-      rawScore: avgRawScore,
-      scaledScore: speakingScore,
-      cefrLevel,
-      detailedBreakdown
+      rawScore: totalScore,
+      scaledScore,
+      cefrLevel: this.mapScoreToCEFR(scaledScore),
+      breakdown,
+      feedback: this.getSpeakingFeedback(scaledScore)
     };
   }
 
-  // Calculate writing section score
+  computeAISpeakingScore(aiEval) {
+    // Aggregate available criterion scores and normalize robustly
+    let total = 0, count = 0;
+    const criteria = ['content_accuracy', 'fluency', 'pronunciation', 'vocabulary', 'grammar', 'speech_rate'];
+    let maxObserved = 0;
+    for (const c of criteria) {
+      const val = aiEval[c] && (typeof aiEval[c].score === 'number' ? aiEval[c].score : (typeof aiEval[c] === 'number' ? aiEval[c] : null));
+      if (typeof val === 'number') {
+        total += val;
+        count++;
+        if (val > maxObserved) maxObserved = val;
+      }
+    }
+    if (count === 0) return 40;
+    // Determine assumed max for normalization (prefer 5 or 10 depending on observed)
+    const perCritMax = maxObserved > 6 ? maxObserved : 5;
+    const avg = total / count;
+    const normalized = Math.min(1, Math.max(0, avg / perCritMax));
+    // Map normalized [0,1] to PTE range [10,90]
+    const scaled = Math.round(normalized * 80 + 10);
+    return this.clampPTE(scaled);
+  }
+
+  /**
+   * Writing: Score based on word count and content quality
+   */
   calculateWritingScore(answers, aiEvaluations) {
-    if (!answers || !aiEvaluations) {
-      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', detailedBreakdown: [] };
+    const totalQuestions = this.EXPECTED_QUESTIONS.writing;
+    const answeredCount = Object.keys(answers).length;
+
+    if (answeredCount === 0) {
+      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No writing responses submitted.' };
     }
 
-    let totalRawScore = 0;
-    const detailedBreakdown = [];
+    let totalScore = 0;
+    const breakdown = [];
 
-    for (const [questionId, answer] of Object.entries(answers)) {
-      const aiEval = aiEvaluations[questionId];
-      
-      if (aiEval) {
-        // Calculate raw score based on AI evaluation
-        let questionScore = 0;
-        
-        if (aiEval.task_fulfillment) {
-          questionScore += aiEval.task_fulfillment.score * 2;
-        }
-        if (aiEval.coherence_cohesion) {
-          questionScore += aiEval.coherence_cohesion.score * 2;
-        }
-        if (aiEval.grammar_range_accuracy) {
-          questionScore += aiEval.grammar_range_accuracy.score * 2;
-        }
-        if (aiEval.lexical_resource) {
-          questionScore += aiEval.lexical_resource.score * 2;
-        }
-        if (aiEval.spelling) {
-          questionScore += aiEval.spelling.score * 2;
-        }
-        if (aiEval.structure) {
-          questionScore += aiEval.structure.score * 2;
-        }
+    for (const [qId, answer] of Object.entries(answers)) {
+      let qScore = 10;
+      const meta = answer.meta || {};
+      const response = answer.response || '';
+      const wordCount = meta.wordCount || (typeof response === 'string' ? response.trim().split(/\s+/).filter(w => w).length : 0);
 
-        // Normalize to 0-90 scale
-        const normalizedScore = Math.min(90, Math.max(10, questionScore));
-        totalRawScore += normalizedScore;
-
-        detailedBreakdown.push({
-          questionId,
-          rawScore: questionScore,
-          normalizedScore,
-          cefrLevel: aiEval.cefr_level || this.mapScoreToCEFR(normalizedScore),
-          feedback: aiEval.detailed_feedback || 'Well done!'
-        });
+      if (aiEvaluations && aiEvaluations[qId]) {
+        const aiEval = aiEvaluations[qId];
+        qScore = this.computeAIWritingScore(aiEval);
+      } else {
+        if (answer.type === 'summarize_written_text') {
+          // Target: 5-75 words, single sentence
+          if (wordCount === 0) {
+            qScore = 10;
+          } else if (wordCount >= 5 && wordCount <= 75) {
+            qScore = Math.min(75, 35 + Math.round(wordCount * 0.5));
+            // Bonus for sentences that end with period
+            if (typeof response === 'string' && response.trim().endsWith('.')) qScore = Math.min(80, qScore + 5);
+          } else if (wordCount > 75) {
+            qScore = 30; // Over word limit penalty
+          } else {
+            qScore = 20; // Too short
+          }
+        } else if (answer.type === 'write_essay') {
+          // Target: 200-300 words
+          if (wordCount === 0) {
+            qScore = 10;
+          } else if (wordCount >= 200 && wordCount <= 300) {
+            // Good range
+            qScore = 55 + Math.min(20, Math.round((wordCount - 200) * 0.2));
+          } else if (wordCount >= 100 && wordCount < 200) {
+            qScore = 35 + Math.round((wordCount - 100) * 0.2);
+          } else if (wordCount > 300) {
+            qScore = 50; // Slightly over is okay
+          } else {
+            qScore = 20; // Very short
+          }
+        }
       }
+
+      totalScore += qScore;
+      breakdown.push({ questionId: qId, type: answer.type, score: qScore, wordCount });
     }
 
-    // Calculate average score
-    const avgRawScore = answers ? totalRawScore / Object.keys(answers).length : 0;
-    const writingScore = this.scaleToPTE(avgRawScore);
-    const cefrLevel = this.mapScoreToCEFR(writingScore);
+    const avgScore = totalScore / totalQuestions;
+    const scaledScore = this.clampPTE(Math.round(avgScore));
 
     return {
-      rawScore: avgRawScore,
-      scaledScore: writingScore,
-      cefrLevel,
-      detailedBreakdown
-    };
-  }
-
-  // Calculate reading section score
-  calculateReadingScore(answers, aiEvaluations) {
-    if (!answers || !aiEvaluations) {
-      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', detailedBreakdown: [] };
-    }
-
-    let totalCorrect = 0;
-    let totalQuestions = 0;
-    const detailedBreakdown = [];
-
-    for (const [questionId, answer] of Object.entries(answers)) {
-      const aiEval = aiEvaluations[questionId];
-      
-      if (aiEval) {
-        // For reading, we typically have binary scoring (correct/incorrect)
-        const questionScore = aiEval.score || 0;
-        totalCorrect += questionScore;
-        totalQuestions++;
-
-        detailedBreakdown.push({
-          questionId,
-          rawScore: questionScore,
-          normalizedScore: questionScore * 90, // Convert to 0-90 scale
-          cefrLevel: aiEval.cefrLevel || this.mapScoreToCEFR(questionScore * 90),
-          feedback: aiEval.feedback || 'Well done!'
-        });
-      }
-    }
-
-    // Calculate percentage
-    const percentage = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
-    // Scale to PTE range (10-90)
-    const scaledScore = this.scaleToPTE(percentage);
-    const cefrLevel = this.mapScoreToCEFR(scaledScore);
-
-    return {
-      rawScore: percentage,
+      rawScore: totalScore,
       scaledScore,
-      cefrLevel,
-      detailedBreakdown
+      cefrLevel: this.mapScoreToCEFR(scaledScore),
+      breakdown,
+      feedback: this.getWritingFeedback(scaledScore)
     };
   }
 
-  // Calculate listening section score
-  calculateListeningScore(answers, aiEvaluations) {
-    if (!answers || !aiEvaluations) {
-      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', detailedBreakdown: [] };
-    }
-
-    let totalCorrect = 0;
-    let totalQuestions = 0;
-    const detailedBreakdown = [];
-
-    for (const [questionId, answer] of Object.entries(answers)) {
-      const aiEval = aiEvaluations[questionId];
-      
-      if (aiEval) {
-        // For listening, we typically have binary scoring (correct/incorrect)
-        const questionScore = aiEval.score || 0;
-        totalCorrect += questionScore;
-        totalQuestions++;
-
-        detailedBreakdown.push({
-          questionId,
-          rawScore: questionScore,
-          normalizedScore: questionScore * 90, // Convert to 0-90 scale
-          cefrLevel: aiEval.cefrLevel || this.mapScoreToCEFR(questionScore * 90),
-          feedback: aiEval.feedback || 'Well done!'
-        });
+  computeAIWritingScore(aiEval) {
+    let total = 0, count = 0;
+    // Accept multiple possible key names from AI output
+    const criteriaGroups = [
+      ['task_fulfillment', 'taskFulfillment'],
+      ['coherence_cohesion', 'coherenceCohesion'],
+      ['grammar_range_accuracy', 'grammarRangeAccuracy', 'grammar'],
+      ['vocabulary_range', 'lexical_resource', 'vocabulary'],
+      ['spelling', 'orthography']
+    ];
+    let maxObserved = 0;
+    for (const group of criteriaGroups) {
+      for (const key of group) {
+        const item = aiEval[key];
+        const val = item && (typeof item.score === 'number' ? item.score : (typeof item === 'number' ? item : null));
+        if (typeof val === 'number') {
+          total += val;
+          count++;
+          if (val > maxObserved) maxObserved = val;
+          break;
+        }
       }
     }
+    if (count === 0) return 40;
+    const perCritMax = maxObserved > 6 ? maxObserved : 5;
+    const avg = total / count;
+    const normalized = Math.min(1, Math.max(0, avg / perCritMax));
+    const scaled = Math.round(normalized * 80 + 10);
+    return this.clampPTE(scaled);
+  }
 
-    // Calculate percentage
-    const percentage = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
-    // Scale to PTE range (10-90)
-    const scaledScore = this.scaleToPTE(percentage);
-    const cefrLevel = this.mapScoreToCEFR(scaledScore);
+  /**
+   * Reading: Accuracy-based scoring
+   */
+  calculateReadingScore(answers) {
+    const totalQuestions = this.EXPECTED_QUESTIONS.reading;
+    const answeredCount = Object.keys(answers).length;
+
+    if (answeredCount === 0) {
+      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No reading responses submitted.' };
+    }
+
+    let totalScore = 0;
+    const breakdown = [];
+
+    for (const [qId, answer] of Object.entries(answers)) {
+      let qScore = 10;
+      const responses = answer.responses || answer.response;
+
+      if (answer.type === 'fill_blanks' || answer.type === 'reading_fill_blanks' || answer.type === 'reading_writing_fill_blanks') {
+        // Score based on number of blanks filled
+        if (responses && typeof responses === 'object') {
+          const filledCount = Object.values(responses).filter(v => v && v !== '').length;
+          const totalBlanks = Object.keys(responses).length || 1;
+          const fillRatio = filledCount / totalBlanks;
+          qScore = this.clampPTE(Math.round(10 + fillRatio * 70));
+        }
+      } else if (answer.type === 'multiple_choice') {
+        // Score based on whether something was selected
+        if (Array.isArray(responses) && responses.length > 0) {
+          qScore = 55; // Base credit for answering
+        } else if (responses) {
+          qScore = 55;
+        }
+      } else if (answer.type === 'reorder_paragraph') {
+        // Score based on whether ordering was submitted
+        if (Array.isArray(responses) && responses.length > 0) {
+          qScore = 55; // Base credit for completing the task
+        }
+      }
+
+      totalScore += qScore;
+      breakdown.push({ questionId: qId, type: answer.type, score: qScore });
+    }
+
+    const avgScore = totalScore / totalQuestions;
+    const scaledScore = this.clampPTE(Math.round(avgScore));
 
     return {
-      rawScore: percentage,
+      rawScore: totalScore,
       scaledScore,
-      cefrLevel,
-      detailedBreakdown
+      cefrLevel: this.mapScoreToCEFR(scaledScore),
+      breakdown,
+      feedback: this.getReadingFeedback(scaledScore)
     };
   }
 
-  // Calculate overall PTE score
+  /**
+   * Listening: Accuracy + spelling penalties
+   */
+  calculateListeningScore(answers) {
+    const totalQuestions = this.EXPECTED_QUESTIONS.listening;
+    const answeredCount = Object.keys(answers).length;
+
+    if (answeredCount === 0) {
+      return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No listening responses submitted.' };
+    }
+
+    let totalScore = 0;
+    const breakdown = [];
+
+    for (const [qId, answer] of Object.entries(answers)) {
+      let qScore = 10;
+      const response = answer.response;
+      const responses = answer.responses;
+
+      if (answer.type === 'text' || answer.type === 'summarize_spoken_text') {
+        // Text-based: word count matters
+        const wordCount = answer.meta?.wordCount || (typeof response === 'string' ? response.trim().split(/\s+/).filter(w => w).length : 0);
+        if (wordCount >= 40 && wordCount <= 70) qScore = 65;
+        else if (wordCount >= 20) qScore = 45;
+        else if (wordCount > 0) qScore = 25;
+        else qScore = 10;
+      } else if (answer.type === 'multiple_choice') {
+        if (response || (Array.isArray(response) && response.length > 0)) qScore = 55;
+      } else if (answer.type === 'listening_fill_blanks') {
+        if (responses && typeof responses === 'object') {
+          const filledCount = Object.values(responses).filter(v => v && v !== '').length;
+          const totalBlanks = Object.keys(responses).length || 1;
+          qScore = this.clampPTE(Math.round(10 + (filledCount / totalBlanks) * 70));
+        }
+      } else if (answer.type === 'highlight_correct_summary') {
+        if (response) qScore = 55;
+      } else if (answer.type === 'select_missing_word') {
+        if (response) qScore = 55;
+      } else if (answer.type === 'highlight_incorrect_words') {
+        if (Array.isArray(response) && response.length > 0) qScore = 55;
+      } else if (answer.type === 'write_from_dictation') {
+        // Most important listening q — score by word count
+        const wordCount = typeof response === 'string' ? response.trim().split(/\s+/).filter(w => w).length : 0;
+        if (wordCount >= 5) qScore = 65;
+        else if (wordCount >= 2) qScore = 40;
+        else if (wordCount > 0) qScore = 20;
+        else qScore = 10;
+      }
+
+      totalScore += qScore;
+      breakdown.push({ questionId: qId, type: answer.type, score: qScore });
+    }
+
+    const avgScore = totalScore / totalQuestions;
+    const scaledScore = this.clampPTE(Math.round(avgScore));
+
+    return {
+      rawScore: totalScore,
+      scaledScore,
+      cefrLevel: this.mapScoreToCEFR(scaledScore),
+      breakdown,
+      feedback: this.getListeningFeedback(scaledScore)
+    };
+  }
+
+  /**
+   * Overall score: weighted average of sections
+   */
   calculateOverallScore(sectionScores) {
     const { speaking, writing, reading, listening } = sectionScores;
 
-    // Weighted average based on section weights
-    const overallRawScore = 
-      (speaking.scaledScore * this.SECTION_WEIGHTS.speaking) +
-      (writing.scaledScore * this.SECTION_WEIGHTS.writing) +
-      (reading.scaledScore * this.SECTION_WEIGHTS.reading) +
-      (listening.scaledScore * this.SECTION_WEIGHTS.listening);
+    // Ensure scaledScore exists and fallback to minimal value
+    const s = speaking && typeof speaking.scaledScore === 'number' ? speaking.scaledScore : 10;
+    const w = writing && typeof writing.scaledScore === 'number' ? writing.scaledScore : 10;
+    const r = reading && typeof reading.scaledScore === 'number' ? reading.scaledScore : 10;
+    const l = listening && typeof listening.scaledScore === 'number' ? listening.scaledScore : 10;
 
-    // Determine overall CEFR level based on dominant level
-    const cefrLevels = [speaking.cefrLevel, writing.cefrLevel, reading.cefrLevel, listening.cefrLevel];
-    const overallCEFR = this.determineOverallCEFR(cefrLevels);
+    const weightedScore =
+      (s * this.SECTION_WEIGHTS.speaking) +
+      (w * this.SECTION_WEIGHTS.writing) +
+      (r * this.SECTION_WEIGHTS.reading) +
+      (l * this.SECTION_WEIGHTS.listening);
 
-    // Classify eligibility
-    const eligibility = this.classifyEligibility(overallRawScore);
+    const overallScore = this.clampPTE(Math.round(weightedScore));
+    const cefrLevel = this.mapScoreToCEFR(overallScore);
+    const classification = this.classifyEligibility(overallScore);
 
     return {
-      overallScore: Math.round(overallRawScore),
-      cefrLevel: overallCEFR,
-      eligibility,
-      sectionScores
+      overallScore,
+      cefrLevel,
+      classification,
+      feedback: this.getOverallFeedback(overallScore, cefrLevel)
     };
+  }
+
+  // Utility: clamp to PTE range
+  clampPTE(score) {
+    return Math.min(90, Math.max(10, score));
   }
 
   // Map score to CEFR level
   mapScoreToCEFR(score) {
-    // Round score to nearest integer for comparison
-    const roundedScore = Math.round(score);
-    
     for (const [level, range] of Object.entries(this.CEFR_MAPPING)) {
-      if (roundedScore >= range.min && roundedScore <= range.max) {
-        return level;
-      }
+      if (score >= range.min && score <= range.max) return level;
     }
-    
-    // Default to A1 if no match
-    return 'A1';
+    return score >= 86 ? 'C2' : 'A1';
   }
 
-  // Determine overall CEFR based on section levels
-  determineOverallCEFR(cefrLevels) {
-    // Convert CEFR levels to numeric values for comparison
-    const levelValues = {
-      'A1': 1, 'A2': 2,
-      'B1': 3, 'B2': 4,
-      'C1': 5, 'C2': 6
-    };
-
-    // Get the average level
-    const totalValue = cefrLevels.reduce((sum, level) => sum + (levelValues[level] || 1), 0);
-    const avgValue = totalValue / cefrLevels.length;
-
-    // Map back to CEFR level
-    if (avgValue <= 1.5) return 'A1';
-    if (avgValue <= 2.5) return 'A2';
-    if (avgValue <= 3.5) return 'B1';
-    if (avgValue <= 4.5) return 'B2';
-    if (avgValue <= 5.5) return 'C1';
-    return 'C2';
-  }
-
-  // Classify eligibility based on overall score
+  // Classify eligibility
   classifyEligibility(score) {
-    if (score >= this.PTE_SCORE_RANGES['Competitive'].min) {
-      return 'Competitive';
-    } else if (score >= this.PTE_SCORE_RANGES['Borderline'].min) {
-      return 'Borderline';
-    } else {
-      return 'Needs Improvement';
-    }
+    if (score >= 79) return 'Superior — Eligible for top universities and immigration';
+    if (score >= 65) return 'Competent — Meets most university and visa requirements';
+    if (score >= 50) return 'Moderate — May qualify for some programs';
+    if (score >= 36) return 'Limited — Additional preparation recommended';
+    return 'Below Functional — Significant preparation needed';
   }
 
-  // Scale score to PTE range (10-90)
-  scaleToPTE(rawScore) {
-    // Ensure raw score is between 0-100
-    const boundedScore = Math.max(0, Math.min(100, rawScore));
-    
-    // Scale from 0-100 to 10-90 range
-    return Math.round(10 + (boundedScore * 0.8)); // 0.8 is the scaling factor (80 points over 100)
+  // Section feedback
+  getSpeakingFeedback(score) {
+    if (score >= 70) return 'Excellent speaking skills. Clear pronunciation and natural fluency.';
+    if (score >= 50) return 'Good speaking ability. Some areas for improvement in fluency and pronunciation.';
+    if (score >= 30) return 'Basic speaking skills. Focus on pronunciation clarity and speaking at a natural pace.';
+    return 'Needs significant improvement. Practice reading aloud and recording yourself regularly.';
   }
 
-  // Generate detailed score report
-  generateScoreReport(examData, aiEvaluations) {
-    const speakingScore = this.calculateSpeakingScore(
-      this.filterBySection(examData.answers, 'speaking'), 
-      this.filterBySection(aiEvaluations, 'speaking')
-    );
-
-    const writingScore = this.calculateWritingScore(
-      this.filterBySection(examData.answers, 'writing'), 
-      this.filterBySection(aiEvaluations, 'writing')
-    );
-
-    const readingScore = this.calculateReadingScore(
-      this.filterBySection(examData.answers, 'reading'), 
-      this.filterBySection(aiEvaluations, 'reading')
-    );
-
-    const listeningScore = this.calculateListeningScore(
-      this.filterBySection(examData.answers, 'listening'), 
-      this.filterBySection(aiEvaluations, 'listening')
-    );
-
-    const sectionScores = {
-      speaking: speakingScore,
-      writing: writingScore,
-      reading: readingScore,
-      listening: listeningScore
-    };
-
-    const overallScore = this.calculateOverallScore(sectionScores);
-
-    return {
-      ...overallScore,
-      detailedReport: {
-        speaking: speakingScore.detailedBreakdown,
-        writing: writingScore.detailedBreakdown,
-        reading: readingScore.detailedBreakdown,
-        listening: listeningScore.detailedBreakdown
-      }
-    };
+  getWritingFeedback(score) {
+    if (score >= 70) return 'Strong writing skills. Good grammar, vocabulary, and coherent structure.';
+    if (score >= 50) return 'Adequate writing. Work on sentence variety and vocabulary range.';
+    if (score >= 30) return 'Basic writing skills. Focus on grammar accuracy and paragraph organization.';
+    return 'Needs significant improvement. Practice writing summaries and structured essays daily.';
   }
 
-  // Helper method to filter answers by section
-  filterBySection(answers, section) {
-    const sectionAnswers = {};
-    
-    for (const [questionId, answer] of Object.entries(answers)) {
-      if (this.isQuestionInSection(questionId, section)) {
-        sectionAnswers[questionId] = answer;
-      }
-    }
-    
-    return sectionAnswers;
+  getReadingFeedback(score) {
+    if (score >= 70) return 'Excellent reading comprehension. Strong vocabulary and inference skills.';
+    if (score >= 50) return 'Good reading skills. Practice scanning and skimming techniques.';
+    if (score >= 30) return 'Basic reading comprehension. Build vocabulary and practice with timed readings.';
+    return 'Needs improvement. Read English articles daily and practice fill-in-the-blank exercises.';
   }
 
-  // Helper method to determine if a question belongs to a section
-  isQuestionInSection(questionId, section) {
-    // This is a simplified approach - in a real app, you'd have more robust question categorization
-    const sectionPrefixes = {
-      speaking: ['saq', 'speaking'], // speaking question prefixes
-      writing: ['wq', 'writing'],   // writing question prefixes
-      reading: ['rq', 'reading'],   // reading question prefixes
-      listening: ['lq', 'listening'] // listening question prefixes
-    };
+  getListeningFeedback(score) {
+    if (score >= 70) return 'Excellent listening comprehension. Strong note-taking and detail recognition.';
+    if (score >= 50) return 'Good listening skills. Practice active listening and note-taking.';
+    if (score >= 30) return 'Basic listening. Focus on main ideas first, then details. Watch English media regularly.';
+    return 'Needs significant improvement. Listen to English podcasts and practice dictation daily.';
+  }
 
-    const prefixes = sectionPrefixes[section] || [];
-    return prefixes.some(prefix => questionId.toLowerCase().startsWith(prefix));
+  getOverallFeedback(score, cefrLevel) {
+    return `Your overall PTE score is ${score}/90 (CEFR ${cefrLevel}). ${this.classifyEligibility(score)}.`;
   }
 }
 
-export default ScoringEngine;
+const scoringEngine = new ScoringEngine();
+export default scoringEngine;
+export { ScoringEngine };

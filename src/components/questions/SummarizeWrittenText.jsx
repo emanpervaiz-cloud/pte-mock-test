@@ -24,11 +24,13 @@ const SummarizeWrittenText = ({ question, onNext }) => {
   const handleSubmit = () => {
     // Save the answer
     saveAnswer(question.id, {
-      type: 'text',
+      questionId: question.id,
+      section: 'writing',
+      type: 'summarize_written_text',
       response: summary,
-      wordCount: wordCount
+      meta: { wordCount: wordCount }
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -41,7 +43,7 @@ const SummarizeWrittenText = ({ question, onNext }) => {
           <p>{question.passage}</p>
         </div>
       </div>
-      
+
       <div className="answer-section">
         <h3>Write your summary here:</h3>
         <textarea
@@ -57,15 +59,15 @@ const SummarizeWrittenText = ({ question, onNext }) => {
           {wordCount > 75 && <span className="error"> Maximum 75 words exceeded</span>}
         </div>
       </div>
-      
+
       <div className="instructions">
         <p><strong>Time allowed:</strong> 10 minutes</p>
         <p><strong>Word limit:</strong> 5-75 words</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={wordCount < 5 || wordCount > 75}
         >

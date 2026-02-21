@@ -25,12 +25,13 @@ const SummarizeSpokenText = ({ question, onNext }) => {
   const handleSubmit = () => {
     // Save the answer
     saveAnswer(question.id, {
-      type: 'text',
+      questionId: question.id,
+      section: 'listening',
+      type: 'summarize_spoken_text',
       response: summary,
-      wordCount: wordCount,
-      audioPlayed: audioPlayed
+      meta: { wordCount: wordCount, audioPlayed: audioPlayed }
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -38,13 +39,13 @@ const SummarizeSpokenText = ({ question, onNext }) => {
   return (
     <div className="summarize-spoken-text-question">
       <div className="audio-section">
-        <AudioPlayer 
-          src={question.audioUrl} 
+        <AudioPlayer
+          src={question.audioUrl}
           title="Listen to the lecture"
           onPlay={handleAudioPlay}
         />
       </div>
-      
+
       <div className="answer-section">
         <h3>Write your summary:</h3>
         <textarea
@@ -56,21 +57,21 @@ const SummarizeSpokenText = ({ question, onNext }) => {
         />
         <div className="word-count">
           {wordCount}/{question.maxWords} words
-          {wordCount < question.minWords && wordCount > 0 && 
+          {wordCount < question.minWords && wordCount > 0 &&
             <span className="warning"> Minimum {question.minWords} words required</span>}
-          {wordCount > question.maxWords && 
+          {wordCount > question.maxWords &&
             <span className="error"> Maximum {question.maxWords} words exceeded</span>}
         </div>
       </div>
-      
+
       <div className="instructions">
         <p><strong>Instructions:</strong> Write a summary of the lecture in {question.minWords}-{question.maxWords} words.</p>
         <p><strong>Note:</strong> You will only be able to play the audio once.</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={wordCount < question.minWords || wordCount > question.maxWords || !audioPlayed}
         >

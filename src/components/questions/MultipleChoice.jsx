@@ -22,10 +22,12 @@ const MultipleChoice = ({ question, onNext }) => {
   const handleSubmit = () => {
     // Save the answer
     saveAnswer(question.id, {
+      questionId: question.id,
+      section: 'reading',
       type: 'multiple_choice',
       responses: selectedOptions
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -35,20 +37,19 @@ const MultipleChoice = ({ question, onNext }) => {
       <div className="question-text">
         <h3>{question.question}</h3>
       </div>
-      
+
       <div className="options-container">
         {question.options.map((option) => (
           <div
             key={option.id}
-            className={`option-item ${
-              selectedOptions.includes(option.id) ? 'selected' : ''
-            }`}
+            className={`option-item ${selectedOptions.includes(option.id) ? 'selected' : ''
+              }`}
             onClick={() => handleOptionToggle(option.id)}
           >
             <input
               type={question.multiple ? 'checkbox' : 'radio'}
               checked={selectedOptions.includes(option.id)}
-              onChange={() => {}}
+              onChange={() => { }}
               className="option-input"
             />
             <div className="option-text">
@@ -57,14 +58,14 @@ const MultipleChoice = ({ question, onNext }) => {
           </div>
         ))}
       </div>
-      
+
       <div className="instructions">
         <p><strong>Instructions:</strong> {question.multiple ? 'Select all that apply.' : 'Select one answer.'}</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={selectedOptions.length === 0}
         >

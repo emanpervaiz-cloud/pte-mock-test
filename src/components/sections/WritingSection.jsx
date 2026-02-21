@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useExam } from '../context/ExamContext';
-import ProgressBar from '../components/common/ProgressBar';
-import Timer from '../components/common/Timer';
-import SummarizeWrittenText from '../components/questions/SummarizeWrittenText';
-import WriteEssay from '../components/questions/WriteEssay';
+import { useExam } from '../../context/ExamContext';
+import ProgressBar from '../common/ProgressBar';
+import Timer from '../common/Timer';
+import SummarizeWrittenText from '../questions/SummarizeWrittenText';
+import WriteEssay from '../questions/WriteEssay';
 import { useNavigate } from 'react-router-dom';
 
 const WritingSection = () => {
@@ -58,7 +58,7 @@ const WritingSection = () => {
         <div className="container">
           <h1 className="exam-title">PTE Academic Mock Test</h1>
           <div className="timer-display">
-            <Timer initialTime={1200} /> {/* 20 minutes for writing section */}
+            <Timer initialTime={600} /> {/* 10 minutes for writing section */}
           </div>
         </div>
       </header>
@@ -67,17 +67,17 @@ const WritingSection = () => {
         <div className="container">
           <div className="exam-section">
             <h2>Writing Section</h2>
-            
-            <ProgressBar 
-              current={currentQuestion + 1} 
-              total={writingQuestions.length} 
+
+            <ProgressBar
+              current={currentQuestion + 1}
+              total={writingQuestions.length}
             />
 
             <div className="exam-question">
               <div className="question-number">
                 Question {currentQuestion + 1} of {writingQuestions.length}
               </div>
-              
+
               <div className="exam-instructions">
                 <p>{currentQuestionData.instruction}</p>
               </div>
@@ -92,15 +92,15 @@ const WritingSection = () => {
             </div>
 
             <div className="navigation-buttons">
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={handlePreviousQuestion}
                 disabled={currentQuestion === 0}
               >
                 Previous
               </button>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={handleNextQuestion}
               >
                 {currentQuestion === writingQuestions.length - 1 ? 'Finish Section' : 'Next'}

@@ -1,14 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 const AudioPlayer = ({ src, title = "Audio Player", onPlay, onPause }) => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [error, setError] = useState(null);
 
   const togglePlayback = async () => {
     const audio = audioRef.current;
-    
+    if (!audio || error) return;
+
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
@@ -18,14 +20,16 @@ const AudioPlayer = ({ src, title = "Audio Player", onPlay, onPause }) => {
         await audio.play();
         setIsPlaying(true);
         if (onPlay) onPlay();
-      } catch (error) {
-        console.error("Error playing audio:", error);
+      } catch (err) {
+        console.error("Error playing audio:", err);
+        setError("Playback failed. Please try again.");
       }
     }
   };
 
   const handleLoadedMetadata = () => {
     setDuration(audioRef.current.duration);
+    setError(null);
   };
 
   const handleTimeUpdate = () => {
@@ -36,47 +40,82 @@ const AudioPlayer = ({ src, title = "Audio Player", onPlay, onPause }) => {
     setIsPlaying(false);
   };
 
+  const handleError = () => {
+    console.error("Audio error:", audioRef.current.error);
+    setError("Failed to load audio. Please check file path.");
+  };
+
   const formatTime = (time) => {
+    if (isNaN(time)) return "0:00";
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="audio-player">
+    <div style={{
+      background: '#f8f9fe',
+      borderRadius: 16,
+      padding: '16px 20px',
+      border: '1px solid #eef2f6',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      width: '100%'
+    }}>
       <audio
         ref={audioRef}
         src={src}
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
-        preload="metadata"
+        onError={handleError}
+        preload="auto"
       />
-      
-      <div className="audio-controls">
-        <button 
-          className="play-button" 
+
+      {error && (
+        <div style={{ fontSize: 12, color: '#dc2626', background: '#fee2e2', padding: '8px 12px', borderRadius: 8, fontWeight: 500 }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <button
           onClick={togglePlayback}
-          aria-label={isPlaying ? "Pause" : "Play"}
+          style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: isPlaying ? '#ff8a65' : '#673ab7',
+            color: '#fff', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18, transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: '0 4px 10px rgba(103, 58, 183, 0.2)'
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
         >
-          {isPlaying ? "⏸️" : "▶️"}
+          {isPlaying ? "⏹" : "▶"}
         </button>
-        
-        <div className="audio-progress">
-          <span>{formatTime(currentTime)}</span>
-          <div className="progress-bar">
-            <div 
-              className="progress-bar-fill" 
-              style={{ 
-                width: `${duration ? (currentTime / duration) * 100 : 0}%` 
-              }}
-            ></div>
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {title && <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1f36' }}>{title}</div>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', minWidth: 32 }}>{formatTime(currentTime)}</span>
+            <div style={{
+              flex: 1, height: 6, background: '#e2e8f0', borderRadius: 10, position: 'relative', overflow: 'hidden'
+            }}>
+              <div
+                style={{
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #673ab7, #9575cd)',
+                  width: `${duration ? (currentTime / duration) * 100 : 0}%`,
+                  transition: 'width 0.1s linear'
+                }}
+              />
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', minWidth: 32 }}>{formatTime(duration)}</span>
           </div>
-          <span>{formatTime(duration)}</span>
         </div>
       </div>
-      
-      {title && <p className="audio-title">{title}</p>}
     </div>
   );
 };

@@ -1,198 +1,220 @@
-import React, { useEffect } from 'react';
-import { useExam } from '../context/ExamContext';
+import React, { useEffect, useState } from 'react';
+import { useExam } from '../../context/ExamContext';
 import { useNavigate } from 'react-router-dom';
+import scoringEngine from '../../services/scoringEngine';
 
 const ResultsPage = () => {
-  const { state } = useExam();
+  const { state, setScores, completeExam, resetExam } = useExam();
   const navigate = useNavigate();
+  const [scores, setLocalScores] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // In a real application, we would calculate the scores here
-  // For now, we'll use mock data to demonstrate the UI
-  const mockResults = {
-    overallScore: 72,
-    cefrLevel: 'B2',
-    eligibility: 'Competitive',
-    sectionScores: {
-      speaking: { scaledScore: 68, cefrLevel: 'B1' },
-      writing: { scaledScore: 75, cefrLevel: 'B2' },
-      reading: { scaledScore: 78, cefrLevel: 'B2' },
-      listening: { scaledScore: 70, cefrLevel: 'B1' }
-    },
-    detailedReport: {
-      speaking: [
-        { questionId: 'saq1', feedback: 'Good pronunciation and fluency. Work on content accuracy.' }
-      ],
-      writing: [
-        { questionId: 'wq1', feedback: 'Clear structure and good vocabulary range.' }
-      ],
-      reading: [
-        { questionId: 'rq1', feedback: 'Strong comprehension skills.' }
-      ],
-      listening: [
-        { questionId: 'lq1', feedback: 'Good understanding of main ideas.' }
-      ]
+  useEffect(() => {
+    // Calculate scores from answers in context
+    try {
+      const calculatedScores = scoringEngine.calculateAllScores(state.answers);
+      setLocalScores(calculatedScores);
+      setScores(calculatedScores);
+      completeExam();
+
+      // Save test result to localStorage for Dashboard history
+      const result = {
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        overall: calculatedScores.overall?.overallScore || 10,
+        speaking: calculatedScores.speaking?.scaledScore || 10,
+        writing: calculatedScores.writing?.scaledScore || 10,
+        reading: calculatedScores.reading?.scaledScore || 10,
+        listening: calculatedScores.listening?.scaledScore || 10,
+        cefrLevel: calculatedScores.overall?.cefrLevel || 'A1',
+        totalAnswered: Object.keys(state.answers).length,
+      };
+      try {
+        const history = JSON.parse(localStorage.getItem('pteTestHistory') || '[]');
+        history.push(result);
+        localStorage.setItem('pteTestHistory', JSON.stringify(history));
+      } catch (e) { /* storage full or unavailable */ }
+
+    } catch (error) {
+      console.error('Error calculating scores:', error);
+      // Fallback scores if calculation fails
+      setLocalScores({
+        speaking: { scaledScore: 10, cefrLevel: 'A1', feedback: 'Unable to calculate score.' },
+        writing: { scaledScore: 10, cefrLevel: 'A1', feedback: 'Unable to calculate score.' },
+        reading: { scaledScore: 10, cefrLevel: 'A1', feedback: 'Unable to calculate score.' },
+        listening: { scaledScore: 10, cefrLevel: 'A1', feedback: 'Unable to calculate score.' },
+        overall: { overallScore: 10, cefrLevel: 'A1', classification: 'Unable to calculate.', feedback: '' }
+      });
     }
-  };
+    setLoading(false);
+  }, []);
 
-  // Determine eligibility badge color
-  const getEligibilityColor = (eligibility) => {
-    switch(eligibility) {
-      case 'Competitive':
-        return '#4CAF50'; // Green
-      case 'Borderline':
-        return '#FF9800'; // Orange
-      case 'Needs Improvement':
-        return '#F44336'; // Red
-      default:
-        return '#9E9E9E'; // Gray
-    }
-  };
-
-  // Determine CEFR level color
-  const getCefrColor = (level) => {
-    switch(level) {
-      case 'C2':
-      case 'C1':
-        return '#4CAF50'; // Green
-      case 'B2':
-      case 'B1':
-        return '#2196F3'; // Blue
-      case 'A2':
-      case 'A1':
-        return '#FF9800'; // Orange
-      default:
-        return '#9E9E9E'; // Gray
-    }
-  };
-
-  // Handle retake exam
-  const handleRetake = () => {
+  const handleRetakeExam = () => {
+    resetExam();
     navigate('/');
   };
 
-  // Handle view detailed feedback
-  const handleViewFeedback = () => {
-    // In a real app, this would navigate to a detailed feedback page
-    alert('Detailed feedback would be shown here');
+  const getScoreColor = (score) => {
+    if (score >= 70) return '#2e7d32';
+    if (score >= 50) return '#f57f17';
+    if (score >= 30) return '#e65100';
+    return '#c62828';
   };
+
+  const getScoreBarWidth = (score) => {
+    return `${((score - 10) / 80) * 100}%`;
+  };
+
+  if (loading) {
+    return (
+      <div className="exam-container exam-theme">
+        <main className="main-content">
+          <div className="container" style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <h2>Calculating your scores...</h2>
+            <p>Please wait while we process your responses.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!scores) {
+    return (
+      <div className="exam-container exam-theme">
+        <main className="main-content">
+          <div className="container" style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <h2>No Results Available</h2>
+            <p>Please complete the exam first.</p>
+            <button className="btn btn-primary" onClick={() => navigate('/')}>Go to Home</button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const overallScore = scores.overall?.overallScore || 10;
+  const cefrLevel = scores.overall?.cefrLevel || 'A1';
+  const classification = scores.overall?.classification || '';
 
   return (
     <div className="exam-container exam-theme">
       <header className="exam-header">
         <div className="container">
-          <h1 className="exam-title">PTE Academic Mock Test</h1>
+          <h1 className="exam-title">PTE Academic — Test Results</h1>
         </div>
       </header>
 
       <main className="main-content">
         <div className="container">
-          <div className="results-container">
-            <h2>Exam Results</h2>
-            
-            <div className="results-summary">
-              <div className="score-overview">
-                <div className="overall-score">
-                  <div className="score-value" style={{ color: getEligibilityColor(mockResults.eligibility) }}>
-                    {mockResults.overallScore}
-                  </div>
-                  <div className="score-label">Overall PTE Score</div>
-                </div>
-                
-                <div className="eligibility-badge" style={{ backgroundColor: getEligibilityColor(mockResults.eligibility) }}>
-                  {mockResults.eligibility}
-                </div>
-              </div>
-              
-              <div className="cefr-level">
-                <div className="cefr-value" style={{ color: getCefrColor(mockResults.cefrLevel) }}>
-                  {mockResults.cefrLevel}
-                </div>
-                <div className="cefr-label">CEFR Level</div>
-              </div>
+          {/* Overall Score Card */}
+          <div className="card" style={{ textAlign: 'center', marginBottom: '24px', padding: '32px' }}>
+            <h2 style={{ marginBottom: '8px' }}>Overall Score</h2>
+            <div style={{
+              fontSize: '72px',
+              fontWeight: '800',
+              color: getScoreColor(overallScore),
+              lineHeight: '1.1',
+              margin: '12px 0'
+            }}>
+              {overallScore}
+              <span style={{ fontSize: '24px', color: '#666' }}>/90</span>
             </div>
+            <div style={{
+              display: 'inline-block',
+              padding: '6px 20px',
+              borderRadius: '20px',
+              background: getScoreColor(overallScore),
+              color: '#fff',
+              fontWeight: '600',
+              fontSize: '16px',
+              marginBottom: '12px'
+            }}>
+              CEFR Level: {cefrLevel}
+            </div>
+            <p style={{ color: '#555', marginTop: '12px', fontSize: '15px' }}>{classification}</p>
+          </div>
 
-            <div className="section-scores">
-              <h3>Section Scores</h3>
-              <div className="section-grid">
-                <div className="score-card">
-                  <div className="section-name">Speaking</div>
-                  <div className="section-score">{mockResults.sectionScores.speaking.scaledScore}</div>
-                  <div className="section-cefr" style={{ color: getCefrColor(mockResults.sectionScores.speaking.cefrLevel) }}>
-                    {mockResults.sectionScores.speaking.cefrLevel}
+          {/* Section Scores */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+            {[
+              { key: 'speaking', label: 'Speaking', icon: '🎤' },
+              { key: 'writing', label: 'Writing', icon: '✍️' },
+              { key: 'reading', label: 'Reading', icon: '📖' },
+              { key: 'listening', label: 'Listening', icon: '🎧' }
+            ].map(({ key, label, icon }) => {
+              const sectionScore = scores[key]?.scaledScore || 10;
+              const sectionCefr = scores[key]?.cefrLevel || 'A1';
+              const sectionFeedback = scores[key]?.feedback || '';
+
+              return (
+                <div key={key} className="card" style={{ padding: '20px' }}>
+                  <h3 style={{ marginBottom: '12px' }}>{icon} {label}</h3>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '36px', fontWeight: '700', color: getScoreColor(sectionScore) }}>
+                      {sectionScore}
+                    </span>
+                    <span style={{ color: '#999' }}>/90</span>
+                    <span style={{
+                      marginLeft: 'auto',
+                      padding: '2px 10px',
+                      borderRadius: '12px',
+                      background: '#f0f0f0',
+                      fontSize: '13px',
+                      fontWeight: '600'
+                    }}>
+                      {sectionCefr}
+                    </span>
                   </div>
-                </div>
-                
-                <div className="score-card">
-                  <div className="section-name">Writing</div>
-                  <div className="section-score">{mockResults.sectionScores.writing.scaledScore}</div>
-                  <div className="section-cefr" style={{ color: getCefrColor(mockResults.sectionScores.writing.cefrLevel) }}>
-                    {mockResults.sectionScores.writing.cefrLevel}
+                  {/* Score bar */}
+                  <div style={{ height: '8px', background: '#e0e0e0', borderRadius: '4px', marginBottom: '12px' }}>
+                    <div style={{
+                      height: '100%',
+                      width: getScoreBarWidth(sectionScore),
+                      background: getScoreColor(sectionScore),
+                      borderRadius: '4px',
+                      transition: 'width 1s ease'
+                    }} />
                   </div>
+                  <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.5' }}>{sectionFeedback}</p>
                 </div>
-                
-                <div className="score-card">
-                  <div className="section-name">Reading</div>
-                  <div className="section-score">{mockResults.sectionScores.reading.scaledScore}</div>
-                  <div className="section-cefr" style={{ color: getCefrColor(mockResults.sectionScores.reading.cefrLevel) }}>
-                    {mockResults.sectionScores.reading.cefrLevel}
-                  </div>
-                </div>
-                
-                <div className="score-card">
-                  <div className="section-name">Listening</div>
-                  <div className="section-score">{mockResults.sectionScores.listening.scaledScore}</div>
-                  <div className="section-cefr" style={{ color: getCefrColor(mockResults.sectionScores.listening.cefrLevel) }}>
-                    {mockResults.sectionScores.listening.cefrLevel}
-                  </div>
-                </div>
+              );
+            })}
+          </div>
+
+          {/* Answers Summary */}
+          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
+            <h3>Exam Summary</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginTop: '12px' }}>
+              <div>
+                <div style={{ fontSize: '13px', color: '#888' }}>Total Questions</div>
+                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.keys(state.answers).length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', color: '#888' }}>Speaking</div>
+                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'speaking').length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', color: '#888' }}>Writing</div>
+                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'writing').length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', color: '#888' }}>Reading</div>
+                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'reading').length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', color: '#888' }}>Listening</div>
+                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'listening').length}</div>
               </div>
             </div>
+          </div>
 
-            <div className="feedback-section">
-              <h3>Performance Feedback</h3>
-              <div className="feedback-highlights">
-                <div className="feedback-item">
-                  <h4>Strengths</h4>
-                  <ul>
-                    <li>Strong reading comprehension skills</li>
-                    <li>Good writing structure and vocabulary</li>
-                    <li>Effective listening abilities</li>
-                  </ul>
-                </div>
-                
-                <div className="feedback-item">
-                  <h4>Areas for Improvement</h4>
-                  <ul>
-                    <li>Focus on speaking fluency and pronunciation</li>
-                    <li>Work on complex grammar structures in writing</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="recommendations-section">
-              <h3>Study Recommendations</h3>
-              <div className="recommendations-list">
-                <div className="recommendation-item">
-                  <h4>Speaking Practice</h4>
-                  <p>Practice speaking on a variety of topics for 2-3 minutes daily. Focus on pronunciation and fluency.</p>
-                </div>
-                
-                <div className="recommendation-item">
-                  <h4>Writing Enhancement</h4>
-                  <p>Work on essay structure and practice writing under timed conditions. Expand your range of linking words.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="action-buttons">
-              <button className="btn btn-primary" onClick={handleViewFeedback}>
-                View Detailed Feedback
-              </button>
-              <button className="btn btn-secondary" onClick={handleRetake}>
-                Retake Exam
-              </button>
-            </div>
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={handleRetakeExam}>
+              Retake Exam
+            </button>
+            <button className="btn btn-secondary" onClick={() => window.print()}>
+              Print Results
+            </button>
           </div>
         </div>
       </main>

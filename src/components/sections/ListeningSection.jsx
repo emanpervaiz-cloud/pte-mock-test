@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useExam } from '../context/ExamContext';
-import ProgressBar from '../components/common/ProgressBar';
-import Timer from '../components/common/Timer';
-import SummarizeSpokenText from '../components/questions/SummarizeSpokenText';
-import ListeningMultipleChoice from '../components/questions/ListeningMultipleChoice';
-import ListeningFillBlanks from '../components/questions/ListeningFillBlanks';
-import HighlightCorrectSummary from '../components/questions/HighlightCorrectSummary';
-import SelectMissingWord from '../components/questions/SelectMissingWord';
-import HighlightIncorrectWords from '../components/questions/HighlightIncorrectWords';
-import WriteFromDictation from '../components/questions/WriteFromDictation';
+import { useExam } from '../../context/ExamContext';
+import ProgressBar from '../common/ProgressBar';
+import Timer from '../common/Timer';
+import SummarizeSpokenText from '../questions/SummarizeSpokenText';
+import ListeningMultipleChoice from '../questions/ListeningMultipleChoice';
+import ListeningFillBlanks from '../questions/ListeningFillBlanks';
+import HighlightCorrectSummary from '../questions/HighlightCorrectSummary';
+import SelectMissingWord from '../questions/SelectMissingWord';
+import HighlightIncorrectWords from '../questions/HighlightIncorrectWords';
+import WriteFromDictation from '../questions/WriteFromDictation';
+import { SUMMARIZE_SPOKEN_TEXT_DB } from '../../data/listeningData';
 import { useNavigate } from 'react-router-dom';
 
 const ListeningSection = () => {
@@ -16,26 +17,27 @@ const ListeningSection = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const navigate = useNavigate();
 
-  // Mock listening questions data
+  // Mock listening questions data - Integrating the new Summarize Spoken Text database
   const listeningQuestions = [
-    {
-      id: 'lq1',
+    ...SUMMARIZE_SPOKEN_TEXT_DB.map(lecture => ({
+      id: `lq_sst_${lecture.id}`,
       type: 'summarize_spoken_text',
-      audioUrl: '/placeholder-audio.mp3',
+      audioUrl: lecture.audioUrl || '/assets/listening/listening_fb_1.wav',
       instruction: 'You will hear a short lecture. Write a summary for the lecture in 50-70 words. You will have 10 minutes to finish this task.',
-      minWords: 50,
-      maxWords: 70
-    },
+      minWords: lecture.minWords,
+      maxWords: lecture.maxWords,
+      transcript: lecture.transcript // Keeping transcript for potential accessibility/fallback
+    })).slice(0, 1), // Keeping only the first one as Question 1 for now, as per standard structure
     {
       id: 'lq2',
       type: 'listening_multiple_choice',
-      audioUrl: '/placeholder-audio.mp3',
-      question: 'What is the main topic of the talk?',
+      audioUrl: '/assets/listening/listening_fb_1.wav',
+      question: 'According to the lecture, what is a significant consequence of microplastics for humans?',
       options: [
-        { id: 'lmc1', text: 'Economic growth' },
-        { id: 'lmc2', text: 'Environmental conservation' },
-        { id: 'lmc3', text: 'Technological advancement' },
-        { id: 'lmc4', text: 'Educational reform' }
+        { id: 'lmc1', text: 'They cause immediate starvation in coastal populations.' },
+        { id: 'lmc2', text: 'They absorb toxins that enter the human food chain through seafood.' },
+        { id: 'lmc3', text: 'They lead to a massive increase in the price of sustainable alternatives.' },
+        { id: 'lmc4', text: 'They prevent researchers from discovering deep ocean trenches.' }
       ],
       correct: 'lmc2',
       multiple: false
@@ -43,7 +45,7 @@ const ListeningSection = () => {
     {
       id: 'lq3',
       type: 'listening_fill_blanks',
-      audioUrl: '/placeholder-audio.mp3',
+      audioUrl: '/assets/listening/placeholder_health.mp3',
       passage: 'The research shows that ___1___ is crucial for maintaining a healthy lifestyle. Regular exercise combined with a balanced diet can significantly improve one\'s ___2___.',
       options: ['exercise', 'diet', 'sleep', 'health', 'wellness', 'activity'],
       answers: [
@@ -54,7 +56,7 @@ const ListeningSection = () => {
     {
       id: 'lq4',
       type: 'highlight_correct_summary',
-      audioUrl: '/placeholder-audio.mp3',
+      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
       options: [
         { id: 'hcs1', text: 'The presentation discusses the importance of renewable energy sources.' },
         { id: 'hcs2', text: 'The speaker focuses on traditional energy production methods.' },
@@ -66,7 +68,7 @@ const ListeningSection = () => {
     {
       id: 'lq5',
       type: 'select_missing_word',
-      audioUrl: '/placeholder-audio.mp3',
+      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
       transcript: 'The research indicates that the new policy will have a significant impact on the ___1___ market. Experts predict that the changes will lead to increased investment and growth.',
       options: ['stock', 'real estate', 'commodity', 'energy'],
       correct: 'real estate'
@@ -74,14 +76,14 @@ const ListeningSection = () => {
     {
       id: 'lq6',
       type: 'highlight_incorrect_words',
-      audioUrl: '/placeholder-audio.mp3',
+      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
       transcript: 'The annual report shows that the company has made substantial progress in the last quarter. The revenue has increased by fifteen percent, which exceeds the expectations of most investors.',
       mistakes: [5, 12] // positions of incorrect words
     },
     {
       id: 'lq7',
       type: 'write_from_dictation',
-      audioUrl: '/placeholder-audio.mp3',
+      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
       instruction: 'You will hear a sentence. Type the sentence exactly as you hear it.'
     }
   ];
@@ -116,7 +118,7 @@ const ListeningSection = () => {
         <div className="container">
           <h1 className="exam-title">PTE Academic Mock Test</h1>
           <div className="timer-display">
-            <Timer initialTime={900} /> {/* 15 minutes for listening section */}
+            <Timer initialTime={600} /> {/* 10 minutes for listening section */}
           </div>
         </div>
       </header>
@@ -125,17 +127,17 @@ const ListeningSection = () => {
         <div className="container">
           <div className="exam-section">
             <h2>Listening Section</h2>
-            
-            <ProgressBar 
-              current={currentQuestion + 1} 
-              total={listeningQuestions.length} 
+
+            <ProgressBar
+              current={currentQuestion + 1}
+              total={listeningQuestions.length}
             />
 
             <div className="exam-question">
               <div className="question-number">
                 Question {currentQuestion + 1} of {listeningQuestions.length}
               </div>
-              
+
               <div className="exam-instructions">
                 <p>{currentQuestionData.instruction || 'Listen to the audio and answer the question.'}</p>
               </div>
@@ -165,15 +167,15 @@ const ListeningSection = () => {
             </div>
 
             <div className="navigation-buttons">
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={handlePreviousQuestion}
                 disabled={currentQuestion === 0}
               >
                 Previous
               </button>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={handleNextQuestion}
               >
                 {currentQuestion === listeningQuestions.length - 1 ? 'Finish Exam' : 'Next'}

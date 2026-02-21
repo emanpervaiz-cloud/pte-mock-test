@@ -9,6 +9,8 @@ const initialState = {
   timer: null,
   examStarted: false,
   examCompleted: false,
+  examDurationMinutes: 40, // default 40 minutes for full mock test
+  useAlternatePaper: false,
   scores: {
     speaking: null,
     writing: null,
@@ -30,6 +32,8 @@ const actionTypes = {
   SET_SCORES: 'SET_SCORES',
   RESET_EXAM: 'RESET_EXAM'
 };
+
+actionTypes.SET_USE_ALTERNATE = 'SET_USE_ALTERNATE';
 
 // Reducer function
 const examReducer = (state, action) => {
@@ -61,6 +65,11 @@ const examReducer = (state, action) => {
       return {
         ...state,
         timer: action.payload
+      };
+    case actionTypes.SET_USE_ALTERNATE:
+      return {
+        ...state,
+        useAlternatePaper: !!action.payload
       };
     case actionTypes.START_EXAM:
       return {
@@ -94,6 +103,19 @@ const ExamContext = createContext();
 export const ExamProvider = ({ children }) => {
   const [state, dispatch] = useReducer(examReducer, initialState);
 
+  // On mount, populate user from localStorage if available
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pte_user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        dispatch({ type: actionTypes.SET_USER, payload: user });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
   // Actions
   const setUser = (user) => {
     dispatch({ type: actionTypes.SET_USER, payload: user });
@@ -120,6 +142,10 @@ export const ExamProvider = ({ children }) => {
 
   const startExam = () => {
     dispatch({ type: actionTypes.START_EXAM });
+    // If a logged-in user has taken a test before, mark alternate paper preference
+    if (state.user && state.user.lastTestTaken) {
+      dispatch({ type: actionTypes.SET_USE_ALTERNATE, payload: true });
+    }
   };
 
   const completeExam = () => {
@@ -134,6 +160,18 @@ export const ExamProvider = ({ children }) => {
     dispatch({ type: actionTypes.RESET_EXAM });
   };
 
+  // Lightweight authentication helpers (local only)
+  const login = (user) => {
+    const u = { ...user, lastLoginAt: new Date().toISOString(), lastTestTaken: user.lastTestTaken || null };
+    dispatch({ type: actionTypes.SET_USER, payload: u });
+    try { localStorage.setItem('pte_user', JSON.stringify(u)); } catch {}
+  };
+
+  const logout = () => {
+    dispatch({ type: actionTypes.SET_USER, payload: null });
+    try { localStorage.removeItem('pte_user'); } catch {}
+  };
+
   const value = {
     state,
     setUser,
@@ -144,7 +182,9 @@ export const ExamProvider = ({ children }) => {
     startExam,
     completeExam,
     setScores,
-    resetExam
+    resetExam,
+    login,
+    logout
   };
 
   return (

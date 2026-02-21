@@ -18,25 +18,27 @@ const ReorderParagraph = ({ question, onNext }) => {
   const handleDrop = (e, dropIndex) => {
     e.preventDefault();
     const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
-    
+
     const newOrderedSentences = [...orderedSentences];
     const draggedItem = newOrderedSentences[dragIndex];
-    
+
     // Remove the dragged item
     newOrderedSentences.splice(dragIndex, 1);
     // Insert at the drop position
     newOrderedSentences.splice(dropIndex, 0, draggedItem);
-    
+
     setOrderedSentences(newOrderedSentences);
   };
 
   const handleSubmit = () => {
     // Save the answer
     saveAnswer(question.id, {
+      questionId: question.id,
+      section: 'reading',
       type: 'reorder_paragraph',
       responses: orderedSentences.map(sentence => sentence.id)
     });
-    
+
     // Move to next question
     onNext();
   };
@@ -46,7 +48,7 @@ const ReorderParagraph = ({ question, onNext }) => {
       <div className="prompt-text">
         <p>{question.prompt}</p>
       </div>
-      
+
       <div className="sentences-container">
         <h3>Reorder the sentences:</h3>
         {orderedSentences.map((sentence, index) => (
@@ -62,14 +64,14 @@ const ReorderParagraph = ({ question, onNext }) => {
           </div>
         ))}
       </div>
-      
+
       <div className="instructions">
         <p><strong>Instructions:</strong> Drag and drop the sentences to restore the original order.</p>
       </div>
-      
+
       <div className="action-buttons">
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           onClick={handleSubmit}
         >
           Submit Order
