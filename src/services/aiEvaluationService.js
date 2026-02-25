@@ -1,44 +1,85 @@
 // AI Evaluation Service for PTE Mock Test
-// This service handles the AI-based evaluation of user responses using GPT-4o or equivalent
+// Professional English Language Examiner — 30+ years experience
+// Uses OpenRouter API with GPT-4o for evaluation
+
+const EXAMINER_SYSTEM_PROMPT = `You are a certified English language examiner with 30+ years of experience in high-stakes spoken English assessment, including PTE Academic, IELTS Speaking, and TOEFL iBT evaluations.
+
+Your task is to evaluate a student's response with the precision, consistency, and constructive tone of a professional human examiner.
+
+EVALUATION CRITERIA — Score each dimension out of 10. Be analytical, specific, and evidence-based — reference actual phrases or patterns from the student's response.
+
+1. Fluency & Coherence (0–10): Assess speech flow, logical sequencing, use of discourse markers, and absence of unnatural pauses or repetition.
+2. Pronunciation & Intonation (0–10): Assess phoneme accuracy, word stress, sentence rhythm, and natural intonation patterns. Note any L1 interference if detectable.
+3. Grammatical Range & Accuracy (0–10): Assess variety of sentence structures (simple, compound, complex) and grammatical correctness. Note recurring error patterns.
+4. Vocabulary & Lexical Resource (0–10): Assess range, precision, and appropriateness of word choice. Penalize overuse of basic vocabulary or repetition.
+5. Task Achievement & Relevance (0–10): Assess whether the response fully addresses the prompt, stays on topic, and meets the expected length and depth.
+
+EXAMINER STANDARDS:
+- Never give generic feedback. Always cite evidence from the response.
+- Maintain professional, encouraging, and growth-oriented tone.
+- Penalize but do not discourage. Frame weaknesses as opportunities.
+- Be consistent — same response quality must yield same score range every time.`;
+
+const WRITING_EXAMINER_SYSTEM_PROMPT = `You are a certified English language examiner with 30+ years of experience in high-stakes written English assessment, including PTE Academic Writing, IELTS Writing Task, and TOEFL iBT Writing evaluations.
+
+Your task is to evaluate a student's written response with the precision, consistency, and constructive tone of a professional human examiner.
+
+EVALUATION CRITERIA — Score each dimension out of 10. Be analytical, specific, and evidence-based — reference actual phrases or patterns from the student's response.
+
+1. Fluency & Coherence (0–10): Assess logical flow of ideas, paragraph organization, use of cohesive devices, and overall readability.
+2. Pronunciation & Intonation (0–10): For writing, assess spelling accuracy, punctuation, and formatting conventions.
+3. Grammatical Range & Accuracy (0–10): Assess variety of sentence structures (simple, compound, complex) and grammatical correctness. Note recurring error patterns.
+4. Vocabulary & Lexical Resource (0–10): Assess range, precision, and appropriateness of word choice. Penalize overuse of basic vocabulary or repetition.
+5. Task Achievement & Relevance (0–10): Assess whether the response fully addresses the prompt, stays on topic, meets word limits, and provides adequate depth.
+
+EXAMINER STANDARDS:
+- Never give generic feedback. Always cite evidence from the response.
+- Maintain professional, encouraging, and growth-oriented tone.
+- Penalize but do not discourage. Frame weaknesses as opportunities.
+- Be consistent — same response quality must yield same score range every time.`;
 
 class AIEvaluationService {
-  constructor(apiKey, apiUrl = 'https://api.openai.com/v1/chat/completions', provider = 'openai') {
+  constructor(apiKey, apiUrl = 'https://openrouter.ai/api/v1/chat/completions', provider = 'openrouter') {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl;
-    this.provider = provider; // 'openai' or 'openrouter'
+    this.provider = provider;
   }
 
-  // Evaluate speaking responses
-  async evaluateSpeaking(prompt, response, questionType) {
-    const evaluationCriteria = this.getSpeakingEvaluationCriteria(questionType);
-    
+  // Evaluate speaking responses with professional examiner rubric
+  async evaluateSpeaking(prompt, audioBlobOrText, questionType) {
+    let transcript = audioBlobOrText;
+
+    // If it's a recorded audio blob, transcribe it first
+    if (audioBlobOrText instanceof Blob) {
+      transcript = await this.transcribeAudio(audioBlobOrText);
+    }
+
     const messages = [
       {
         role: "system",
-        content: `You are an expert PTE examiner evaluating a student's speaking response. Evaluate based on IELTS/CEFR standards and provide constructive feedback.`
+        content: EXAMINER_SYSTEM_PROMPT
       },
       {
         role: "user",
         content: `
           Question Type: ${questionType}
-          Prompt: ${prompt}
-          Student Response: ${response}
+          Prompt/Task: ${prompt}
+          Student's Spoken Response (transcribed): ${transcript}
           
-          Evaluate based on these criteria: ${evaluationCriteria}
-          
-          Provide your evaluation in the following JSON format:
+          Evaluate this speaking response using the 5-dimension rubric. Return your evaluation as valid JSON only (no markdown, no explanation outside JSON):
           {
-            "content_accuracy": {score: 0-5, feedback: "specific feedback"},
-            "fluency": {score: 0-5, feedback: "specific feedback"},
-            "pronunciation": {score: 0-5, feedback: "specific feedback"},
-            "vocabulary": {score: 0-5, feedback: "specific feedback"},
-            "grammar": {score: 0-5, feedback: "specific feedback"},
-            "speech_rate": {score: 0-5, feedback: "specific feedback"},
-            "hesitations": {score: 0-5, feedback: "specific feedback"},
-            "overall_score": 0-90,
-            "cefr_level": "B1/B2/C1/C2",
-            "band_descriptor": "brief descriptor",
-            "detailed_feedback": "comprehensive feedback"
+            "fluency_coherence": { "score": 0-10, "feedback": "2-3 sentence analytical comment with specific reference to the response" },
+            "pronunciation_intonation": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
+            "grammar_range_accuracy": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
+            "vocabulary_lexical_resource": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
+            "task_achievement": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
+            "total_score": [sum of all 5 scores out of 50],
+            "scaled_score": [total_score / 5, rounded to 1 decimal],
+            "band_descriptor": "one of: Expert Communicator | Strong Communicator | Competent Communicator | Developing Communicator | Needs Improvement",
+            "top_strength": "One specific thing the student did well",
+            "priority_improvement": "One precise, actionable tip to raise their score",
+            "overall_pte_score": [mapped to PTE 10-90 scale],
+            "cefr_level": "A1/A2/B1/B2/C1/C2"
           }
         `
       }
@@ -49,10 +90,9 @@ class AIEvaluationService {
         model: this.provider === 'openrouter' ? 'openai/gpt-4o' : 'gpt-4o',
         messages: messages,
         temperature: 0.3,
-        max_tokens: 1000
+        max_tokens: 1500
       };
 
-      // Add OpenRouter-specific headers if using OpenRouter
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`
@@ -63,57 +103,111 @@ class AIEvaluationService {
         headers['X-Title'] = 'PTE Mock Test AI Evaluation';
       }
 
-      const response = await fetch(this.apiUrl, {
+      const apiResponse = await fetch(this.apiUrl, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestBody)
       });
 
-      const data = await response.json();
-      
-      // Handle response based on provider
-      if (this.provider === 'openrouter') {
-        return JSON.parse(data.choices[0].message.content);
+      const data = await apiResponse.json();
+
+      let evaluationResult;
+
+      if (!data.choices || !data.choices[0]) {
+        console.error('Invalid API response:', data);
+        evaluationResult = this.getFallbackSpeakingEvaluation();
       } else {
-        return JSON.parse(data.choices[0].message.content);
+        const content = data.choices[0].message.content;
+        // Extract JSON from response (handle markdown code blocks)
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          console.error('No JSON found in response:', content);
+          evaluationResult = this.getFallbackSpeakingEvaluation();
+        } else {
+          evaluationResult = JSON.parse(jsonMatch[0]);
+        }
       }
+
+      return {
+        ...evaluationResult,
+        transcript: transcript
+      };
     } catch (error) {
       console.error('Error evaluating speaking:', error);
-      // Return a fallback evaluation
-      return this.getFallbackSpeakingEvaluation();
+      return {
+        ...this.getFallbackSpeakingEvaluation(),
+        transcript: transcript
+      };
     }
   }
 
-  // Evaluate writing responses
+  // Transcribe audio using OpenAI Whisper API
+  async transcribeAudio(audioBlob) {
+    try {
+      // Require OpenAI API Key for Whisper
+      const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+      if (!openAiKey) {
+        console.warn('VITE_OPENAI_API_KEY is not set. Cannot use Whisper API.');
+        return "[Audio response recorded, but transcription unavailable because OpenAI API key is missing. Please add VITE_OPENAI_API_KEY to your .env file.]";
+      }
+
+      const formData = new FormData();
+      const extension = audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
+      formData.append('file', audioBlob, `audio.${extension}`);
+      formData.append('model', 'whisper-1');
+      formData.append('prompt', 'I have a voice note of a girl speaking. I want you to generate an accurate transcript of her voice only. Do not include any other existing transcript or text — only transcribe what she says in the voice note. Make sure the transcript is clear, correctly punctuated, and reflects her exact words.');
+
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAiKey}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('Whisper API Error:', data.error);
+        return `[Transcription failed: ${data.error.message}]`;
+      }
+
+      return data.text || "[No speech detected]";
+    } catch (error) {
+      console.error('Transcription error:', error);
+      return "[Transcription error occurred]";
+    }
+  }
+
+  // Evaluate writing responses with professional examiner rubric
   async evaluateWriting(prompt, response, questionType) {
-    const evaluationCriteria = this.getWritingEvaluationCriteria(questionType);
-    
     const messages = [
       {
         role: "system",
-        content: `You are an expert PTE examiner evaluating a student's writing response. Evaluate based on IELTS/CEFR standards and provide constructive feedback.`
+        content: WRITING_EXAMINER_SYSTEM_PROMPT
       },
       {
         role: "user",
         content: `
           Question Type: ${questionType}
-          Prompt: ${prompt}
-          Student Response: ${response}
+          Prompt/Task: ${prompt}
+          Student's Written Response: ${response}
           
-          Evaluate based on these criteria: ${evaluationCriteria}
-          
-          Provide your evaluation in the following JSON format:
+          Evaluate this writing response using the 5-dimension rubric. Return your evaluation as valid JSON only (no markdown, no explanation outside JSON):
           {
-            "task_fulfillment": {score: 0-5, feedback: "specific feedback"},
-            "coherence_cohesion": {score: 0-5, feedback: "specific feedback"},
-            "grammar_range_accuracy": {score: 0-5, feedback: "specific feedback"},
-            "lexical_resource": {score: 0-5, feedback: "specific feedback"},
-            "spelling": {score: 0-5, feedback: "specific feedback"},
-            "structure": {score: 0-5, feedback: "specific feedback"},
-            "overall_score": 0-90,
-            "cefr_level": "B1/B2/C1/C2",
-            "band_descriptor": "brief descriptor",
-            "detailed_feedback": "comprehensive feedback"
+            "fluency_coherence": { "score": 0-10, "feedback": "2-3 sentence analytical comment with specific reference to the response" },
+            "pronunciation_intonation": { "score": 0-10, "feedback": "2-3 sentence analytical comment about spelling, punctuation, formatting" },
+            "grammar_range_accuracy": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
+            "vocabulary_lexical_resource": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
+            "task_achievement": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
+            "total_score": [sum of all 5 scores out of 50],
+            "scaled_score": [total_score / 5, rounded to 1 decimal],
+            "band_descriptor": "one of: Expert Communicator | Strong Communicator | Competent Communicator | Developing Communicator | Needs Improvement",
+            "top_strength": "One specific thing the student did well",
+            "priority_improvement": "One precise, actionable tip to raise their score",
+            "overall_pte_score": [mapped to PTE 10-90 scale],
+            "cefr_level": "A1/A2/B1/B2/C1/C2"
           }
         `
       }
@@ -124,10 +218,9 @@ class AIEvaluationService {
         model: this.provider === 'openrouter' ? 'openai/gpt-4o' : 'gpt-4o',
         messages: messages,
         temperature: 0.3,
-        max_tokens: 1000
+        max_tokens: 1500
       };
 
-      // Add OpenRouter-specific headers if using OpenRouter
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`
@@ -138,23 +231,29 @@ class AIEvaluationService {
         headers['X-Title'] = 'PTE Mock Test AI Evaluation';
       }
 
-      const response = await fetch(this.apiUrl, {
+      const apiResponse = await fetch(this.apiUrl, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestBody)
       });
 
-      const data = await response.json();
-      
-      // Handle response based on provider
-      if (this.provider === 'openrouter') {
-        return JSON.parse(data.choices[0].message.content);
-      } else {
-        return JSON.parse(data.choices[0].message.content);
+      const data = await apiResponse.json();
+
+      if (!data.choices || !data.choices[0]) {
+        console.error('Invalid API response:', data);
+        return this.getFallbackWritingEvaluation();
       }
+
+      const content = data.choices[0].message.content;
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('No JSON found in response:', content);
+        return this.getFallbackWritingEvaluation();
+      }
+
+      return JSON.parse(jsonMatch[0]);
     } catch (error) {
       console.error('Error evaluating writing:', error);
-      // Return a fallback evaluation
       return this.getFallbackWritingEvaluation();
     }
   }
@@ -170,7 +269,7 @@ class AIEvaluationService {
         if (isCorrect) {
           score += 1;
         }
-        
+
         feedback.push({
           questionIndex: i,
           isCorrect: isCorrect,
@@ -207,7 +306,7 @@ class AIEvaluationService {
         if (isCorrect) {
           score += 1;
         }
-        
+
         feedback.push({
           questionIndex: i,
           isCorrect: isCorrect,
@@ -253,65 +352,38 @@ class AIEvaluationService {
     return 'A2';
   }
 
-  // Get speaking evaluation criteria based on question type
-  getSpeakingEvaluationCriteria(questionType) {
-    switch(questionType) {
-      case 'read_aloud':
-        return "Content accuracy (correct pronunciation of words), Fluency (smooth delivery without hesitation), Pronunciation (clear articulation), Intonation (appropriate stress and rhythm)";
-      case 'repeat_sentence':
-        return "Content accuracy (exact reproduction of sentence), Fluency (smooth delivery), Pronunciation (clear articulation), Intonation (matching the original)";
-      case 'describe_image':
-        return "Content accuracy (relevant details), Fluency (coherent delivery), Vocabulary (descriptive language), Grammar (accurate structures), Organization (logical flow)";
-      case 'retell_lecture':
-        return "Content accuracy (key points captured), Fluency (coherent delivery), Vocabulary (range and accuracy), Grammar (complex structures), Organization (logical sequence)";
-      case 'answer_short_question':
-        return "Content accuracy (correct answer), Fluency (clear delivery), Vocabulary (appropriate word choice), Grammar (accuracy)";
-      default:
-        return "Content accuracy, Fluency, Pronunciation, Vocabulary, Grammar";
-    }
-  }
-
-  // Get writing evaluation criteria based on question type
-  getWritingEvaluationCriteria(questionType) {
-    switch(questionType) {
-      case 'summarize_written_text':
-        return "Task fulfillment (captures key points), Coherence and cohesion (logical flow), Grammar range and accuracy (complex structures), Lexical resource (vocabulary range), Spelling (accuracy)";
-      case 'write_essay':
-        return "Task fulfillment (addresses all parts), Coherence and cohesion (organized structure), Grammar range and accuracy (complex structures), Lexical resource (vocabulary range), Spelling (accuracy), Structure (introduction-body-conclusion)";
-      default:
-        return "Task fulfillment, Coherence and cohesion, Grammar range and accuracy, Lexical resource, Spelling, Structure";
-    }
-  }
-
-  // Fallback evaluations
+  // Fallback evaluations with new 5-dimension format
   getFallbackSpeakingEvaluation() {
     return {
-      content_accuracy: {score: 3, feedback: "Moderate accuracy in content delivery"},
-      fluency: {score: 3, feedback: "Some hesitations but generally smooth delivery"},
-      pronunciation: {score: 3, feedback: "Mostly clear pronunciation with some errors"},
-      vocabulary: {score: 3, feedback: "Adequate vocabulary range for the task"},
-      grammar: {score: 3, feedback: "Basic grammatical structures mostly correct"},
-      speech_rate: {score: 3, feedback: "Appropriate pace with minor issues"},
-      hesitations: {score: 3, feedback: "Occasional hesitations but manageable"},
-      overall_score: 60,
-      cefr_level: "B1",
-      band_descriptor: "Modest ability",
-      detailed_feedback: "Your response demonstrates basic competency but needs improvement in several areas. Focus on pronunciation accuracy and expanding your vocabulary range for more complex expressions."
+      fluency_coherence: { score: 5, feedback: "Unable to perform live AI evaluation. Based on recording indicators, the response shows moderate fluency. Practice maintaining a steady pace without unnecessary pauses." },
+      pronunciation_intonation: { score: 5, feedback: "Pronunciation assessment requires AI analysis. Focus on clear articulation of consonant clusters and natural stress patterns." },
+      grammar_range_accuracy: { score: 5, feedback: "Grammar evaluation pending. Aim to use a mix of simple and complex sentence structures in your responses." },
+      vocabulary_lexical_resource: { score: 5, feedback: "Vocabulary assessment pending. Try incorporating more topic-specific terminology and avoiding repetition of common words." },
+      task_achievement: { score: 5, feedback: "Task completion assessment pending. Ensure your response fully addresses all aspects of the prompt within the time limit." },
+      total_score: 25,
+      scaled_score: 5.0,
+      band_descriptor: "Developing Communicator",
+      top_strength: "Completed the recording within the time limit",
+      priority_improvement: "Practice speaking at a natural, steady pace with clear pronunciation",
+      overall_pte_score: 50,
+      cefr_level: "B1"
     };
   }
 
   getFallbackWritingEvaluation() {
     return {
-      task_fulfillment: {score: 3, feedback: "Addresses most parts of the task"},
-      coherence_cohesion: {score: 3, feedback: "Some logical organization but could be clearer"},
-      grammar_range_accuracy: {score: 3, feedback: "Uses basic structures correctly"},
-      lexical_resource: {score: 3, feedback: "Limited but adequate vocabulary"},
-      spelling: {score: 3, feedback: "Few errors that don't impede communication"},
-      structure: {score: 3, feedback: "Basic structure present"},
-      overall_score: 60,
-      cefr_level: "B1",
-      band_descriptor: "Modest ability",
-      detailed_feedback: "Your writing addresses the task requirements but could benefit from improved organization and more varied vocabulary. Work on developing complex grammatical structures."
+      fluency_coherence: { score: 5, feedback: "Unable to perform live AI evaluation. Ensure your writing follows a logical structure with clear topic sentences and transitions." },
+      pronunciation_intonation: { score: 5, feedback: "Spelling and punctuation assessment pending. Proofread your work for common spelling errors and proper punctuation usage." },
+      grammar_range_accuracy: { score: 5, feedback: "Grammar evaluation pending. Use a variety of sentence types — simple, compound, and complex — to demonstrate range." },
+      vocabulary_lexical_resource: { score: 5, feedback: "Vocabulary assessment pending. Incorporate academic vocabulary and avoid repeating the same words or phrases." },
+      task_achievement: { score: 5, feedback: "Task completion assessment pending. Make sure you address every part of the prompt and stay within the word limit." },
+      total_score: 25,
+      scaled_score: 5.0,
+      band_descriptor: "Developing Communicator",
+      top_strength: "Submitted a response within the word limit",
+      priority_improvement: "Focus on organizing ideas with clear paragraph structure and cohesive devices",
+      overall_pte_score: 50,
+      cefr_level: "B1"
     };
   }
 
@@ -321,7 +393,7 @@ class AIEvaluationService {
       total: 10,
       percentage: 50,
       cefrLevel: "B1",
-      feedback: [{questionIndex: 0, isCorrect: false, correctAnswer: "", studentAnswer: "", feedback: "Could not evaluate due to system error"}]
+      feedback: [{ questionIndex: 0, isCorrect: false, correctAnswer: "", studentAnswer: "", feedback: "Could not evaluate due to system error" }]
     };
   }
 
@@ -331,7 +403,7 @@ class AIEvaluationService {
       total: 10,
       percentage: 50,
       cefrLevel: "B1",
-      feedback: [{questionIndex: 0, isCorrect: false, correctAnswer: "", studentAnswer: "", feedback: "Could not evaluate due to system error"}]
+      feedback: [{ questionIndex: 0, isCorrect: false, correctAnswer: "", studentAnswer: "", feedback: "Could not evaluate due to system error" }]
     };
   }
 }

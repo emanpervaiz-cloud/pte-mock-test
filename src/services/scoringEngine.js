@@ -93,8 +93,8 @@ class ScoringEngine {
    * Good duration = full base credit (scored by AI when available)
    */
   calculateSpeakingScore(answers, aiEvaluations) {
-    const totalQuestions = this.EXPECTED_QUESTIONS.speaking;
     const answeredCount = Object.keys(answers).length;
+    const totalQuestions = Math.max(this.EXPECTED_QUESTIONS.speaking, answeredCount);
 
     if (answeredCount === 0) {
       return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No speaking responses recorded.' };
@@ -166,11 +166,14 @@ class ScoringEngine {
   }
 
   computeAISpeakingScore(aiEval) {
-    // Aggregate available criterion scores and normalize robustly
+    // Support new 5-dimension format (0-10 each) and legacy format
     let total = 0, count = 0;
-    const criteria = ['content_accuracy', 'fluency', 'pronunciation', 'vocabulary', 'grammar', 'speech_rate'];
+    const newCriteria = ['fluency_coherence', 'pronunciation_intonation', 'grammar_range_accuracy', 'vocabulary_lexical_resource', 'task_achievement'];
+    const legacyCriteria = ['content_accuracy', 'fluency', 'pronunciation', 'vocabulary', 'grammar', 'speech_rate'];
+
+    // Try new format first
     let maxObserved = 0;
-    for (const c of criteria) {
+    for (const c of newCriteria) {
       const val = aiEval[c] && (typeof aiEval[c].score === 'number' ? aiEval[c].score : (typeof aiEval[c] === 'number' ? aiEval[c] : null));
       if (typeof val === 'number') {
         total += val;
@@ -178,12 +181,28 @@ class ScoringEngine {
         if (val > maxObserved) maxObserved = val;
       }
     }
+
+    // Fallback to legacy format if new format not found
+    if (count === 0) {
+      for (const c of legacyCriteria) {
+        const val = aiEval[c] && (typeof aiEval[c].score === 'number' ? aiEval[c].score : (typeof aiEval[c] === 'number' ? aiEval[c] : null));
+        if (typeof val === 'number') {
+          total += val;
+          count++;
+          if (val > maxObserved) maxObserved = val;
+        }
+      }
+    }
+
+    // Use overall_pte_score directly if available
+    if (typeof aiEval.overall_pte_score === 'number') {
+      return this.clampPTE(aiEval.overall_pte_score);
+    }
+
     if (count === 0) return 40;
-    // Determine assumed max for normalization (prefer 5 or 10 depending on observed)
-    const perCritMax = maxObserved > 6 ? maxObserved : 5;
+    const perCritMax = maxObserved > 6 ? 10 : 5;
     const avg = total / count;
     const normalized = Math.min(1, Math.max(0, avg / perCritMax));
-    // Map normalized [0,1] to PTE range [10,90]
     const scaled = Math.round(normalized * 80 + 10);
     return this.clampPTE(scaled);
   }
@@ -192,8 +211,8 @@ class ScoringEngine {
    * Writing: Score based on word count and content quality
    */
   calculateWritingScore(answers, aiEvaluations) {
-    const totalQuestions = this.EXPECTED_QUESTIONS.writing;
     const answeredCount = Object.keys(answers).length;
+    const totalQuestions = Math.max(this.EXPECTED_QUESTIONS.writing, answeredCount);
 
     if (answeredCount === 0) {
       return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No writing responses submitted.' };
@@ -293,8 +312,8 @@ class ScoringEngine {
    * Reading: Accuracy-based scoring
    */
   calculateReadingScore(answers) {
-    const totalQuestions = this.EXPECTED_QUESTIONS.reading;
     const answeredCount = Object.keys(answers).length;
+    const totalQuestions = Math.max(this.EXPECTED_QUESTIONS.reading, answeredCount);
 
     if (answeredCount === 0) {
       return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No reading responses submitted.' };
@@ -349,8 +368,8 @@ class ScoringEngine {
    * Listening: Accuracy + spelling penalties
    */
   calculateListeningScore(answers) {
-    const totalQuestions = this.EXPECTED_QUESTIONS.listening;
     const answeredCount = Object.keys(answers).length;
+    const totalQuestions = Math.max(this.EXPECTED_QUESTIONS.listening, answeredCount);
 
     if (answeredCount === 0) {
       return { rawScore: 0, scaledScore: 10, cefrLevel: 'A1', breakdown: [], feedback: 'No listening responses submitted.' };

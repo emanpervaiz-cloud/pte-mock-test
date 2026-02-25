@@ -1,130 +1,256 @@
-export const SUMMARIZE_SPOKEN_TEXT_DB = [
+export const LISTENING_PASSAGES = [
     {
-        "id": 1,
-        "topic": "Environment",
-        "title": "Ocean Plastic Pollution",
-        "transcript": "Every year, approximately eight million tonnes of plastic waste enter the world's oceans. This staggering figure has profound consequences for marine ecosystems and ultimately for human health. Microplastics — tiny fragments less than five millimetres in size — have been discovered in the deepest ocean trenches and even in the bodies of remote Arctic wildlife. Marine animals frequently mistake plastic debris for food, leading to starvation, internal injuries, and death. Beyond wildlife, toxins absorbed by microplastics enter the human food chain through seafood consumption. Researchers warn that without urgent policy intervention, the volume of plastic in the ocean could outweigh fish by 2050. Tackling this crisis requires international cooperation, stricter manufacturing regulations, and a fundamental shift in consumer behaviour toward sustainable alternatives.",
-        "key_points": [
-            "8 million tonnes of plastic enter oceans every year",
-            "Microplastics found in deep ocean trenches and Arctic wildlife",
-            "Marine animals mistake plastic for food — causing injury and death",
-            "Toxins from microplastics enter the human food chain via seafood",
-            "Plastic may outweigh fish by 2050 without urgent action"
-        ],
-        "main_idea": "Ocean plastic pollution poses a severe threat to marine ecosystems and human health, requiring urgent global policy action.",
-        "minWords": 50,
-        "maxWords": 70
+        "passage_id": "listening_1",
+        "title": "The Psychology of Urban Design",
+        "transcript": "Recent studies in environmental psychology have highlighted how urban architecture significantly influences our mental well-being. It is no longer just about aesthetics; it is about cognitive load. When individuals navigate through cities with monotonous, glass-fronted buildings, their stress levels—measured via skin conductance and heart rate—tend to spike. Conversely, environments that incorporate 'fractal' patterns, often found in nature and traditional architecture, tend to lower cortisol levels. Urban planners are now being urged to integrate more green spaces and complex facades to combat what is becoming known as 'urban fatigue.' This shift represents a move toward evidence-based design, ensuring that as the global population becomes increasingly urbanized, our cities support rather than deplete our psychological resources.",
+        "questions": [
+            {
+                "type": "Summarize Spoken Text",
+                "question": "You will hear a short lecture. Write a summary for a fellow student who was not present at the lecture. You should write 50–70 words.",
+                "word_count_limit": [50, 70],
+                "key_points": [
+                    "Urban architecture affects mental well-being and stress levels.",
+                    "Monotonous buildings increase stress, while natural 'fractal' patterns reduce it.",
+                    "Planners are adopting evidence-based design to include green spaces.",
+                    "Goal is to prevent urban fatigue and support psychological health."
+                ],
+                "difficulty": "Hard"
+            },
+            {
+                "type": "Multiple Choice (Single Answer)",
+                "question": "According to the lecture, what do 'fractal' patterns primarily help with?",
+                "options": [
+                    "A. Increasing property values in urban areas",
+                    "B. Lowering cortisol levels and reducing stress",
+                    "C. Improving traffic flow and navigation",
+                    "D. Encouraging more physical activity outdoors"
+                ],
+                "correct_answer": "B",
+                "difficulty": "Medium"
+            },
+            {
+                "type": "True / False / Not Given",
+                "question": "Based on the lecture, decide whether each statement is True, False, or Not Given.",
+                "statements": [
+                    {
+                        "statement": "Skin conductance and heart rate were used to measure stress levels.",
+                        "answer": "True"
+                    },
+                    {
+                        "statement": "Fractal patterns are only found in modern architecture.",
+                        "answer": "False"
+                    },
+                    {
+                        "statement": "Green spaces in cities have been proven to eliminate depression.",
+                        "answer": "Not Given"
+                    },
+                    {
+                        "statement": "Evidence-based design is a growing trend in urban planning.",
+                        "answer": "True"
+                    }
+                ],
+                "difficulty": "Medium"
+            }
+        ]
     },
     {
-        "id": 2,
-        "topic": "Technology",
-        "title": "Artificial Intelligence in Healthcare",
-        "transcript": "Artificial intelligence is rapidly transforming the field of medicine, offering tools that can analyse vast quantities of patient data far more quickly than any human physician. Machine learning algorithms have demonstrated remarkable accuracy in detecting early-stage cancers from medical imaging, sometimes outperforming experienced radiologists. AI-powered systems can also predict patient deterioration in hospital wards, enabling earlier and potentially life-saving interventions. However, the integration of AI into healthcare is not without challenges. Issues surrounding data privacy, algorithmic bias, and the ethical implications of machine-driven diagnoses remain subjects of intense debate. Medical professionals stress that AI should function as a complement to clinical expertise, not a replacement. As technology evolves, developing clear regulatory frameworks will be essential to ensure patient safety and equitable access.",
-        "key_points": [
-            "AI analyses patient data rapidly and accurately",
-            "Machine learning detects early-stage cancers, sometimes surpassing radiologists",
-            "AI can predict patient deterioration in hospital wards",
-            "Challenges include data privacy, algorithmic bias, and ethics",
-            "AI should complement — not replace — clinical expertise"
-        ],
-        "main_idea": "AI offers transformative potential in healthcare through faster diagnosis and prediction, but ethical and regulatory challenges must be addressed.",
-        "minWords": 50,
-        "maxWords": 70
+        "passage_id": "listening_2",
+        "title": "The History of Antibiotics",
+        "transcript": "The discovery of penicillin by Alexander Fleming in 1928 was a landmark moment in medical history. Before this, even minor infections could be fatal. However, the widespread use of these drugs has led to a significant challenge: antimicrobial resistance. This occurs when bacteria evolve to withstand the medications intended to kill them. Scientists are now racing to develop new classes of antibiotics and alternative therapies, such as phage therapy, to address this growing global health crisis.",
+        "questions": [
+            {
+                "type": "Fill in the Blanks",
+                "blank_text": "The discovery of penicillin by Alexander Fleming in 1928 was a ________ moment in medical history. Before this, even minor infections could be ________. However, the widespread use of these drugs has led to a significant challenge: antimicrobial ________. This occurs when bacteria ________ to withstand the medications intended to kill them.",
+                "correct_answers": ["landmark", "fatal", "resistance", "evolve"],
+                "difficulty": "Medium"
+            },
+            {
+                "type": "Multiple Choice (Multiple Answers)",
+                "question": "Which TWO of the following are mentioned in the lecture?",
+                "options": [
+                    "A. Penicillin was discovered in 1928",
+                    "B. Antibiotics were first used during World War I",
+                    "C. Phage therapy is being explored as an alternative treatment",
+                    "D. Bacteria can become resistant to antibiotics",
+                    "E. Fleming won a Nobel Prize for his discovery"
+                ],
+                "correct_answers": ["A", "C", "D"],
+                "note": "Select all that are explicitly mentioned.",
+                "difficulty": "Medium"
+            },
+            {
+                "type": "Short Answer",
+                "question": "What is antimicrobial resistance? Answer in no more than 15 words.",
+                "model_answer": "When bacteria evolve to withstand the medications designed to kill them.",
+                "difficulty": "Easy"
+            }
+        ]
     },
     {
-        "id": 3,
-        "topic": "Education",
-        "title": "The Rise of Online Learning",
-        "transcript": "The proliferation of digital technology has fundamentally altered how people access education. Online learning platforms now offer millions of courses across virtually every discipline, enabling individuals worldwide to acquire new skills regardless of geographic location or financial circumstance. The COVID-19 pandemic accelerated this shift dramatically, forcing institutions to adapt almost overnight to remote delivery. Research suggests that online learning can be equally effective as traditional classroom instruction when designed thoughtfully, incorporating interactive elements, regular assessments, and peer collaboration. Nevertheless, significant challenges persist. Students without reliable internet access or suitable devices remain disadvantaged, reinforcing existing inequalities. Additionally, self-motivation and time management are critical for success in self-paced environments. Educators must therefore strike a balance between technological innovation and inclusive, supportive learning design.",
-        "key_points": [
-            "Digital technology has transformed access to education globally",
-            "COVID-19 dramatically accelerated the shift to online learning",
-            "Online learning can match classroom effectiveness when well-designed",
-            "The digital divide disadvantages students without internet or devices",
-            "Self-motivation and time management are essential for online learners"
-        ],
-        "main_idea": "Online learning has expanded educational access globally, but challenges like the digital divide and learner self-discipline must be addressed to ensure equity.",
-        "minWords": 50,
-        "maxWords": 70
+        "passage_id": "listening_3",
+        "title": "The Role of Sleep in Memory Consolidation",
+        "transcript": "Sleep is far more than a passive state of rest. Neuroscientists have discovered that during sleep, particularly during the rapid eye movement—or REM—stage, the brain is highly active in consolidating memories. This process involves transferring information from the hippocampus, where short-term memories are stored, to the neocortex, where they become long-term memories. Studies have shown that students who sleep after learning new material perform significantly better on recall tests than those who remain awake. Chronic sleep deprivation not only impairs memory formation but is also linked to increased risk of neurodegenerative diseases such as Alzheimer's. Health professionals now emphasize that quality sleep is not a luxury—it is a biological necessity for cognitive health.",
+        "questions": [
+            {
+                "type": "Summarize Spoken Text",
+                "question": "Write a summary of the lecture in 50–70 words.",
+                "word_count_limit": [50, 70],
+                "key_points": [
+                    "Sleep, especially REM sleep, is essential for memory consolidation.",
+                    "Memories move from the hippocampus to the neocortex during sleep.",
+                    "Sleep-deprived students perform worse on recall tests.",
+                    "Chronic sleep deprivation is linked to Alzheimer's and other diseases.",
+                    "Sleep is considered a biological necessity for cognitive health."
+                ],
+                "difficulty": "Hard"
+            },
+            {
+                "type": "Fill in the Blanks",
+                "blank_text": "During sleep, the brain transfers information from the ________, where short-term memories are stored, to the ________, where they become long-term memories. Chronic sleep ________ is also linked to increased risk of ________ diseases such as Alzheimer's.",
+                "correct_answers": ["hippocampus", "neocortex", "deprivation", "neurodegenerative"],
+                "difficulty": "Hard"
+            },
+            {
+                "type": "Multiple Choice (Single Answer)",
+                "question": "What does the lecture suggest about students who sleep after studying?",
+                "options": [
+                    "A. They feel more stressed before exams",
+                    "B. They perform better on recall tests",
+                    "C. They are more likely to develop Alzheimer's",
+                    "D. They store memories only in the hippocampus"
+                ],
+                "correct_answer": "B",
+                "difficulty": "Easy"
+            },
+            {
+                "type": "True / False / Not Given",
+                "question": "Based on the lecture, decide whether each statement is True, False, or Not Given.",
+                "statements": [
+                    {
+                        "statement": "REM sleep is when the brain is completely inactive.",
+                        "answer": "False"
+                    },
+                    {
+                        "statement": "The hippocampus stores long-term memories permanently.",
+                        "answer": "False"
+                    },
+                    {
+                        "statement": "Most adults need exactly eight hours of sleep per night.",
+                        "answer": "Not Given"
+                    },
+                    {
+                        "statement": "Sleep deprivation can increase the risk of Alzheimer's disease.",
+                        "answer": "True"
+                    }
+                ],
+                "difficulty": "Medium"
+            }
+        ]
     },
     {
-        "id": 4,
-        "topic": "Health & Nutrition",
-        "title": "The Impact of Sleep Deprivation",
-        "transcript": "Sleep is a biological necessity, yet modern society consistently undervalues it. The recommended amount of sleep for adults is between seven and nine hours per night, yet surveys indicate that a significant proportion of the global population regularly falls short of this target. The consequences of chronic sleep deprivation extend well beyond simple tiredness. Cognitively, insufficient sleep impairs memory consolidation, decision-making, and concentration. Physically, it is linked to increased risks of obesity, cardiovascular disease, and a weakened immune system. The economic cost is also substantial: productivity losses attributable to sleep deprivation run into hundreds of billions of dollars annually in major economies. Public health campaigns increasingly advocate for sleep hygiene education in schools and workplaces, recognising quality sleep as a foundational pillar of overall wellbeing.",
-        "key_points": [
-            "Adults need 7–9 hours of sleep per night",
-            "Many people globally do not meet this requirement",
-            "Sleep deprivation impairs memory, decision-making, and concentration",
-            "Linked to obesity, cardiovascular disease, and weakened immunity",
-            "Costs hundreds of billions in lost productivity annually"
-        ],
-        "main_idea": "Chronic sleep deprivation has serious cognitive, physical, and economic consequences, making sleep hygiene a critical public health priority.",
-        "minWords": 50,
-        "maxWords": 70
+        "passage_id": "listening_4",
+        "title": "The Economics of Remote Work",
+        "transcript": "The COVID-19 pandemic accelerated a seismic shift in how people work. Remote work, once a rare perk, became a global experiment overnight. Economists studying this transition have identified both significant benefits and notable drawbacks. On the positive side, companies have reported savings on office space and overhead, while many employees have gained back hours previously lost to commuting. Studies suggest that productivity, for certain job types, has actually increased. However, there are concerns about the erosion of company culture, the blurring of work-life boundaries, and unequal access to suitable home-working environments—particularly for lower-income workers living in smaller dwellings. Policymakers are now grappling with questions about tax implications, urban planning, and whether remote work might contribute to the economic decline of city centers.",
+        "questions": [
+            {
+                "type": "Summarize Spoken Text",
+                "question": "Write a summary of the lecture in 50–70 words.",
+                "word_count_limit": [50, 70],
+                "key_points": [
+                    "The pandemic rapidly normalized remote work globally.",
+                    "Benefits include cost savings and improved productivity for some workers.",
+                    "Drawbacks include cultural erosion and blurred work-life boundaries.",
+                    "Lower-income workers face greater challenges working from home.",
+                    "Policymakers face new questions about tax, urban planning, and city economies."
+                ],
+                "difficulty": "Hard"
+            },
+            {
+                "type": "Multiple Choice (Multiple Answers)",
+                "question": "According to the lecture, which TWO are identified as benefits of remote work?",
+                "options": [
+                    "A. Stronger company culture",
+                    "B. Savings on office space for companies",
+                    "C. Reduced commuting time for employees",
+                    "D. Equal working conditions for all income levels",
+                    "E. Guaranteed increase in productivity across all sectors"
+                ],
+                "correct_answers": ["B", "C"],
+                "difficulty": "Medium"
+            },
+            {
+                "type": "Fill in the Blanks",
+                "blank_text": "Remote work became a global ________ overnight due to the pandemic. While companies saved on ________ space, concerns arose about the erosion of company ________ and the blurring of work-life ________.",
+                "correct_answers": ["experiment", "office", "culture", "boundaries"],
+                "difficulty": "Medium"
+            },
+            {
+                "type": "Short Answer",
+                "question": "Name TWO groups or areas that policymakers are concerned about in relation to remote work.",
+                "model_answer": "Tax implications, urban planning (or city centers / lower-income workers). Any two of these are acceptable.",
+                "difficulty": "Medium"
+            }
+        ]
     },
     {
-        "id": 5,
-        "topic": "History",
-        "title": "The Silk Road and Cultural Exchange",
-        "transcript": "The Silk Road was not merely a trade network — it was one of history's most powerful engines of cultural exchange. Spanning thousands of kilometres from China to the Mediterranean, these ancient routes facilitated the movement of silk, spices, and precious metals for over a millennium. Yet the most enduring legacies were not material. Along the Silk Road, religions spread across continents: Buddhism travelled eastward into China and Japan, while Islam moved westward into Central Asia. Scientific knowledge, artistic traditions, and culinary practices were exchanged between civilisations that might otherwise have remained entirely isolated from one another. The Bubonic Plague, however, also spread along these same routes during the fourteenth century, demonstrating that connectivity carries risks alongside benefits. Today, historians regard the Silk Road as a defining symbol of globalisation long before the modern era.",
-        "key_points": [
-            "Silk Road connected China to the Mediterranean over thousands of kilometres",
-            "Traded silk, spices, and precious metals for over a millennium",
-            "Spread religions — Buddhism eastward, Islam westward",
-            "Facilitated exchange of science, art, and culinary traditions",
-            "Also spread the Bubonic Plague — connectivity has risks"
-        ],
-        "main_idea": "The Silk Road was a profound engine of cultural and religious exchange across continents, though it also carried devastating risks such as the spread of plague.",
-        "minWords": 50,
-        "maxWords": 70
-    },
-    {
-        "id": 6,
-        "topic": "Social Issues",
-        "title": "Urbanisation and Mental Health",
-        "transcript": "By 2050, it is projected that nearly seventy percent of the world's population will live in urban areas. While cities offer economic opportunity and access to services, they also present a unique set of mental health challenges. Research consistently shows that urban dwellers experience higher rates of anxiety, depression, and stress-related disorders compared to their rural counterparts. Contributing factors include noise pollution, overcrowding, social isolation despite dense populations, and reduced access to natural environments. The psychological importance of green spaces is now well documented — studies demonstrate that regular exposure to parks and natural surroundings lowers cortisol levels and improves mood. Urban planners and policymakers are increasingly incorporating mental health considerations into city design, recognising that a healthy city must nurture psychological wellbeing alongside physical infrastructure.",
-        "key_points": [
-            "70% of the world's population will be urban by 2050",
-            "Urban dwellers have higher rates of anxiety and depression",
-            "Causes include noise, overcrowding, and social isolation",
-            "Green spaces reduce cortisol and improve mental wellbeing",
-            "Urban planning must now incorporate mental health principles"
-        ],
-        "main_idea": "Rapid urbanisation is linked to rising mental health problems, making the integration of green spaces and wellbeing-focused design essential in modern cities.",
-        "minWords": 50,
-        "maxWords": 70
-    },
-    {
-        "id": 7,
-        "topic": "Science",
-        "title": "The Science of Vaccines",
-        "transcript": "Vaccines are one of the most effective public health interventions ever developed. They work by training the immune system to recognise and combat specific pathogens without causing the disease itself. Traditional vaccines introduce weakened or inactivated forms of a virus or bacteria, prompting the body to produce antibodies. More recently, mRNA vaccine technology — brought to widespread attention during the COVID-19 pandemic — works differently, instructing cells to produce a harmless protein that triggers an immune response. This approach has proven both highly effective and adaptable, offering new possibilities for tackling diseases including certain cancers. Despite their demonstrable safety record, vaccines continue to face public resistance in some communities, fuelled by misinformation. Health authorities emphasise that sustained vaccination programmes are critical for achieving and maintaining herd immunity at the population level.",
-        "key_points": [
-            "Vaccines train the immune system to fight pathogens safely",
-            "Traditional vaccines use weakened or inactivated pathogens",
-            "mRNA technology gained prominence during the COVID-19 pandemic",
-            "mRNA approach may also help treat certain cancers",
-            "Misinformation drives vaccine hesitancy and threatens herd immunity"
-        ],
-        "main_idea": "Vaccines, including newer mRNA technologies, are vital public health tools, but vaccine hesitancy driven by misinformation remains a significant global challenge.",
-        "minWords": 50,
-        "maxWords": 70
-    },
-    {
-        "id": 8,
-        "topic": "Economics",
-        "title": "The Gig Economy",
-        "transcript": "The gig economy — characterised by short-term contracts and freelance work rather than permanent employment — has expanded dramatically over the past decade, driven largely by digital platforms that connect workers with consumers. Proponents argue that gig work offers unparalleled flexibility, allowing individuals to set their own hours and diversify their income streams. However, critics highlight significant drawbacks. Gig workers are typically classified as independent contractors, which means they lack access to employment benefits such as paid leave, healthcare coverage, and pension contributions. Income instability is also a persistent concern, as earnings fluctuate according to demand. Governments around the world are grappling with how to regulate this evolving labour market — the central challenge being how to preserve worker flexibility while simultaneously ensuring adequate protections and a social safety net.",
-        "key_points": [
-            "Gig economy involves short-term and freelance work via digital platforms",
-            "Advantage: unparalleled flexibility for workers",
-            "Disadvantage: no paid leave, healthcare, or pension benefits",
-            "Income instability is a persistent concern",
-            "Governments face challenge of balancing flexibility with worker protections"
-        ],
-        "main_idea": "The gig economy offers workers flexibility but lacks employment protections, presenting governments with the challenge of designing fair and effective labour regulation.",
-        "minWords": 50,
-        "maxWords": 70
+        "passage_id": "listening_5",
+        "title": "Coral Reefs and Climate Change",
+        "transcript": "Coral reefs cover less than one percent of the ocean floor, yet they support approximately twenty-five percent of all marine species. These ecosystems, often called the rainforests of the sea, are under severe threat from climate change. Rising ocean temperatures cause a process known as coral bleaching, where corals expel the algae living in their tissues, turning white and becoming highly vulnerable to disease. The Great Barrier Reef, the world's largest coral reef system, has experienced multiple mass bleaching events in recent decades. Scientists warn that if global temperatures rise by two degrees Celsius above pre-industrial levels, more than ninety percent of coral reefs could be destroyed. Conservation efforts, including the development of heat-resistant coral strains, offer some hope, but experts stress that meaningful progress requires urgent and substantial reductions in global carbon emissions.",
+        "questions": [
+            {
+                "type": "Summarize Spoken Text",
+                "question": "Write a summary of the lecture in 50–70 words.",
+                "word_count_limit": [50, 70],
+                "key_points": [
+                    "Coral reefs support 25% of marine life despite covering less than 1% of the ocean.",
+                    "Rising temperatures cause coral bleaching, threatening reef survival.",
+                    "The Great Barrier Reef has suffered repeated bleaching events.",
+                    "A 2°C temperature rise could destroy 90% of coral reefs.",
+                    "Conservation and carbon emission reductions are both urgently needed."
+                ],
+                "difficulty": "Hard"
+            },
+            {
+                "type": "Fill in the Blanks",
+                "blank_text": "Coral reefs support approximately ________ percent of all marine species. Rising ocean temperatures cause coral ________, where corals expel the ________ living in their tissues. Scientists warn that a ________ degree Celsius rise could destroy over ninety percent of coral reefs.",
+                "correct_answers": ["twenty-five", "bleaching", "algae", "two"],
+                "difficulty": "Medium"
+            },
+            {
+                "type": "Multiple Choice (Single Answer)",
+                "question": "What do scientists say is ultimately needed to protect coral reefs?",
+                "options": [
+                    "A. Building artificial reefs to replace natural ones",
+                    "B. Moving coral reefs to cooler areas of the ocean",
+                    "C. Substantial reductions in global carbon emissions",
+                    "D. Breeding more fish species that protect corals"
+                ],
+                "correct_answer": "C",
+                "difficulty": "Easy"
+            },
+            {
+                "type": "True / False / Not Given",
+                "question": "Based on the lecture, decide whether each statement is True, False, or Not Given.",
+                "statements": [
+                    {
+                        "statement": "Coral reefs cover more than ten percent of the ocean floor.",
+                        "answer": "False"
+                    },
+                    {
+                        "statement": "The Great Barrier Reef is the world's largest coral reef system.",
+                        "answer": "True"
+                    },
+                    {
+                        "statement": "Heat-resistant coral strains have already fully restored damaged reefs.",
+                        "answer": "False"
+                    },
+                    {
+                        "statement": "Governments have agreed to reduce carbon emissions by 2030.",
+                        "answer": "Not Given"
+                    }
+                ],
+                "difficulty": "Medium"
+            }
+        ]
     }
 ];

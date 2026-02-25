@@ -20,37 +20,72 @@ const SpeakingSection = () => {
       id: 'vn_1',
       type: 'repeat_sentence',
       audioUrl: '/assets/speaking/read_aloud_1.wav',
-      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.'
+      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.',
+      transcript: 'Global warming is one of the most serious challenges facing humanity today. Immediate action is required to reduce carbon emissions.'
     },
     {
       id: 'vn_2',
       type: 'repeat_sentence',
       audioUrl: '/assets/speaking/read_aloud_2.wav',
-      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.'
+      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.',
+      transcript: 'Education is the foundation of personal and social development. Every child deserves access to quality learning opportunities.'
     },
     {
       id: 'vn_3',
       type: 'repeat_sentence',
       audioUrl: '/assets/speaking/read_aloud_3.wav',
-      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.'
+      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.',
+      transcript: 'Technology has transformed the way we communicate. Social media platforms connect millions of people worldwide.'
     },
     {
       id: 'vn_4',
       type: 'repeat_sentence',
       audioUrl: '/assets/speaking/read_aloud_4.wav',
-      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.'
+      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.',
+      transcript: 'Healthy eating is essential for maintaining physical and mental well-being. Fruits and vegetables should be included in every meal.'
     },
     {
       id: 'vn_5',
       type: 'repeat_sentence',
       audioUrl: '/assets/speaking/read_aloud_5.wav',
-      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.'
+      instruction: 'Listen to the audio and repeat the sentence exactly as you hear it.',
+      transcript: 'Global trade has increased dramatically in the past decades. Countries are more interconnected than ever before.'
     },
     {
       id: 'vn_6_di',
       type: 'describe_image',
       imageUrl: '/assets/pte_describe_image_chart.png',
       instruction: 'Look at the image below and describe it in detail. You have 25 seconds to prepare and 40 seconds to speak.'
+    },
+    {
+      id: 'ra_1',
+      type: 'read_aloud',
+      prompt: 'Global warming is one of the most serious challenges facing humanity today. Immediate action is required to reduce carbon emissions.',
+      instruction: 'Look at the text below. In 40 seconds, you must read this text aloud as naturally and clearly as possible. You have 40 seconds to read aloud.'
+    },
+    {
+      id: 'ra_2',
+      type: 'read_aloud',
+      prompt: 'Education is the foundation of personal and social development. Every child deserves access to quality learning opportunities.',
+      instruction: 'Look at the text below. In 40 seconds, you must read this text aloud as naturally and clearly as possible. You have 40 seconds to read aloud.'
+    },
+    {
+      id: 'ra_3',
+      type: 'read_aloud',
+      prompt: 'Technology has transformed the way we communicate. Social media platforms connect millions of people worldwide.',
+      instruction: 'Look at the text below. In 40 seconds, you must read this text aloud as naturally and clearly as possible. You have 40 seconds to read aloud.'
+    },
+    {
+      id: 'ra_4',
+      type: 'read_aloud',
+      prompt: 'Healthy eating is essential for maintaining physical and mental well-being. Fruits and vegetables should be included in every meal.',
+      instruction: 'Look at the text below. In 40 seconds, you must read this text aloud as naturally and clearly as possible. You have 40 seconds to read aloud.'
+    },
+    {
+      id: 'ra_5',
+      type: 'read_aloud',
+      prompt: 'Global trade has increased dramatically in the past decades. Countries are more interconnected than ever before.',
+      instruction: 'Look at the text below. In 40 seconds, you must read this text aloud as naturally and clearly as possible. You have 40 seconds to read aloud.'
     }
   ];
 

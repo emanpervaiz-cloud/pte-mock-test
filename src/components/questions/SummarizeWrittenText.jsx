@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
+import ScoreDisplay from '../common/ScoreDisplay';
+import AIEvaluationService from '../../services/aiEvaluationService';
 
 const SummarizeWrittenText = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
   const [summary, setSummary] = useState('');
   const [wordCount, setWordCount] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
 
-  // Calculate word count whenever summary changes
   useEffect(() => {
     const words = summary.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
@@ -14,15 +19,13 @@ const SummarizeWrittenText = ({ question, onNext }) => {
 
   const handleChange = (e) => {
     const text = e.target.value;
-    // Limit to 75 words
     const words = text.split(/\s+/).filter(word => word.length > 0);
     if (words.length <= 75) {
       setSummary(text);
     }
   };
 
-  const handleSubmit = () => {
-    // Save the answer
+  const handleSave = () => {
     saveAnswer(question.id, {
       questionId: question.id,
       section: 'writing',
@@ -30,8 +33,45 @@ const SummarizeWrittenText = ({ question, onNext }) => {
       response: summary,
       meta: { wordCount: wordCount }
     });
+    setIsSaved(true);
+  };
 
-    // Move to next question
+  const handleGetScore = async () => {
+    // Auto-save if not saved yet
+    if (!isSaved) {
+      handleSave();
+    }
+
+    setEvalLoading(true);
+    setEvalError(null);
+    try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
+      const apiUrl = import.meta.env.VITE_OPENROUTER_API_KEY
+        ? 'https://openrouter.ai/api/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+      const provider = import.meta.env.VITE_OPENROUTER_API_KEY ? 'openrouter' : 'openai';
+
+      if (!apiKey) {
+        setEvalError('No API key configured. Please set VITE_OPENROUTER_API_KEY in your .env file.');
+        setEvalLoading(false);
+        return;
+      }
+
+      const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
+      const result = await evaluator.evaluateWriting(
+        `Summarize the following passage in one sentence (5-75 words):\n\n${question.passage}`,
+        summary,
+        'summarize_written_text'
+      );
+      setEvaluation(result);
+    } catch (err) {
+      setEvalError(err.message || 'Failed to evaluate. Please try again.');
+    }
+    setEvalLoading(false);
+  };
+
+  const handleSubmit = () => {
+    if (!isSaved) handleSave();
     onNext();
   };
 
@@ -65,13 +105,23 @@ const SummarizeWrittenText = ({ question, onNext }) => {
         <p><strong>Word limit:</strong> 5-75 words</p>
       </div>
 
-      <div className="action-buttons">
+      {/* Score Display */}
+      <ScoreDisplay
+        evaluation={evaluation}
+        loading={evalLoading}
+        error={evalError}
+        onGetScore={handleGetScore}
+        hasResponse={wordCount >= 5}
+        questionType="writing"
+      />
+
+      <div className="action-buttons" style={{ display: 'flex', gap: 12, marginTop: 16 }}>
         <button
           className="btn btn-primary"
           onClick={handleSubmit}
           disabled={wordCount < 5 || wordCount > 75}
         >
-          Submit Summary
+          Submit & Continue →
         </button>
       </div>
     </div>

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import audioService from '../../services/audioService';
 import AudioPlayer from '../common/AudioPlayer';
+import ScoreDisplay from '../common/ScoreDisplay';
+import AIEvaluationService from '../../services/aiEvaluationService';
 
 const RepeatSentence = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
@@ -10,6 +12,10 @@ const RepeatSentence = ({ question, onNext }) => {
   const [micReady, setMicReady] = useState(false);
   const [micError, setMicError] = useState(false);
   const [hasRecorded, setHasRecorded] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
   const recordingInterval = useRef(null);
   const timeoutRef = useRef(null);
 
@@ -55,6 +61,7 @@ const RepeatSentence = ({ question, onNext }) => {
     const blob = await audioService.stopRecording();
     setIsRecording(false);
     setHasRecorded(true);
+    setAudioBlob(blob);
 
     saveAnswer(question.id, {
       questionId: question.id,
@@ -63,6 +70,35 @@ const RepeatSentence = ({ question, onNext }) => {
       response: blob,
       meta: { duration: recordingTime, hasAudio: !!blob, blobSize: blob?.size || 0 }
     });
+  };
+
+  const handleGetScore = async () => {
+    setEvalLoading(true);
+    setEvalError(null);
+    try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
+      const apiUrl = import.meta.env.VITE_OPENROUTER_API_KEY
+        ? 'https://openrouter.ai/api/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+      const provider = import.meta.env.VITE_OPENROUTER_API_KEY ? 'openrouter' : 'openai';
+
+      if (!apiKey) {
+        setEvalError('No API key configured. Please set VITE_OPENROUTER_API_KEY in your .env file.');
+        setEvalLoading(false);
+        return;
+      }
+
+      const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
+      const result = await evaluator.evaluateSpeaking(
+        question.instruction || question.prompt || 'Repeat the sentence you heard',
+        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s, Question: Repeat Sentence]`,
+        'repeat_sentence'
+      );
+      setEvaluation(result);
+    } catch (err) {
+      setEvalError(err.message || 'Failed to evaluate. Please try again.');
+    }
+    setEvalLoading(false);
   };
 
   const handleNext = async () => {
@@ -89,6 +125,19 @@ const RepeatSentence = ({ question, onNext }) => {
             src={question.audioUrl || '/placeholder-audio.mp3'}
             title="Listen to the sentence carefully"
           />
+          {question.transcript && (
+            <div style={{
+              marginTop: 20, padding: '16px 20px', background: '#f8f9fe',
+              borderRadius: 12, border: '1px dashed #d1d5db'
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📝</span> Transcript
+              </div>
+              <div style={{ fontSize: 16, color: '#1f2937', fontStyle: 'italic', lineHeight: 1.5 }}>
+                "{question.transcript}"
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -124,7 +173,7 @@ const RepeatSentence = ({ question, onNext }) => {
               {isRecording ? 'Recording repitition...' : (hasRecorded ? 'Response captured' : 'Ready to record')}
             </div>
             <div style={{ fontSize: 14, color: '#5a6270' }}>
-              {isRecording ? `${recordingTime}s / 15s - Speak clearly` : (hasRecorded ? 'You can proceed to next question' : 'Click the microphone to repeat')}
+              {isRecording ? `${recordingTime}s / 15s - Speak clearly` : (hasRecorded ? 'You can get your score or proceed' : 'Click the microphone to repeat')}
             </div>
           </div>
         </div>
@@ -140,6 +189,16 @@ const RepeatSentence = ({ question, onNext }) => {
           </div>
         )}
       </div>
+
+      {/* Score Display */}
+      <ScoreDisplay
+        evaluation={evaluation}
+        loading={evalLoading}
+        error={evalError}
+        onGetScore={handleGetScore}
+        hasResponse={hasRecorded}
+        questionType="speaking"
+      />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
         <button

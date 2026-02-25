@@ -8,87 +8,81 @@ import ReorderParagraph from '../questions/ReorderParagraph';
 import ReadingFillBlanks from '../questions/ReadingFillBlanks';
 import ReadingMultipleChoiceAudio from '../questions/ReadingMultipleChoiceAudio';
 import { useNavigate } from 'react-router-dom';
+import { READING_PASSAGES } from '../../data/readingData';
 
 const ReadingSection = () => {
   const { state, setCurrentQuestionIndex, setCurrentSection } = useExam();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const navigate = useNavigate();
 
-  // Mock reading questions data
-  const readingQuestions = [
-    {
-      id: 'rq1',
-      type: 'reading_writing_fill_blanks',
-      passage: 'The development of technology has significantly impacted the way people communicate. In the past, communication was limited to face-to-face interactions, letters, and telephone calls. Today, however, individuals can instantly connect with others across the globe through various digital platforms such as email, social media, and messaging applications.',
-      prompt: 'Below is a passage with several blanks. For each blank, select the most appropriate word from the dropdown menu.',
-      questions: [
-        {
-          id: 'rq1_blank1',
-          options: ['technology', 'education', 'medicine', 'transportation'],
-          correct: 'technology',
-          position: 1
-        },
-        {
-          id: 'rq1_blank2',
-          options: ['instantly', 'slowly', 'carefully', 'quietly'],
-          correct: 'instantly',
-          position: 2
-        }
-      ]
-    },
-    {
-      id: 'rq2',
-      type: 'multiple_choice',
-      question: 'Which of the following best describes the main idea of the passage?',
-      options: [
-        { id: 'mc1', text: 'Technology has improved transportation systems' },
-        { id: 'mc2', text: 'Communication methods have evolved with technology' },
-        { id: 'mc3', text: 'Social media is the primary communication method' },
-        { id: 'mc4', text: 'Face-to-face communication is becoming obsolete' }
-      ],
-      correct: 'mc2',
-      multiple: false
-    },
-    {
-      id: 'rq3',
-      type: 'reorder_paragraph',
-      prompt: 'The text boxes below have been placed in random order. Restore the original order by dragging and dropping the text boxes.',
-      sentences: [
-        { id: 'rs1', text: 'The first computers were created in the early 20th century.' },
-        { id: 'rs2', text: 'These early machines were massive and occupied entire rooms.' },
-        { id: 'rs3', text: 'Today, computing power has increased exponentially while size has decreased dramatically.' },
-        { id: 'rs4', text: 'The development of microprocessors revolutionized personal computing.' },
-        { id: 'rs5', text: 'Modern smartphones have more computing power than the early room-sized computers.' }
-      ],
-      correctOrder: ['rs1', 'rs2', 'rs4', 'rs3', 'rs5']
-    },
-    {
-      id: 'rq4',
-      type: 'reading_fill_blanks',
-      passage: 'Climate change represents one of the most significant challenges facing our planet today. The ___1___ of global temperatures has led to various environmental impacts, including rising sea levels, extreme weather events, and changes in precipitation patterns. Scientists ___2___ that human activities, particularly the emission of greenhouse gases, are the primary drivers of contemporary climate change.',
-      prompt: 'Complete the text with the most appropriate words from the box below. Each word can only be used once.',
-      options: ['increase', 'research', 'suggest', 'decline', 'analyze', 'confirm'],
-      answers: [
-        { blank: 1, correct: 'increase' },
-        { blank: 2, correct: 'suggest' }
-      ]
-    },
-    {
-      id: 'rq5_audio',
-      type: 'reading_multiple_choice_audio',
-      audioUrl: '/assets/reading/reading_audio_1.wav',
-      prompt: 'Listen to the audio note and answer the question below.',
-      question: 'What is the speaker mainly discussing in the audio?',
-      options: [
-        { id: 'rao1', text: 'The importance of consistent practice' },
-        { id: 'rao2', text: 'The new grading criteria' },
-        { id: 'rao3', text: 'A technical issue with the software' },
-        { id: 'rao4', text: 'The schedule for the next exam' }
-      ],
-      correct: 'rao1',
-      multiple: false
-    }
-  ];
+  // Map the structured JSON reading passages into individual test questions
+  const readingQuestions = READING_PASSAGES.flatMap(passage => {
+    return passage.questions.map((q) => {
+      let type = '';
+      let options = [];
+      let correct = null;
+      let answers = [];
+      let sentences = [];
+      let correctOrder = [];
+
+      if (q.type === 'MCQ Single Answer') {
+        type = 'multiple_choice';
+        options = Object.entries(q.options).map(([key, text]) => ({ id: key, text }));
+        correct = q.correct_answer;
+      } else if (q.type === 'MCQ Multiple Answers') {
+        type = 'multiple_choice';
+        options = Object.entries(q.options).map(([key, text]) => ({ id: key, text }));
+        correct = q.correct_answer;
+      } else if (q.type === 'Re-order Paragraphs') {
+        type = 'reorder_paragraph';
+        sentences = q.paragraphs.map(p => {
+          const match = p.match(/^(\d+)\.\s*(.*)/);
+          if (match) {
+            return { id: `rs_${match[1]}`, text: match[2] };
+          }
+          return { id: `rs_${Math.random()}`, text: p };
+        });
+        correctOrder = q.correct_order.map(num => `rs_${num}`);
+      } else if (q.type === 'Fill in the Blanks') {
+        type = 'reading_fill_blanks';
+        let blankCount = 0;
+        const formattedPassage = q.blank_text.replace(/________/g, () => {
+          blankCount++;
+          return `___${blankCount}___`;
+        });
+
+        options = [...q.correct_answers].sort();
+        answers = q.correct_answers.map((ans, idx) => ({
+          blank: idx + 1, // Fix: Use 1-based index (e.g. 1 instead of 0) since replace uses 1-based logic
+          correct: ans
+        }));
+
+        return {
+          id: q.id,
+          type,
+          passage: formattedPassage, // For fill in the blanks, passage is the blank_text
+          prompt: q.student_instructions,
+          options,
+          answers,
+          title: passage.title
+        };
+      }
+
+      return {
+        id: q.id,
+        type,
+        passage: passage.text,
+        prompt: q.student_instructions,
+        question: q.question,
+        options,
+        correct,
+        multiple: q.type === 'MCQ Multiple Answers',
+        sentences,
+        correctOrder,
+        title: passage.title
+      };
+    });
+  });
 
   const currentQuestionData = readingQuestions[currentQuestion];
 
@@ -140,9 +134,16 @@ const ReadingSection = () => {
                 Question {currentQuestion + 1} of {readingQuestions.length}
               </div>
 
-              <div className="exam-instructions">
-                <p>{currentQuestionData.prompt}</p>
+              <div className="exam-instructions" style={{ marginBottom: 24 }}>
+                <p><strong>{currentQuestionData.prompt}</strong></p>
               </div>
+
+              {currentQuestionData.passage && currentQuestionData.type !== 'reading_fill_blanks' && currentQuestionData.type !== 'reading_writing_fill_blanks' && (
+                <div style={{ padding: '24px', background: '#f8f9fe', borderRadius: '16px', marginBottom: '32px', borderLeft: '4px solid #673ab7', fontSize: '16px', lineHeight: '1.7', color: '#1e293b' }}>
+                  {currentQuestionData.title && <h3 style={{ margin: '0 0 16px', fontSize: 20, color: '#0f172a' }}>{currentQuestionData.title}</h3>}
+                  <p style={{ margin: 0 }}>{currentQuestionData.passage}</p>
+                </div>
+              )}
 
               {/* Render the appropriate question component based on type */}
               {currentQuestionData.type === 'reading_writing_fill_blanks' && (

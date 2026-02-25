@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
+import ScoreDisplay from '../common/ScoreDisplay';
+import AIEvaluationService from '../../services/aiEvaluationService';
 
 const WriteEssay = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
   const [essay, setEssay] = useState('');
   const [wordCount, setWordCount] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
 
-  // Calculate word count whenever essay changes
   useEffect(() => {
     const words = essay.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
@@ -16,8 +21,7 @@ const WriteEssay = ({ question, onNext }) => {
     setEssay(e.target.value);
   };
 
-  const handleSubmit = () => {
-    // Save the answer
+  const handleSave = () => {
     saveAnswer(question.id, {
       questionId: question.id,
       section: 'writing',
@@ -25,8 +29,45 @@ const WriteEssay = ({ question, onNext }) => {
       response: essay,
       meta: { wordCount: wordCount }
     });
+    setIsSaved(true);
+  };
 
-    // Move to next question
+  const handleGetScore = async () => {
+    // Auto-save if not saved yet
+    if (!isSaved) {
+      handleSave();
+    }
+
+    setEvalLoading(true);
+    setEvalError(null);
+    try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
+      const apiUrl = import.meta.env.VITE_OPENROUTER_API_KEY
+        ? 'https://openrouter.ai/api/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+      const provider = import.meta.env.VITE_OPENROUTER_API_KEY ? 'openrouter' : 'openai';
+
+      if (!apiKey) {
+        setEvalError('No API key configured. Please set VITE_OPENROUTER_API_KEY in your .env file.');
+        setEvalLoading(false);
+        return;
+      }
+
+      const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
+      const result = await evaluator.evaluateWriting(
+        question.prompt,
+        essay,
+        'write_essay'
+      );
+      setEvaluation(result);
+    } catch (err) {
+      setEvalError(err.message || 'Failed to evaluate. Please try again.');
+    }
+    setEvalLoading(false);
+  };
+
+  const handleSubmit = () => {
+    if (!isSaved) handleSave();
     onNext();
   };
 
@@ -61,13 +102,23 @@ const WriteEssay = ({ question, onNext }) => {
         <p><strong>Guidelines:</strong> Organize your essay with an introduction, body paragraphs, and conclusion. Support your ideas with examples.</p>
       </div>
 
-      <div className="action-buttons">
+      {/* Score Display */}
+      <ScoreDisplay
+        evaluation={evaluation}
+        loading={evalLoading}
+        error={evalError}
+        onGetScore={handleGetScore}
+        hasResponse={wordCount >= 50}
+        questionType="writing"
+      />
+
+      <div className="action-buttons" style={{ display: 'flex', gap: 12, marginTop: 16 }}>
         <button
           className="btn btn-primary"
           onClick={handleSubmit}
           disabled={wordCount < 200}
         >
-          Submit Essay
+          Submit & Continue →
         </button>
       </div>
     </div>

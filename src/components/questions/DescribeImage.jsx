@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import audioService from '../../services/audioService';
+import ScoreDisplay from '../common/ScoreDisplay';
+import AIEvaluationService from '../../services/aiEvaluationService';
 
 const DescribeImage = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
@@ -10,6 +12,10 @@ const DescribeImage = ({ question, onNext }) => {
   const [micReady, setMicReady] = useState(false);
   const [micError, setMicError] = useState(false);
   const [hasRecorded, setHasRecorded] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
   const recordingInterval = useRef(null);
   const prepInterval = useRef(null);
   const timeoutRef = useRef(null);
@@ -23,7 +29,6 @@ const DescribeImage = ({ question, onNext }) => {
     };
     initMic();
 
-    // Prep countdown
     prepInterval.current = setInterval(() => {
       setPrepTime(prev => {
         if (prev <= 1) {
@@ -73,6 +78,7 @@ const DescribeImage = ({ question, onNext }) => {
     const blob = await audioService.stopRecording();
     setIsRecording(false);
     setHasRecorded(true);
+    setAudioBlob(blob);
 
     saveAnswer(question.id, {
       questionId: question.id,
@@ -81,6 +87,35 @@ const DescribeImage = ({ question, onNext }) => {
       response: blob,
       meta: { duration: recordingTime, hasAudio: !!blob, blobSize: blob?.size || 0, prepTimeUsed: 25 - prepTime }
     });
+  };
+
+  const handleGetScore = async () => {
+    setEvalLoading(true);
+    setEvalError(null);
+    try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
+      const apiUrl = import.meta.env.VITE_OPENROUTER_API_KEY
+        ? 'https://openrouter.ai/api/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+      const provider = import.meta.env.VITE_OPENROUTER_API_KEY ? 'openrouter' : 'openai';
+
+      if (!apiKey) {
+        setEvalError('No API key configured. Please set VITE_OPENROUTER_API_KEY in your .env file.');
+        setEvalLoading(false);
+        return;
+      }
+
+      const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
+      const result = await evaluator.evaluateSpeaking(
+        question.instruction || 'Describe the image in detail',
+        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s, Task: Describe Image, Prep time used: ${25 - prepTime}s]`,
+        'describe_image'
+      );
+      setEvaluation(result);
+    } catch (err) {
+      setEvalError(err.message || 'Failed to evaluate. Please try again.');
+    }
+    setEvalLoading(false);
   };
 
   const handleNext = async () => {
@@ -179,7 +214,7 @@ const DescribeImage = ({ question, onNext }) => {
               {isRecording ? 'Recording in progress...' : (hasRecorded ? 'Recording complete!' : (prepTime > 0 ? 'Preparing...' : 'Ready to record'))}
             </div>
             <div style={{ fontSize: 14, color: '#5a6270' }}>
-              {isRecording ? `Please describe the image (${recordingTime}s / 40s)` : (hasRecorded ? 'Review your response and continue' : 'Click the button to start speaking')}
+              {isRecording ? `Please describe the image (${recordingTime}s / 40s)` : (hasRecorded ? 'Get your score or continue' : 'Click the button to start speaking')}
             </div>
           </div>
         </div>
@@ -195,6 +230,16 @@ const DescribeImage = ({ question, onNext }) => {
           </div>
         )}
       </div>
+
+      {/* Score Display */}
+      <ScoreDisplay
+        evaluation={evaluation}
+        loading={evalLoading}
+        error={evalError}
+        onGetScore={handleGetScore}
+        hasResponse={hasRecorded}
+        questionType="speaking"
+      />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
         <button

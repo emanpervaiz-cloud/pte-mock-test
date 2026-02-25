@@ -9,7 +9,7 @@ import HighlightCorrectSummary from '../questions/HighlightCorrectSummary';
 import SelectMissingWord from '../questions/SelectMissingWord';
 import HighlightIncorrectWords from '../questions/HighlightIncorrectWords';
 import WriteFromDictation from '../questions/WriteFromDictation';
-import { SUMMARIZE_SPOKEN_TEXT_DB } from '../../data/listeningData';
+import { LISTENING_PASSAGES } from '../../data/listeningData';
 import { useNavigate } from 'react-router-dom';
 
 const ListeningSection = () => {
@@ -17,76 +17,94 @@ const ListeningSection = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const navigate = useNavigate();
 
-  // Mock listening questions data - Integrating the new Summarize Spoken Text database
-  const listeningQuestions = [
-    ...SUMMARIZE_SPOKEN_TEXT_DB.map(lecture => ({
-      id: `lq_sst_${lecture.id}`,
-      type: 'summarize_spoken_text',
-      audioUrl: lecture.audioUrl || '/assets/listening/listening_fb_1.wav',
-      instruction: 'You will hear a short lecture. Write a summary for the lecture in 50-70 words. You will have 10 minutes to finish this task.',
-      minWords: lecture.minWords,
-      maxWords: lecture.maxWords,
-      transcript: lecture.transcript // Keeping transcript for potential accessibility/fallback
-    })).slice(0, 1), // Keeping only the first one as Question 1 for now, as per standard structure
-    {
-      id: 'lq2',
-      type: 'listening_multiple_choice',
-      audioUrl: '/assets/listening/listening_fb_1.wav',
-      question: 'According to the lecture, what is a significant consequence of microplastics for humans?',
-      options: [
-        { id: 'lmc1', text: 'They cause immediate starvation in coastal populations.' },
-        { id: 'lmc2', text: 'They absorb toxins that enter the human food chain through seafood.' },
-        { id: 'lmc3', text: 'They lead to a massive increase in the price of sustainable alternatives.' },
-        { id: 'lmc4', text: 'They prevent researchers from discovering deep ocean trenches.' }
-      ],
-      correct: 'lmc2',
-      multiple: false
-    },
-    {
-      id: 'lq3',
-      type: 'listening_fill_blanks',
-      audioUrl: '/assets/listening/placeholder_health.mp3',
-      passage: 'The research shows that ___1___ is crucial for maintaining a healthy lifestyle. Regular exercise combined with a balanced diet can significantly improve one\'s ___2___.',
-      options: ['exercise', 'diet', 'sleep', 'health', 'wellness', 'activity'],
-      answers: [
-        { blank: 1, correct: 'exercise' },
-        { blank: 2, correct: 'health' }
-      ]
-    },
-    {
-      id: 'lq4',
-      type: 'highlight_correct_summary',
-      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
-      options: [
-        { id: 'hcs1', text: 'The presentation discusses the importance of renewable energy sources.' },
-        { id: 'hcs2', text: 'The speaker focuses on traditional energy production methods.' },
-        { id: 'hcs3', text: 'The lecture explores the economic benefits of fossil fuels.' },
-        { id: 'hcs4', text: 'The talk examines the impact of climate change on agriculture.' }
-      ],
-      correct: 'hcs1'
-    },
-    {
-      id: 'lq5',
-      type: 'select_missing_word',
-      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
-      transcript: 'The research indicates that the new policy will have a significant impact on the ___1___ market. Experts predict that the changes will lead to increased investment and growth.',
-      options: ['stock', 'real estate', 'commodity', 'energy'],
-      correct: 'real estate'
-    },
-    {
-      id: 'lq6',
-      type: 'highlight_incorrect_words',
-      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
-      transcript: 'The annual report shows that the company has made substantial progress in the last quarter. The revenue has increased by fifteen percent, which exceeds the expectations of most investors.',
-      mistakes: [5, 12] // positions of incorrect words
-    },
-    {
-      id: 'lq7',
-      type: 'write_from_dictation',
-      audioUrl: '/assets/listening/placeholder_lecture_misc.mp3',
-      instruction: 'You will hear a sentence. Type the sentence exactly as you hear it.'
-    }
-  ];
+  // Map the structured JSON listening passages into individual test questions
+  const listeningQuestions = LISTENING_PASSAGES.flatMap((passage, pIdx) => {
+    return passage.questions.flatMap((q, qIdx) => {
+      const audioUrl = `/assets/listening/listening_audio_${(pIdx % 3) + 1}.wav`; // using placeholder audio files 1-3
+      const title = passage.title;
+
+      if (q.type === 'Summarize Spoken Text') {
+        return {
+          id: `${passage.passage_id}_${qIdx}`,
+          type: 'summarize_spoken_text',
+          audioUrl,
+          instruction: q.question,
+          minWords: q.word_count_limit ? q.word_count_limit[0] : 50,
+          maxWords: q.word_count_limit ? q.word_count_limit[1] : 70,
+          transcript: passage.transcript,
+          title
+        };
+      } else if (q.type.includes('Multiple Choice')) {
+        const multiple = q.type.includes('Multiple Answers');
+        const options = q.options ? q.options.map((opt, idx) => {
+          const match = opt.match(/^([A-Z])\.\s*(.*)/);
+          return match ? { id: match[1], text: match[2] } : { id: `opt_${idx}`, text: opt };
+        }) : [];
+        const correct = multiple ? q.correct_answers : q.correct_answer;
+
+        return {
+          id: `${passage.passage_id}_${qIdx}`,
+          type: 'listening_multiple_choice',
+          audioUrl,
+          instruction: q.note || 'Listen to the audio and answer the multiple-choice question.',
+          question: q.question,
+          options,
+          correct,
+          multiple,
+          title
+        };
+      } else if (q.type === 'Fill in the Blanks') {
+        let blankCount = 0;
+        const formattedPassage = q.blank_text.replace(/________/g, () => {
+          blankCount++;
+          return `___${blankCount}___`;
+        });
+        const answers = q.correct_answers.map((ans, idx) => ({
+          blank: idx + 1,
+          correct: ans
+        }));
+
+        return {
+          id: `${passage.passage_id}_${qIdx}`,
+          type: 'listening_fill_blanks',
+          audioUrl,
+          passage: formattedPassage,
+          options: [...q.correct_answers].sort(),
+          answers,
+          instruction: 'Type the missing words in the blanks based on the recording.',
+          title
+        };
+      } else if (q.type === 'True / False / Not Given') {
+        return q.statements.map((stmt, idx) => ({
+          id: `${passage.passage_id}_${qIdx}_${idx}`,
+          type: 'listening_multiple_choice',
+          audioUrl,
+          instruction: 'Based on the lecture, decide whether the following statement is True, False, or Not Given.',
+          question: stmt.statement,
+          options: [
+            { id: 'True', text: 'True' },
+            { id: 'False', text: 'False' },
+            { id: 'Not Given', text: 'Not Given' }
+          ],
+          correct: stmt.answer,
+          multiple: false,
+          title
+        }));
+      } else if (q.type === 'Short Answer') {
+        return {
+          id: `${passage.passage_id}_${qIdx}`,
+          type: 'summarize_spoken_text', // Mapping short answer to summarize_spoken_text for simplicity
+          audioUrl,
+          instruction: q.question,
+          minWords: 1,
+          maxWords: 15,
+          transcript: passage.transcript,
+          title
+        };
+      }
+      return [];
+    });
+  });
 
   const currentQuestionData = listeningQuestions[currentQuestion];
 
@@ -138,9 +156,15 @@ const ListeningSection = () => {
                 Question {currentQuestion + 1} of {listeningQuestions.length}
               </div>
 
-              <div className="exam-instructions">
-                <p>{currentQuestionData.instruction || 'Listen to the audio and answer the question.'}</p>
+              <div className="exam-instructions" style={{ marginBottom: 24 }}>
+                <p><strong>{currentQuestionData.instruction || 'Listen to the audio and answer the question.'}</strong></p>
               </div>
+
+              {currentQuestionData.title && currentQuestionData.type !== 'summarize_spoken_text' && (
+                <div style={{ padding: '16px', background: '#e0f2fe', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #0284c7', color: '#0f172a' }}>
+                  <h3 style={{ margin: 0, fontSize: 18 }}>Topic: {currentQuestionData.title}</h3>
+                </div>
+              )}
 
               {/* Render the appropriate question component based on type */}
               {currentQuestionData.type === 'summarize_spoken_text' && (

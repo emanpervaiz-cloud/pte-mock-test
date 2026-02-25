@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import audioService from '../../services/audioService';
+import ScoreDisplay from '../common/ScoreDisplay';
+import AIEvaluationService from '../../services/aiEvaluationService';
 
 const ReadAloud = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
@@ -9,10 +11,13 @@ const ReadAloud = ({ question, onNext }) => {
   const [micReady, setMicReady] = useState(false);
   const [micError, setMicError] = useState(false);
   const [hasRecorded, setHasRecorded] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
   const recordingInterval = useRef(null);
   const timeoutRef = useRef(null);
 
-  // Request mic permission on mount
   useEffect(() => {
     const initMic = async () => {
       const ok = await audioService.initRecording();
@@ -45,7 +50,6 @@ const ReadAloud = ({ question, onNext }) => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
 
-    // Auto-stop after 50 seconds
     timeoutRef.current = setTimeout(() => stopRecording(), 50000);
   };
 
@@ -56,6 +60,7 @@ const ReadAloud = ({ question, onNext }) => {
     const blob = await audioService.stopRecording();
     setIsRecording(false);
     setHasRecorded(true);
+    setAudioBlob(blob);
 
     saveAnswer(question.id, {
       questionId: question.id,
@@ -64,6 +69,35 @@ const ReadAloud = ({ question, onNext }) => {
       response: blob,
       meta: { duration: recordingTime, hasAudio: !!blob, blobSize: blob?.size || 0 }
     });
+  };
+
+  const handleGetScore = async () => {
+    setEvalLoading(true);
+    setEvalError(null);
+    try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || import.meta.env.VITE_OPENAI_API_KEY;
+      const apiUrl = import.meta.env.VITE_OPENROUTER_API_KEY
+        ? 'https://openrouter.ai/api/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+      const provider = import.meta.env.VITE_OPENROUTER_API_KEY ? 'openrouter' : 'openai';
+
+      if (!apiKey) {
+        setEvalError('No API key configured. Please set VITE_OPENROUTER_API_KEY in your .env file.');
+        setEvalLoading(false);
+        return;
+      }
+
+      const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
+      const result = await evaluator.evaluateSpeaking(
+        question.prompt || question.instruction || 'Read the following text aloud',
+        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s, Text to read: "${question.prompt || ''}"]`,
+        'read_aloud'
+      );
+      setEvaluation(result);
+    } catch (err) {
+      setEvalError(err.message || 'Failed to evaluate. Please try again.');
+    }
+    setEvalLoading(false);
   };
 
   const handleNext = async () => {
@@ -123,7 +157,7 @@ const ReadAloud = ({ question, onNext }) => {
               {isRecording ? 'Recording...' : (hasRecorded ? 'Recorded Successfully' : 'Ready to record')}
             </div>
             <div style={{ fontSize: 14, color: '#5a6270' }}>
-              {isRecording ? `Time elapsed: ${recordingTime}s / 50s` : (hasRecorded ? 'You can continue to the next question' : 'Click the microphone to start reading')}
+              {isRecording ? `Time elapsed: ${recordingTime}s / 50s` : (hasRecorded ? 'Get your score or continue to the next question' : 'Click the microphone to start reading')}
             </div>
           </div>
         </div>
@@ -139,6 +173,16 @@ const ReadAloud = ({ question, onNext }) => {
           </div>
         )}
       </div>
+
+      {/* Score Display */}
+      <ScoreDisplay
+        evaluation={evaluation}
+        loading={evalLoading}
+        error={evalError}
+        onGetScore={handleGetScore}
+        hasResponse={hasRecorded}
+        questionType="speaking"
+      />
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
         <button
