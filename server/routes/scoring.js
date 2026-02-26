@@ -19,9 +19,21 @@ router.post('/evaluate-speaking', async (req, res) => {
     }
 });
 
-// Placeholder for writing evaluation
+// Handle writing evaluation
 router.post('/evaluate-writing', async (req, res) => {
-    res.status(501).json({ message: 'Writing evaluation coming soon' });
+    const { prompt, response, questionType } = req.body;
+
+    if (!prompt || !response) {
+        return res.status(400).json({ error: 'Missing prompt or response' });
+    }
+
+    try {
+        const result = await scoringEngine.evaluateWriting(prompt, response, questionType || 'writing');
+        res.json(result);
+    } catch (error) {
+        console.error('Route error (writing):', error);
+        res.status(500).json({ error: 'Writing evaluation failed' });
+    }
 });
 
 module.exports = router;

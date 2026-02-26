@@ -102,6 +102,57 @@ class BackendScoringEngine {
         };
     }
 
+    /**
+   * Evaluate writing responses using LLM
+   */
+    async evaluateWriting(prompt, response, questionType) {
+        const systemPrompt = `You are a certified PTE Academic writing examiner. Evaluate the following ${questionType} response.
+    
+    TASK TOPIC: "${prompt}"
+    STUDENT RESPONSE: "${response}"
+    
+    Evaluate the response using the following dimensions (0-10 each):
+    1. Fluency & Coherence (Logical structure and cohesive devices)
+    2. Spelling & Punctuation (Accuracy of writing conventions)
+    3. Grammatical Range & Accuracy (Sentence variety and correctness)
+    4. Vocabulary & Lexical Resource (Range and precision of academic language)
+    5. Task Achievement & Relevance (Addressing the prompt and meeting word counts)
+    
+    Return result in JSON format:
+    {
+      "fluency_coherence": { "score": 0-10, "feedback": "..." },
+      "pronunciation_intonation": { "score": 0-10, "feedback": "Spelling and punctuation feedback..." },
+      "grammar_range_accuracy": { "score": 0-10, "feedback": "..." },
+      "vocabulary_lexical_resource": { "score": 0-10, "feedback": "..." },
+      "task_achievement": { "score": 0-10, "feedback": "..." },
+      "total_score": 0-50,
+      "scaled_score": 0-10.0,
+      "band_descriptor": "Expert/Strong/Competent/Developing Communicator",
+      "top_strength": "...",
+      "priority_improvement": "...",
+      "overall_pte_score": 10-90,
+      "cefr_level": "A1-C2"
+    }`;
+
+        try {
+            const openai = this._getOpenAI();
+            const aiResponse = await openai.chat.completions.create({
+                model: process.env.OPENROUTER_API_KEY ? "openai/gpt-4o" : "gpt-4o",
+                messages: [{ role: "system", content: systemPrompt }],
+                response_format: { type: "json_object" }
+            });
+
+            return JSON.parse(aiResponse.choices[0].message.content);
+        } catch (error) {
+            console.error("Writing Evaluation Error:", error);
+            return {
+                error: "Writing evaluation failed. Please try again.",
+                overall_pte_score: 10,
+                cefr_level: "A1"
+            };
+        }
+    }
+
     mapPTEtoCEFR(score) {
         if (score >= 85) return 'C2';
         if (score >= 76) return 'C1';

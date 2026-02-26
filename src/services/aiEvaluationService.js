@@ -127,103 +127,30 @@ class AIEvaluationService {
     }
   }
 
-  // Evaluate writing responses with professional examiner rubric
+  // Evaluate writing responses with hybrid scoring engine (Backend)
   async evaluateWriting(prompt, response, questionType) {
-    const messages = [
-      {
-        role: "system",
-        content: WRITING_EXAMINER_SYSTEM_PROMPT
-      },
-      {
-        role: "user",
-        content: `
-          Question Type: ${questionType}
-          Prompt/Task: ${prompt}
-          Student's Written Response: ${response}
-          
-          Evaluate this writing response using the 5-dimension rubric. Return your evaluation as valid JSON only (no markdown, no explanation outside JSON):
-          {
-            "fluency_coherence": { "score": 0-10, "feedback": "2-3 sentence analytical comment with specific reference to the response" },
-            "pronunciation_intonation": { "score": 0-10, "feedback": "2-3 sentence analytical comment about spelling, punctuation, formatting" },
-            "grammar_range_accuracy": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
-            "vocabulary_lexical_resource": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
-            "task_achievement": { "score": 0-10, "feedback": "2-3 sentence analytical comment" },
-            "total_score": [sum of all 5 scores out of 50],
-            "scaled_score": [total_score / 5, rounded to 1 decimal],
-            "band_descriptor": "one of: Expert Communicator | Strong Communicator | Competent Communicator | Developing Communicator | Needs Improvement",
-            "top_strength": "One specific thing the student did well",
-            "priority_improvement": "One precise, actionable tip to raise their score",
-            "overall_pte_score": [mapped to PTE 10-90 scale],
-            "cefr_level": "A1/A2/B1/B2/C1/C2"
-          }
-        `
-      }
-    ];
-
     try {
+      const backendUrl = 'http://localhost:5000/api/scoring/evaluate-writing';
       const requestBody = {
         action: "evaluate_writing",
         questionType: questionType,
         prompt: prompt,
-        response: response,
-        system_instruction: WRITING_EXAMINER_SYSTEM_PROMPT,
-        format_instruction: `
-          Evaluate this writing response using the 5-dimension rubric. Return your evaluation as valid JSON only:
-          {
-            "fluency_coherence": { "score": 0-10, "feedback": "..." },
-            "pronunciation_intonation": { "score": 0-10, "feedback": "spelling, punctuation..." },
-            "grammar_range_accuracy": { "score": 0-10, "feedback": "..." },
-            "vocabulary_lexical_resource": { "score": 0-10, "feedback": "..." },
-            "task_achievement": { "score": 0-10, "feedback": "..." },
-            "total_score": 0-50,
-            "scaled_score": 0-10.0,
-            "band_descriptor": "Expert Communicator...",
-            "top_strength": "...",
-            "priority_improvement": "...",
-            "overall_pte_score": 10-90,
-            "cefr_level": "A1-C2"
-          }`
+        response: response
       };
 
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-
-      const n8nKey = import.meta.env.VITE_N8N_API_KEY;
-      if (n8nKey) {
-        headers['Authorization'] = `Bearer ${n8nKey}`;
-      }
-
-      const apiResponse = await fetch(this.webhookUrl, {
+      const apiResponse = await fetch(backendUrl, {
         method: 'POST',
-        headers: headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       });
 
-      const textResponse = await apiResponse.text();
-      let evaluationResult;
-
-      try {
-        evaluationResult = JSON.parse(textResponse);
-        if (evaluationResult.output || evaluationResult.data || evaluationResult.text) {
-          const nestedJSONstr = evaluationResult.output || evaluationResult.data || evaluationResult.text;
-          const jsonMatch = nestedJSONstr.match(/\{[\s\S]*\}/);
-          if (jsonMatch) evaluationResult = JSON.parse(jsonMatch[0]);
-        }
-      } catch (parseError) {
-        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          evaluationResult = JSON.parse(jsonMatch[0]);
-        } else {
-          console.error("Failed to parse JSON from n8n webhook:", textResponse);
-          return this.getFallbackWritingEvaluation();
-        }
+      if (!apiResponse.ok) {
+        throw new Error(`Backend responded with status ${apiResponse.status}`);
       }
 
-      return evaluationResult;
+      return await apiResponse.json();
     } catch (error) {
-      console.error('Error evaluating writing:', error);
+      console.error('Error evaluating writing via backend:', error);
       return this.getFallbackWritingEvaluation();
     }
   }
