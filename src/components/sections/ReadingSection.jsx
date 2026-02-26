@@ -88,10 +88,14 @@ const ReadingSection = () => {
 
   const handleNextQuestion = () => {
     if (currentQuestion < readingQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setCurrentQuestionIndex(currentQuestion + 1);
+      const nextIndex = currentQuestion + 1;
+      setCurrentQuestion(nextIndex);
+      setCurrentQuestionIndex(nextIndex);
+      window.scrollTo(0, 0);
     } else {
       // Move to listening section
+      setCurrentSection('listening');
+      setCurrentQuestionIndex(0);
       navigate('/exam/listening');
     }
   };

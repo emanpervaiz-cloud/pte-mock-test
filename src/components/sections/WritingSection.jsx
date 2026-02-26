@@ -32,10 +32,14 @@ const WritingSection = () => {
 
   const handleNextQuestion = () => {
     if (currentQuestion < writingQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setCurrentQuestionIndex(currentQuestion + 1);
+      const nextIndex = currentQuestion + 1;
+      setCurrentQuestion(nextIndex);
+      setCurrentQuestionIndex(nextIndex);
+      window.scrollTo(0, 0);
     } else {
       // Move to reading section
+      setCurrentSection('reading');
+      setCurrentQuestionIndex(0);
       navigate('/exam/reading');
     }
   };
@@ -91,8 +95,9 @@ const WritingSection = () => {
               )}
             </div>
 
-            <div className="navigation-buttons">
+            <div className="navigation-buttons" style={{ position: 'relative', zIndex: 10 }}>
               <button
+                type="button"
                 className="btn btn-secondary"
                 onClick={handlePreviousQuestion}
                 disabled={currentQuestion === 0}
@@ -100,6 +105,7 @@ const WritingSection = () => {
                 Previous
               </button>
               <button
+                type="button"
                 className="btn btn-primary"
                 onClick={handleNextQuestion}
               >

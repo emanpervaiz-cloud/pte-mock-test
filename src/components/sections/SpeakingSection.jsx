@@ -62,11 +62,17 @@ const SpeakingSection = () => {
   const currentQuestionData = speakingQuestions[currentQuestion];
 
   const handleNextQuestion = () => {
+    console.log('handleNextQuestion called', currentQuestion, speakingQuestions.length);
     if (currentQuestion < speakingQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setCurrentQuestionIndex(currentQuestion + 1);
+      const nextIndex = currentQuestion + 1;
+      setCurrentQuestion(nextIndex);
+      setCurrentQuestionIndex(nextIndex);
+      window.scrollTo(0, 0);
     } else {
-      // Move to writing section
+      console.log('Navigating to writing section...');
+      // Set section in context before navigating for consistency
+      setCurrentSection('writing');
+      setCurrentQuestionIndex(0);
       navigate('/exam/writing');
     }
   };
@@ -182,9 +188,11 @@ const SpeakingSection = () => {
           <div style={{
             marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             padding: '20px 32px', background: '#fff', borderRadius: 20,
-            border: '1px solid #eef2f6', boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
+            border: '1px solid #eef2f6', boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+            position: 'relative', zIndex: 10
           }}>
             <button
+              type="button"
               onClick={handlePreviousQuestion}
               disabled={currentQuestion === 0}
               style={{
@@ -201,6 +209,7 @@ const SpeakingSection = () => {
               Ensure your answers are saved before proceeding
             </div>
             <button
+              type="button"
               onClick={handleNextQuestion}
               style={{
                 padding: '10px 32px', borderRadius: 12,

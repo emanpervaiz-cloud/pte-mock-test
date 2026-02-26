@@ -110,10 +110,13 @@ const ListeningSection = () => {
 
   const handleNextQuestion = () => {
     if (currentQuestion < listeningQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setCurrentQuestionIndex(currentQuestion + 1);
+      const nextIndex = currentQuestion + 1;
+      setCurrentQuestion(nextIndex);
+      setCurrentQuestionIndex(nextIndex);
+      window.scrollTo(0, 0);
     } else {
       // Move to results section
+      setCurrentQuestionIndex(0);
       navigate('/exam/results');
     }
   };
@@ -190,8 +193,9 @@ const ListeningSection = () => {
               )}
             </div>
 
-            <div className="navigation-buttons">
+            <div className="navigation-buttons" style={{ position: 'relative', zIndex: 10 }}>
               <button
+                type="button"
                 className="btn btn-secondary"
                 onClick={handlePreviousQuestion}
                 disabled={currentQuestion === 0}
@@ -199,6 +203,7 @@ const ListeningSection = () => {
                 Previous
               </button>
               <button
+                type="button"
                 className="btn btn-primary"
                 onClick={handleNextQuestion}
               >
