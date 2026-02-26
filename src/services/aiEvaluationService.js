@@ -39,10 +39,9 @@ EXAMINER STANDARDS:
 - Be consistent — same response quality must yield same score range every time.`;
 
 class AIEvaluationService {
-  constructor(apiKey, apiUrl = 'https://openrouter.ai/api/v1/chat/completions', provider = 'openrouter') {
-    this.apiKey = apiKey;
-    this.apiUrl = apiUrl;
-    this.provider = provider;
+  constructor() {
+    // Default to the provided n8n webhook URL if env variable is missing
+    this.webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'https://n8n.srv826531.hstgr.cloud/webhook-test/b225b16c-c602-450e-b858-f9bbe4ba5dd6';
   }
 
   // Evaluate speaking responses with professional examiner rubric
@@ -87,44 +86,68 @@ class AIEvaluationService {
 
     try {
       const requestBody = {
-        model: this.provider === 'openrouter' ? 'openai/gpt-4o' : 'gpt-4o',
-        messages: messages,
-        temperature: 0.3,
-        max_tokens: 1500
+        action: "evaluate_speaking",
+        questionType: questionType,
+        prompt: prompt,
+        transcript: transcript,
+        // Passing the system instructions so the n8n LLM node has context
+        system_instruction: EXAMINER_SYSTEM_PROMPT,
+        format_instruction: `
+          Evaluate this speaking response using the 5-dimension rubric. Return your evaluation as valid JSON only:
+          {
+            "fluency_coherence": { "score": 0-10, "feedback": "..." },
+            "pronunciation_intonation": { "score": 0-10, "feedback": "..." },
+            "grammar_range_accuracy": { "score": 0-10, "feedback": "..." },
+            "vocabulary_lexical_resource": { "score": 0-10, "feedback": "..." },
+            "task_achievement": { "score": 0-10, "feedback": "..." },
+            "total_score": 0-50,
+            "scaled_score": 0-10.0,
+            "band_descriptor": "Expert Communicator...",
+            "top_strength": "...",
+            "priority_improvement": "...",
+            "overall_pte_score": 10-90,
+            "cefr_level": "A1-C2"
+          }`
       };
 
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
+        'Accept': 'application/json'
       };
 
-      if (this.provider === 'openrouter') {
-        headers['HTTP-Referer'] = window.location.origin;
-        headers['X-Title'] = 'PTE Mock Test AI Evaluation';
+      // If an n8n API key is required and exists in .env, append it
+      const n8nKey = import.meta.env.VITE_N8N_API_KEY;
+      if (n8nKey) {
+        headers['Authorization'] = `Bearer ${n8nKey}`;
       }
 
-      const apiResponse = await fetch(this.apiUrl, {
+      const apiResponse = await fetch(this.webhookUrl, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestBody)
       });
 
-      const data = await apiResponse.json();
-
+      const textResponse = await apiResponse.text();
       let evaluationResult;
 
-      if (!data.choices || !data.choices[0]) {
-        console.error('Invalid API response:', data);
-        evaluationResult = this.getFallbackSpeakingEvaluation();
-      } else {
-        const content = data.choices[0].message.content;
-        // Extract JSON from response (handle markdown code blocks)
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-          console.error('No JSON found in response:', content);
-          evaluationResult = this.getFallbackSpeakingEvaluation();
-        } else {
+      try {
+        // Attempt to parse the direct n8n response as JSON
+        evaluationResult = JSON.parse(textResponse);
+
+        // n8n sometimes wraps the response in a 'data' object depending on the node configuration
+        if (evaluationResult.output || evaluationResult.data || evaluationResult.text) {
+          const nestedJSONstr = evaluationResult.output || evaluationResult.data || evaluationResult.text;
+          const jsonMatch = nestedJSONstr.match(/\{[\s\S]*\}/);
+          if (jsonMatch) evaluationResult = JSON.parse(jsonMatch[0]);
+        }
+      } catch (parseError) {
+        // Fallback robust json extraction if n8n returns markdown text wrapping the json
+        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
           evaluationResult = JSON.parse(jsonMatch[0]);
+        } else {
+          console.error("Failed to parse JSON from n8n webhook:", textResponse);
+          evaluationResult = this.getFallbackSpeakingEvaluation();
         }
       }
 
@@ -149,7 +172,7 @@ class AIEvaluationService {
 
       if (!openAiKey) {
         console.warn('VITE_OPENAI_API_KEY is not set. Cannot use Whisper API.');
-        return "[Audio response recorded, but transcription unavailable because OpenAI API key is missing. Please add VITE_OPENAI_API_KEY to your .env file.]";
+        return "[Audio response recorded]";
       }
 
       const formData = new FormData();
@@ -215,43 +238,66 @@ class AIEvaluationService {
 
     try {
       const requestBody = {
-        model: this.provider === 'openrouter' ? 'openai/gpt-4o' : 'gpt-4o',
-        messages: messages,
-        temperature: 0.3,
-        max_tokens: 1500
+        action: "evaluate_writing",
+        questionType: questionType,
+        prompt: prompt,
+        response: response,
+        system_instruction: WRITING_EXAMINER_SYSTEM_PROMPT,
+        format_instruction: `
+          Evaluate this writing response using the 5-dimension rubric. Return your evaluation as valid JSON only:
+          {
+            "fluency_coherence": { "score": 0-10, "feedback": "..." },
+            "pronunciation_intonation": { "score": 0-10, "feedback": "spelling, punctuation..." },
+            "grammar_range_accuracy": { "score": 0-10, "feedback": "..." },
+            "vocabulary_lexical_resource": { "score": 0-10, "feedback": "..." },
+            "task_achievement": { "score": 0-10, "feedback": "..." },
+            "total_score": 0-50,
+            "scaled_score": 0-10.0,
+            "band_descriptor": "Expert Communicator...",
+            "top_strength": "...",
+            "priority_improvement": "...",
+            "overall_pte_score": 10-90,
+            "cefr_level": "A1-C2"
+          }`
       };
 
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
+        'Accept': 'application/json'
       };
 
-      if (this.provider === 'openrouter') {
-        headers['HTTP-Referer'] = window.location.origin;
-        headers['X-Title'] = 'PTE Mock Test AI Evaluation';
+      const n8nKey = import.meta.env.VITE_N8N_API_KEY;
+      if (n8nKey) {
+        headers['Authorization'] = `Bearer ${n8nKey}`;
       }
 
-      const apiResponse = await fetch(this.apiUrl, {
+      const apiResponse = await fetch(this.webhookUrl, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestBody)
       });
 
-      const data = await apiResponse.json();
+      const textResponse = await apiResponse.text();
+      let evaluationResult;
 
-      if (!data.choices || !data.choices[0]) {
-        console.error('Invalid API response:', data);
-        return this.getFallbackWritingEvaluation();
+      try {
+        evaluationResult = JSON.parse(textResponse);
+        if (evaluationResult.output || evaluationResult.data || evaluationResult.text) {
+          const nestedJSONstr = evaluationResult.output || evaluationResult.data || evaluationResult.text;
+          const jsonMatch = nestedJSONstr.match(/\{[\s\S]*\}/);
+          if (jsonMatch) evaluationResult = JSON.parse(jsonMatch[0]);
+        }
+      } catch (parseError) {
+        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          evaluationResult = JSON.parse(jsonMatch[0]);
+        } else {
+          console.error("Failed to parse JSON from n8n webhook:", textResponse);
+          return this.getFallbackWritingEvaluation();
+        }
       }
 
-      const content = data.choices[0].message.content;
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('No JSON found in response:', content);
-        return this.getFallbackWritingEvaluation();
-      }
-
-      return JSON.parse(jsonMatch[0]);
+      return evaluationResult;
     } catch (error) {
       console.error('Error evaluating writing:', error);
       return this.getFallbackWritingEvaluation();

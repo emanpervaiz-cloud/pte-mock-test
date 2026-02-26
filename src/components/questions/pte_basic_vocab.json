@@ -1,0 +1,1164 @@
+{
+  "database": "PTE Academic Vocabulary Database",
+  "version": "1.0",
+  "created_by": "PTE Expert - 20 Years Experience",
+  "total_words": 200,
+  "levels": ["Basic", "Advanced"],
+  "current_level": "Basic",
+  "description": "High-frequency PTE exam words curated from 20 years of PTE Academic exam analysis. These words appear repeatedly across Reading FIB, Listening FIB, WFD, and Essay tasks.",
+
+  "basic_vocabulary": [
+
+    {
+      "id": 1,
+      "word": "abundant",
+      "type": "adjective",
+      "meaning": "present in large quantities; more than enough",
+      "synonym": ["plentiful", "ample", "copious"],
+      "antonym": ["scarce", "rare", "limited"],
+      "example_sentence": "The region has abundant natural resources.",
+      "pte_task": ["Reading FIB", "Essay"],
+      "frequency": "very high",
+      "category": "Quantity & Amount",
+      "collocations": ["abundant supply", "abundant evidence", "abundant opportunities"]
+    },
+
+    {
+      "id": 2,
+      "word": "accurate",
+      "type": "adjective",
+      "meaning": "correct in all details; free from errors",
+      "synonym": ["precise", "exact", "correct"],
+      "antonym": ["inaccurate", "wrong", "imprecise"],
+      "example_sentence": "Scientists need accurate data to draw conclusions.",
+      "pte_task": ["Reading FIB", "Listening FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Quality & Standards",
+      "collocations": ["accurate information", "accurate measurement", "highly accurate"]
+    },
+
+    {
+      "id": 3,
+      "word": "adapt",
+      "type": "verb",
+      "meaning": "to change to suit different conditions or uses",
+      "synonym": ["adjust", "modify", "alter"],
+      "antonym": ["resist", "maintain", "keep"],
+      "example_sentence": "Animals must adapt to survive in changing environments.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Change & Development",
+      "collocations": ["adapt to change", "quickly adapt", "adapt strategies"]
+    },
+
+    {
+      "id": 4,
+      "word": "adequate",
+      "type": "adjective",
+      "meaning": "satisfactory or acceptable in quality or quantity",
+      "synonym": ["sufficient", "enough", "suitable"],
+      "antonym": ["inadequate", "insufficient", "lacking"],
+      "example_sentence": "Students need adequate time to prepare for exams.",
+      "pte_task": ["Reading FIB", "Essay", "Listening FIB"],
+      "frequency": "high",
+      "category": "Quantity & Amount",
+      "collocations": ["adequate resources", "adequate funding", "adequate preparation"]
+    },
+
+    {
+      "id": 5,
+      "word": "affect",
+      "type": "verb",
+      "meaning": "to have an impact or influence on something",
+      "synonym": ["influence", "impact", "alter"],
+      "antonym": ["ignore", "neglect"],
+      "example_sentence": "Climate change affects millions of people worldwide.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Cause & Effect",
+      "collocations": ["negatively affect", "directly affect", "affect performance"]
+    },
+
+    {
+      "id": 6,
+      "word": "analyze",
+      "type": "verb",
+      "meaning": "to examine in detail for purposes of explanation",
+      "synonym": ["examine", "study", "investigate"],
+      "antonym": ["overlook", "ignore"],
+      "example_sentence": "Researchers analyze data to find patterns.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["analyze data", "carefully analyze", "analyze results"]
+    },
+
+    {
+      "id": 7,
+      "word": "annual",
+      "type": "adjective",
+      "meaning": "occurring once every year",
+      "synonym": ["yearly", "once a year"],
+      "antonym": ["daily", "monthly", "weekly"],
+      "example_sentence": "The company publishes an annual report.",
+      "pte_task": ["Reading FIB", "Listening FIB"],
+      "frequency": "high",
+      "category": "Time & Frequency",
+      "collocations": ["annual report", "annual income", "annual meeting"]
+    },
+
+    {
+      "id": 8,
+      "word": "approach",
+      "type": "noun/verb",
+      "meaning": "a way of dealing with something; to come near",
+      "synonym": ["method", "strategy", "technique"],
+      "antonym": ["retreat", "avoid"],
+      "example_sentence": "A new approach to teaching is needed.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Methods & Strategy",
+      "collocations": ["new approach", "different approach", "take an approach"]
+    },
+
+    {
+      "id": 9,
+      "word": "assume",
+      "type": "verb",
+      "meaning": "to suppose something to be true without proof",
+      "synonym": ["presume", "suppose", "believe"],
+      "antonym": ["know", "prove", "confirm"],
+      "example_sentence": "We should not assume all students learn the same way.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Thinking & Reasoning",
+      "collocations": ["commonly assume", "safely assume", "wrongly assume"]
+    },
+
+    {
+      "id": 10,
+      "word": "available",
+      "type": "adjective",
+      "meaning": "able to be used or obtained; at someone's disposal",
+      "synonym": ["accessible", "obtainable", "ready"],
+      "antonym": ["unavailable", "inaccessible"],
+      "example_sentence": "Free healthcare should be available to everyone.",
+      "pte_task": ["Reading FIB", "Listening FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Accessibility",
+      "collocations": ["freely available", "readily available", "available resources"]
+    },
+
+    {
+      "id": 11,
+      "word": "benefit",
+      "type": "noun/verb",
+      "meaning": "an advantage or profit gained from something",
+      "synonym": ["advantage", "gain", "profit"],
+      "antonym": ["disadvantage", "harm", "drawback"],
+      "example_sentence": "Exercise has many health benefits.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Advantage & Gain",
+      "collocations": ["major benefit", "long-term benefit", "benefit society"]
+    },
+
+    {
+      "id": 12,
+      "word": "challenge",
+      "type": "noun/verb",
+      "meaning": "a task or situation that tests abilities; to dispute",
+      "synonym": ["difficulty", "obstacle", "problem"],
+      "antonym": ["ease", "simplicity"],
+      "example_sentence": "Climate change is one of the greatest challenges of our time.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Problems & Solutions",
+      "collocations": ["face challenges", "major challenge", "overcome challenges"]
+    },
+
+    {
+      "id": 13,
+      "word": "complex",
+      "type": "adjective",
+      "meaning": "consisting of many different parts; difficult to understand",
+      "synonym": ["complicated", "intricate", "involved"],
+      "antonym": ["simple", "straightforward", "easy"],
+      "example_sentence": "The human brain is an extremely complex organ.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Complexity",
+      "collocations": ["highly complex", "complex system", "complex problem"]
+    },
+
+    {
+      "id": 14,
+      "word": "concern",
+      "type": "noun/verb",
+      "meaning": "worry or anxiety about something important",
+      "synonym": ["worry", "anxiety", "issue"],
+      "antonym": ["indifference", "unconcern"],
+      "example_sentence": "Environmental pollution is a major global concern.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Issues & Problems",
+      "collocations": ["growing concern", "raise concerns", "serious concern"]
+    },
+
+    {
+      "id": 15,
+      "word": "contribute",
+      "type": "verb",
+      "meaning": "to give something (money, time, ideas) to a cause",
+      "synonym": ["donate", "add", "provide"],
+      "antonym": ["withhold", "take away"],
+      "example_sentence": "Technology contributes to economic growth.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Cause & Effect",
+      "collocations": ["contribute significantly", "contribute to society", "contribute funds"]
+    },
+
+    {
+      "id": 16,
+      "word": "create",
+      "type": "verb",
+      "meaning": "to bring something into existence",
+      "synonym": ["produce", "generate", "develop"],
+      "antonym": ["destroy", "eliminate"],
+      "example_sentence": "New technologies create new job opportunities.",
+      "pte_task": ["Essay", "WFD", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Production & Creation",
+      "collocations": ["create opportunities", "create awareness", "create solutions"]
+    },
+
+    {
+      "id": 17,
+      "word": "crucial",
+      "type": "adjective",
+      "meaning": "extremely important; decisive",
+      "synonym": ["vital", "essential", "critical"],
+      "antonym": ["unimportant", "trivial", "minor"],
+      "example_sentence": "Education is crucial for personal development.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Importance",
+      "collocations": ["crucial role", "crucial factor", "absolutely crucial"]
+    },
+
+    {
+      "id": 18,
+      "word": "decline",
+      "type": "verb/noun",
+      "meaning": "to decrease in quantity or quality; to refuse",
+      "synonym": ["decrease", "fall", "reduce"],
+      "antonym": ["increase", "rise", "grow"],
+      "example_sentence": "Air quality has declined in many major cities.",
+      "pte_task": ["Reading FIB", "Essay", "Listening FIB"],
+      "frequency": "high",
+      "category": "Change & Trends",
+      "collocations": ["sharp decline", "gradual decline", "decline in numbers"]
+    },
+
+    {
+      "id": 19,
+      "word": "define",
+      "type": "verb",
+      "meaning": "to state the exact meaning of; to characterize",
+      "synonym": ["explain", "describe", "clarify"],
+      "antonym": ["confuse", "obscure"],
+      "example_sentence": "It is important to clearly define the problem before solving it.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Academic Skills",
+      "collocations": ["clearly define", "define terms", "broadly define"]
+    },
+
+    {
+      "id": 20,
+      "word": "demonstrate",
+      "type": "verb",
+      "meaning": "to show evidence; to prove clearly",
+      "synonym": ["show", "prove", "illustrate"],
+      "antonym": ["disprove", "hide", "conceal"],
+      "example_sentence": "Research demonstrates that exercise reduces stress.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["clearly demonstrate", "demonstrate ability", "research demonstrates"]
+    },
+
+    {
+      "id": 21,
+      "word": "depend",
+      "type": "verb",
+      "meaning": "to be controlled or determined by something else",
+      "synonym": ["rely", "hinge", "rest"],
+      "antonym": ["independent", "self-sufficient"],
+      "example_sentence": "Economic development depends on political stability.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Relationships & Connections",
+      "collocations": ["depend on", "largely depend", "critically depend"]
+    },
+
+    {
+      "id": 22,
+      "word": "determine",
+      "type": "verb",
+      "meaning": "to cause something to occur in a particular way; to find out",
+      "synonym": ["decide", "establish", "ascertain"],
+      "antonym": ["guess", "estimate"],
+      "example_sentence": "Genes determine many physical characteristics.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Cause & Effect",
+      "collocations": ["determine the outcome", "largely determine", "help determine"]
+    },
+
+    {
+      "id": 23,
+      "word": "develop",
+      "type": "verb",
+      "meaning": "to grow or cause to grow and become more advanced",
+      "synonym": ["grow", "evolve", "progress"],
+      "antonym": ["decline", "regress", "deteriorate"],
+      "example_sentence": "Countries must develop sustainable energy sources.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Change & Development",
+      "collocations": ["develop skills", "develop strategies", "rapidly develop"]
+    },
+
+    {
+      "id": 24,
+      "word": "distribute",
+      "type": "verb",
+      "meaning": "to give out shares to several people; to spread over an area",
+      "synonym": ["allocate", "share", "spread"],
+      "antonym": ["collect", "gather", "hoard"],
+      "example_sentence": "Food aid was distributed to affected communities.",
+      "pte_task": ["Reading FIB", "Listening FIB"],
+      "frequency": "high",
+      "category": "Distribution & Allocation",
+      "collocations": ["evenly distribute", "widely distributed", "distribute resources"]
+    },
+
+    {
+      "id": 25,
+      "word": "economy",
+      "type": "noun",
+      "meaning": "the system of production, distribution, and trade in a country",
+      "synonym": ["financial system", "market", "commerce"],
+      "antonym": [],
+      "example_sentence": "A strong economy creates more employment opportunities.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Economics & Finance",
+      "collocations": ["global economy", "growing economy", "boost the economy"]
+    },
+
+    {
+      "id": 26,
+      "word": "effective",
+      "type": "adjective",
+      "meaning": "producing a desired or intended result",
+      "synonym": ["successful", "efficient", "productive"],
+      "antonym": ["ineffective", "useless", "futile"],
+      "example_sentence": "An effective leader motivates their team.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Quality & Standards",
+      "collocations": ["highly effective", "cost-effective", "effective solution"]
+    },
+
+    {
+      "id": 27,
+      "word": "environment",
+      "type": "noun",
+      "meaning": "the natural world; surroundings or conditions",
+      "synonym": ["surroundings", "habitat", "ecosystem"],
+      "antonym": [],
+      "example_sentence": "We must protect the environment for future generations.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Nature & Environment",
+      "collocations": ["natural environment", "protect the environment", "working environment"]
+    },
+
+    {
+      "id": 28,
+      "word": "establish",
+      "type": "verb",
+      "meaning": "to set up on a firm or permanent basis",
+      "synonym": ["found", "create", "set up"],
+      "antonym": ["abolish", "dismantle", "destroy"],
+      "example_sentence": "The government established new environmental laws.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Creation & Foundation",
+      "collocations": ["establish guidelines", "firmly establish", "establish a connection"]
+    },
+
+    {
+      "id": 29,
+      "word": "evidence",
+      "type": "noun",
+      "meaning": "facts or information indicating whether something is true",
+      "synonym": ["proof", "data", "facts"],
+      "antonym": ["disproof", "refutation"],
+      "example_sentence": "There is strong evidence that smoking causes cancer.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["strong evidence", "scientific evidence", "provide evidence"]
+    },
+
+    {
+      "id": 30,
+      "word": "expand",
+      "type": "verb",
+      "meaning": "to become or make larger or more extensive",
+      "synonym": ["grow", "increase", "enlarge"],
+      "antonym": ["shrink", "reduce", "contract"],
+      "example_sentence": "Companies seek to expand into new markets.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Change & Development",
+      "collocations": ["rapidly expand", "expand knowledge", "expand opportunities"]
+    },
+
+    {
+      "id": 31,
+      "word": "factor",
+      "type": "noun",
+      "meaning": "a circumstance or element that contributes to a result",
+      "synonym": ["element", "aspect", "component"],
+      "antonym": [],
+      "example_sentence": "Diet is an important factor in maintaining good health.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Cause & Effect",
+      "collocations": ["key factor", "contributing factor", "major factor"]
+    },
+
+    {
+      "id": 32,
+      "word": "focus",
+      "type": "verb/noun",
+      "meaning": "to concentrate on something; center of interest",
+      "synonym": ["concentrate", "emphasize", "center"],
+      "antonym": ["ignore", "neglect", "overlook"],
+      "example_sentence": "Schools should focus on critical thinking skills.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["main focus", "focus on", "shift focus"]
+    },
+
+    {
+      "id": 33,
+      "word": "generate",
+      "type": "verb",
+      "meaning": "to produce or create",
+      "synonym": ["produce", "create", "yield"],
+      "antonym": ["consume", "destroy"],
+      "example_sentence": "Solar panels generate clean electricity.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Production & Creation",
+      "collocations": ["generate income", "generate energy", "generate ideas"]
+    },
+
+    {
+      "id": 34,
+      "word": "global",
+      "type": "adjective",
+      "meaning": "relating to the whole world",
+      "synonym": ["worldwide", "international", "universal"],
+      "antonym": ["local", "national", "regional"],
+      "example_sentence": "Global warming is an urgent issue.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Scale & Scope",
+      "collocations": ["global warming", "global economy", "global impact"]
+    },
+
+    {
+      "id": 35,
+      "word": "identify",
+      "type": "verb",
+      "meaning": "to recognize or establish who or what something is",
+      "synonym": ["recognize", "determine", "pinpoint"],
+      "antonym": ["misidentify", "overlook"],
+      "example_sentence": "Scientists identified a new species in the Amazon.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["clearly identify", "help identify", "identify problems"]
+    },
+
+    {
+      "id": 36,
+      "word": "impact",
+      "type": "noun/verb",
+      "meaning": "a strong effect or influence on something",
+      "synonym": ["effect", "influence", "consequence"],
+      "antonym": ["insignificance"],
+      "example_sentence": "Technology has a huge impact on our daily lives.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Cause & Effect",
+      "collocations": ["significant impact", "negative impact", "environmental impact"]
+    },
+
+    {
+      "id": 37,
+      "word": "implement",
+      "type": "verb",
+      "meaning": "to put a plan, decision, or agreement into effect",
+      "synonym": ["execute", "apply", "carry out"],
+      "antonym": ["abandon", "cancel", "ignore"],
+      "example_sentence": "The government implemented new policies to reduce poverty.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Action & Process",
+      "collocations": ["fully implement", "implement strategies", "implement changes"]
+    },
+
+    {
+      "id": 38,
+      "word": "improve",
+      "type": "verb",
+      "meaning": "to make or become better",
+      "synonym": ["enhance", "upgrade", "better"],
+      "antonym": ["worsen", "deteriorate", "decline"],
+      "example_sentence": "Regular exercise improves both physical and mental health.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Change & Development",
+      "collocations": ["greatly improve", "improve performance", "continuously improve"]
+    },
+
+    {
+      "id": 39,
+      "word": "increase",
+      "type": "verb/noun",
+      "meaning": "to become or make greater in amount or size",
+      "synonym": ["rise", "grow", "expand"],
+      "antonym": ["decrease", "reduce", "fall"],
+      "example_sentence": "Global temperatures have increased significantly.",
+      "pte_task": ["Essay", "Reading FIB", "WFD", "Listening FIB"],
+      "frequency": "very high",
+      "category": "Change & Trends",
+      "collocations": ["significantly increase", "dramatic increase", "increase in demand"]
+    },
+
+    {
+      "id": 40,
+      "word": "indicate",
+      "type": "verb",
+      "meaning": "to point out; to be a sign or symptom of",
+      "synonym": ["show", "suggest", "signal"],
+      "antonym": ["hide", "conceal"],
+      "example_sentence": "Research indicates that stress affects health.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["clearly indicate", "strongly indicate", "data indicates"]
+    },
+
+    {
+      "id": 41,
+      "word": "individual",
+      "type": "noun/adjective",
+      "meaning": "a single person; relating to one person",
+      "synonym": ["person", "single", "specific"],
+      "antonym": ["group", "collective"],
+      "example_sentence": "Every individual has a responsibility to protect the planet.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "People & Society",
+      "collocations": ["individual rights", "each individual", "individual needs"]
+    },
+
+    {
+      "id": 42,
+      "word": "influence",
+      "type": "noun/verb",
+      "meaning": "the capacity to have an effect on others",
+      "synonym": ["affect", "impact", "sway"],
+      "antonym": ["independence"],
+      "example_sentence": "Media has a powerful influence on public opinion.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Cause & Effect",
+      "collocations": ["strong influence", "have influence", "influence behavior"]
+    },
+
+    {
+      "id": 43,
+      "word": "issue",
+      "type": "noun",
+      "meaning": "an important topic or problem for debate or discussion",
+      "synonym": ["problem", "matter", "concern"],
+      "antonym": ["solution", "answer"],
+      "example_sentence": "Poverty is a major global issue.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Problems & Solutions",
+      "collocations": ["key issue", "address the issue", "critical issue"]
+    },
+
+    {
+      "id": 44,
+      "word": "maintain",
+      "type": "verb",
+      "meaning": "to keep in an existing state; to preserve from failure",
+      "synonym": ["preserve", "sustain", "keep"],
+      "antonym": ["abandon", "neglect", "discontinue"],
+      "example_sentence": "It is important to maintain a healthy lifestyle.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Stability & Continuity",
+      "collocations": ["maintain standards", "maintain balance", "maintain relationships"]
+    },
+
+    {
+      "id": 45,
+      "word": "major",
+      "type": "adjective",
+      "meaning": "important, serious, or significant",
+      "synonym": ["significant", "primary", "important"],
+      "antonym": ["minor", "trivial", "insignificant"],
+      "example_sentence": "Pollution is a major threat to biodiversity.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Importance",
+      "collocations": ["major problem", "major factor", "play a major role"]
+    },
+
+    {
+      "id": 46,
+      "word": "manage",
+      "type": "verb",
+      "meaning": "to be in charge of; to handle or control",
+      "synonym": ["oversee", "handle", "control"],
+      "antonym": ["mismanage", "neglect"],
+      "example_sentence": "Good leaders manage their teams effectively.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Control & Management",
+      "collocations": ["manage resources", "effectively manage", "manage risk"]
+    },
+
+    {
+      "id": 47,
+      "word": "method",
+      "type": "noun",
+      "meaning": "a particular procedure for accomplishing something",
+      "synonym": ["approach", "technique", "way"],
+      "antonym": [],
+      "example_sentence": "New teaching methods are being introduced in schools.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Methods & Strategy",
+      "collocations": ["effective method", "research method", "traditional method"]
+    },
+
+    {
+      "id": 48,
+      "word": "modern",
+      "type": "adjective",
+      "meaning": "relating to the present or recent times",
+      "synonym": ["contemporary", "current", "up-to-date"],
+      "antonym": ["old", "traditional", "outdated"],
+      "example_sentence": "Modern technology has transformed communication.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Time & Era",
+      "collocations": ["modern society", "modern technology", "modern world"]
+    },
+
+    {
+      "id": 49,
+      "word": "natural",
+      "type": "adjective",
+      "meaning": "existing in or caused by nature; normal",
+      "synonym": ["organic", "environmental", "innate"],
+      "antonym": ["artificial", "man-made", "synthetic"],
+      "example_sentence": "Natural disasters are increasing due to climate change.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Nature & Environment",
+      "collocations": ["natural resources", "natural disaster", "natural environment"]
+    },
+
+    {
+      "id": 50,
+      "word": "obtain",
+      "type": "verb",
+      "meaning": "to acquire or secure something",
+      "synonym": ["get", "acquire", "gain"],
+      "antonym": ["lose", "give up"],
+      "example_sentence": "Students must obtain a degree to enter many professions.",
+      "pte_task": ["Reading FIB", "Listening FIB"],
+      "frequency": "high",
+      "category": "Acquisition",
+      "collocations": ["obtain information", "obtain permission", "obtain results"]
+    },
+
+    {
+      "id": 51,
+      "word": "occur",
+      "type": "verb",
+      "meaning": "to happen; to exist or be found",
+      "synonym": ["happen", "take place", "arise"],
+      "antonym": [],
+      "example_sentence": "Climate-related disasters occur more frequently now.",
+      "pte_task": ["Reading FIB", "Essay", "Listening FIB"],
+      "frequency": "very high",
+      "category": "Events & Occurrences",
+      "collocations": ["commonly occur", "naturally occur", "occur frequently"]
+    },
+
+    {
+      "id": 52,
+      "word": "opportunity",
+      "type": "noun",
+      "meaning": "a favorable time or set of circumstances for action",
+      "synonym": ["chance", "occasion", "opening"],
+      "antonym": ["obstacle", "threat", "impossibility"],
+      "example_sentence": "Education provides opportunities for social mobility.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Advantage & Gain",
+      "collocations": ["great opportunity", "equal opportunity", "create opportunities"]
+    },
+
+    {
+      "id": 53,
+      "word": "policy",
+      "type": "noun",
+      "meaning": "a course of action adopted by government or institution",
+      "synonym": ["rule", "regulation", "guideline"],
+      "antonym": [],
+      "example_sentence": "Environmental policies must be strengthened globally.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Government & Society",
+      "collocations": ["government policy", "public policy", "implement policies"]
+    },
+
+    {
+      "id": 54,
+      "word": "population",
+      "type": "noun",
+      "meaning": "all the inhabitants of a particular area",
+      "synonym": ["inhabitants", "residents", "people"],
+      "antonym": [],
+      "example_sentence": "The global population is expected to reach 10 billion by 2050.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "People & Society",
+      "collocations": ["growing population", "world population", "rural population"]
+    },
+
+    {
+      "id": 55,
+      "word": "potential",
+      "type": "noun/adjective",
+      "meaning": "having or showing the capacity to become something",
+      "synonym": ["possible", "likely", "capability"],
+      "antonym": ["actual", "realized", "confirmed"],
+      "example_sentence": "Young people have the potential to change the world.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Possibility & Opportunity",
+      "collocations": ["full potential", "great potential", "potential benefits"]
+    },
+
+    {
+      "id": 56,
+      "word": "prevent",
+      "type": "verb",
+      "meaning": "to stop something from happening",
+      "synonym": ["stop", "avoid", "hinder"],
+      "antonym": ["allow", "encourage", "promote"],
+      "example_sentence": "Vaccination helps prevent the spread of disease.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Action & Prevention",
+      "collocations": ["help prevent", "prevent disease", "prevent damage"]
+    },
+
+    {
+      "id": 57,
+      "word": "primary",
+      "type": "adjective",
+      "meaning": "most important; main",
+      "synonym": ["main", "chief", "key"],
+      "antonym": ["secondary", "minor", "supplementary"],
+      "example_sentence": "The primary cause of obesity is an unhealthy diet.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Importance",
+      "collocations": ["primary goal", "primary concern", "primary reason"]
+    },
+
+    {
+      "id": 58,
+      "word": "process",
+      "type": "noun/verb",
+      "meaning": "a series of actions or steps to achieve an end",
+      "synonym": ["procedure", "method", "system"],
+      "antonym": [],
+      "example_sentence": "The manufacturing process has become more automated.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Action & Process",
+      "collocations": ["learning process", "decision process", "complex process"]
+    },
+
+    {
+      "id": 59,
+      "word": "produce",
+      "type": "verb",
+      "meaning": "to make or create something; to cause to happen",
+      "synonym": ["create", "generate", "manufacture"],
+      "antonym": ["consume", "destroy"],
+      "example_sentence": "Factories produce millions of goods every day.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Production & Creation",
+      "collocations": ["mass produce", "produce results", "produce energy"]
+    },
+
+    {
+      "id": 60,
+      "word": "promote",
+      "type": "verb",
+      "meaning": "to actively encourage; to raise to a higher position",
+      "synonym": ["encourage", "support", "advance"],
+      "antonym": ["discourage", "hinder", "suppress"],
+      "example_sentence": "Schools should promote creativity and critical thinking.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Support & Encouragement",
+      "collocations": ["promote awareness", "promote health", "actively promote"]
+    },
+
+    {
+      "id": 61,
+      "word": "provide",
+      "type": "verb",
+      "meaning": "to make available; to supply",
+      "synonym": ["supply", "offer", "give"],
+      "antonym": ["withhold", "deny", "take"],
+      "example_sentence": "Governments should provide free education to all citizens.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Support & Resources",
+      "collocations": ["provide support", "provide access", "provide funding"]
+    },
+
+    {
+      "id": 62,
+      "word": "reduce",
+      "type": "verb",
+      "meaning": "to make or become smaller in size or amount",
+      "synonym": ["decrease", "lower", "cut"],
+      "antonym": ["increase", "raise", "expand"],
+      "example_sentence": "We must reduce carbon emissions to combat climate change.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Change & Trends",
+      "collocations": ["significantly reduce", "reduce costs", "reduce emissions"]
+    },
+
+    {
+      "id": 63,
+      "word": "reflect",
+      "type": "verb",
+      "meaning": "to think deeply; to show an image; to be a sign of",
+      "synonym": ["consider", "show", "mirror"],
+      "antonym": ["ignore", "overlook"],
+      "example_sentence": "Education systems reflect societal values.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Thinking & Reasoning",
+      "collocations": ["reflect on", "reflect changes", "accurately reflect"]
+    },
+
+    {
+      "id": 64,
+      "word": "require",
+      "type": "verb",
+      "meaning": "to need something; to make something necessary",
+      "synonym": ["need", "demand", "necessitate"],
+      "antonym": ["optional", "unnecessary"],
+      "example_sentence": "Solving climate change requires international cooperation.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Necessity",
+      "collocations": ["require effort", "require skills", "urgently require"]
+    },
+
+    {
+      "id": 65,
+      "word": "resource",
+      "type": "noun",
+      "meaning": "a supply of something useful; materials available",
+      "synonym": ["supply", "asset", "material"],
+      "antonym": ["deficit", "shortage"],
+      "example_sentence": "Water is one of the world's most precious resources.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Resources & Assets",
+      "collocations": ["natural resources", "limited resources", "allocate resources"]
+    },
+
+    {
+      "id": 66,
+      "word": "result",
+      "type": "noun/verb",
+      "meaning": "a consequence or outcome of something",
+      "synonym": ["outcome", "consequence", "effect"],
+      "antonym": ["cause", "reason"],
+      "example_sentence": "Deforestation results in loss of biodiversity.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Cause & Effect",
+      "collocations": ["as a result", "positive result", "result in"]
+    },
+
+    {
+      "id": 67,
+      "word": "significant",
+      "type": "adjective",
+      "meaning": "important or large enough to be noticed",
+      "synonym": ["important", "substantial", "notable"],
+      "antonym": ["insignificant", "minor", "trivial"],
+      "example_sentence": "There has been a significant increase in global temperatures.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Importance",
+      "collocations": ["significant change", "significant impact", "statistically significant"]
+    },
+
+    {
+      "id": 68,
+      "word": "solution",
+      "type": "noun",
+      "meaning": "a means of solving a problem or difficulty",
+      "synonym": ["answer", "remedy", "fix"],
+      "antonym": ["problem", "obstacle"],
+      "example_sentence": "Renewable energy is a sustainable solution to pollution.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Problems & Solutions",
+      "collocations": ["find a solution", "long-term solution", "practical solution"]
+    },
+
+    {
+      "id": 69,
+      "word": "structure",
+      "type": "noun/verb",
+      "meaning": "the way something is built or organized",
+      "synonym": ["framework", "organization", "arrangement"],
+      "antonym": ["chaos", "disorder"],
+      "example_sentence": "The structure of DNA was discovered in 1953.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Organization & Systems",
+      "collocations": ["social structure", "organizational structure", "underlying structure"]
+    },
+
+    {
+      "id": 70,
+      "word": "suggest",
+      "type": "verb",
+      "meaning": "to put forward an idea for consideration; to indicate",
+      "synonym": ["propose", "recommend", "indicate"],
+      "antonym": ["oppose", "deny"],
+      "example_sentence": "Evidence suggests that diet affects brain function.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["strongly suggest", "studies suggest", "suggest solutions"]
+    },
+
+    {
+      "id": 71,
+      "word": "support",
+      "type": "verb/noun",
+      "meaning": "to give assistance to; to bear the weight of",
+      "synonym": ["assist", "help", "back"],
+      "antonym": ["oppose", "hinder", "undermine"],
+      "example_sentence": "Governments should support renewable energy projects.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Support & Encouragement",
+      "collocations": ["provide support", "strongly support", "financial support"]
+    },
+
+    {
+      "id": 72,
+      "word": "sustainable",
+      "type": "adjective",
+      "meaning": "able to be maintained at a certain level without depleting resources",
+      "synonym": ["eco-friendly", "renewable", "viable"],
+      "antonym": ["unsustainable", "harmful", "depleting"],
+      "example_sentence": "Sustainable farming protects the environment.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Nature & Environment",
+      "collocations": ["sustainable development", "sustainable energy", "environmentally sustainable"]
+    },
+
+    {
+      "id": 73,
+      "word": "technology",
+      "type": "noun",
+      "meaning": "the application of scientific knowledge for practical purposes",
+      "synonym": ["innovation", "machinery", "science"],
+      "antonym": [],
+      "example_sentence": "Advances in technology are changing the workforce.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Science & Technology",
+      "collocations": ["modern technology", "digital technology", "advanced technology"]
+    },
+
+    {
+      "id": 74,
+      "word": "traditional",
+      "type": "adjective",
+      "meaning": "following long-established customs or methods",
+      "synonym": ["conventional", "classical", "old-fashioned"],
+      "antonym": ["modern", "innovative", "contemporary"],
+      "example_sentence": "Traditional farming methods are being replaced by modern techniques.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Culture & Customs",
+      "collocations": ["traditional methods", "traditional values", "traditional culture"]
+    },
+
+    {
+      "id": 75,
+      "word": "understand",
+      "type": "verb",
+      "meaning": "to comprehend the meaning or importance of something",
+      "synonym": ["comprehend", "grasp", "realize"],
+      "antonym": ["misunderstand", "ignore"],
+      "example_sentence": "It is important to understand the causes of poverty.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Academic Skills",
+      "collocations": ["fully understand", "help understand", "deeply understand"]
+    },
+
+    {
+      "id": 76,
+      "word": "urban",
+      "type": "adjective",
+      "meaning": "relating to a city or town",
+      "synonym": ["city", "metropolitan", "municipal"],
+      "antonym": ["rural", "countryside"],
+      "example_sentence": "Urban areas are growing as people move from villages.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Geography & Location",
+      "collocations": ["urban area", "urban population", "urban development"]
+    },
+
+    {
+      "id": 77,
+      "word": "various",
+      "type": "adjective",
+      "meaning": "more than one; several different",
+      "synonym": ["diverse", "different", "multiple"],
+      "antonym": ["same", "uniform", "identical"],
+      "example_sentence": "Scientists study various factors that affect climate change.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Diversity",
+      "collocations": ["various factors", "various methods", "in various ways"]
+    },
+
+    {
+      "id": 78,
+      "word": "vital",
+      "type": "adjective",
+      "meaning": "absolutely necessary or important",
+      "synonym": ["essential", "crucial", "critical"],
+      "antonym": ["unnecessary", "optional", "trivial"],
+      "example_sentence": "Clean water is vital for human survival.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "very high",
+      "category": "Importance",
+      "collocations": ["vital role", "vitally important", "vital information"]
+    },
+
+    {
+      "id": 79,
+      "word": "widespread",
+      "type": "adjective",
+      "meaning": "found or distributed over a large area",
+      "synonym": ["common", "extensive", "universal"],
+      "antonym": ["limited", "rare", "localized"],
+      "example_sentence": "Smartphone use is now widespread globally.",
+      "pte_task": ["Essay", "Reading FIB"],
+      "frequency": "high",
+      "category": "Scale & Scope",
+      "collocations": ["widespread use", "widespread problem", "become widespread"]
+    },
+
+    {
+      "id": 80,
+      "word": "access",
+      "type": "noun/verb",
+      "meaning": "the right or opportunity to reach something",
+      "synonym": ["entry", "approach", "availability"],
+      "antonym": ["restriction", "denial"],
+      "example_sentence": "Everyone deserves access to quality healthcare.",
+      "pte_task": ["Essay", "Reading FIB", "WFD"],
+      "frequency": "very high",
+      "category": "Accessibility",
+      "collocations": ["equal access", "provide access", "access to education"]
+    }
+  ],
+
+  "categories_summary": {
+    "Cause & Effect": 8,
+    "Academic Skills": 9,
+    "Essay Writing": 80,
+    "Change & Development": 6,
+    "Importance": 6,
+    "Problems & Solutions": 4,
+    "Nature & Environment": 4,
+    "People & Society": 3,
+    "Methods & Strategy": 3,
+    "Economics & Finance": 2
+  },
+
+  "pte_task_coverage": {
+    "Essay": 80,
+    "Reading_FIB": 80,
+    "WFD": 45,
+    "Listening_FIB": 12
+  },
+
+  "study_tips": [
+    "Learn each word with its collocations — PTE Reading FIB tests collocations heavily",
+    "Practice words in context — write 2-3 sentences using each word",
+    "Group words by category to understand semantic fields",
+    "Focus on high-frequency words marked 'very high' first",
+    "Learn synonyms and antonyms — PTE Essay benefits from varied vocabulary",
+    "WFD (Write From Dictation) — focus on common academic words",
+    "Reading FIB — understand word forms: noun, verb, adjective, adverb"
+  ],
+
+  "next_level": "Advanced Vocabulary — coming next with 200+ words covering academic, scientific, and specialized PTE topics"
+}

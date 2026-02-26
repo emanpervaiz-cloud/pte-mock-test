@@ -20,7 +20,7 @@ const ListeningSection = () => {
   // Map the structured JSON listening passages into individual test questions
   const listeningQuestions = LISTENING_PASSAGES.flatMap((passage, pIdx) => {
     return passage.questions.flatMap((q, qIdx) => {
-      const audioUrl = `/assets/listening/listening_audio_${(pIdx % 3) + 1}.wav`; // using placeholder audio files 1-3
+      const audioUrl = passage.audioUrl || `/assets/listening/listening_audio_${(pIdx % 3) + 1}.wav`;
       const title = passage.title;
 
       if (q.type === 'Summarize Spoken Text') {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CATEGORIES, ESSAY_DATABASE, ESSAY_RUBRIC } from '../../data/materialsData';
+import DictationLab from './DictationLab';
 
 const Materials = () => {
     const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -58,6 +59,33 @@ const Materials = () => {
                         background: '#00796b', color: '#fff', border: 'none',
                         fontWeight: 600, cursor: 'pointer'
                     }}>View Rubric</button>
+                </div>
+            </div>
+
+            {/* Dictation Lab card */}
+            <div
+                onClick={() => setViewMode('dictation-lab')}
+                style={{
+                    background: '#fff', borderRadius: 16, overflow: 'hidden',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+                    border: '2px solid #00d4ff', cursor: 'pointer',
+                    transition: 'transform 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+                <div style={{ background: '#e0f7fa', padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#006064' }}>🎧 Audio Dictation Lab</h3>
+                </div>
+                <div style={{ padding: '20px' }}>
+                    <p style={{ fontSize: 14, color: '#666', margin: '0 0 16px' }}>
+                        Practice high-frequency PTE words and sentences in a real test simulation environment.
+                    </p>
+                    <button style={{
+                        width: '100%', padding: '10px', borderRadius: 8,
+                        background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', color: '#fff', border: 'none',
+                        fontWeight: 600, cursor: 'pointer'
+                    }}>Open Lab</button>
                 </div>
             </div>
 
@@ -349,10 +377,31 @@ const Materials = () => {
         </div>
     );
 
+    const renderDictationLab = () => (
+        <div>
+            <button
+                onClick={() => setViewMode('categories')}
+                style={{
+                    marginBottom: 20, padding: '8px 16px', borderRadius: 8,
+                    border: '1px solid #ddd', background: '#fff', cursor: 'pointer',
+                    fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 8
+                }}
+                onMouseOver={(e) => e.target.style.background = '#f5f5f5'}
+                onMouseOut={(e) => e.target.style.background = '#fff'}
+            >
+                <span>←</span> Back to Materials
+            </button>
+            <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+                <DictationLab />
+            </div>
+        </div>
+    );
+
     const renderContent = () => {
         switch (viewMode) {
             case 'essay-db': return renderEssayDB();
             case 'rubric': return renderRubric();
+            case 'dictation-lab': return renderDictationLab();
             default: return renderCategories();
         }
     };

@@ -51,6 +51,20 @@ const DASH = ({ color = '#f59e0b' }) => (
 
 const PRACTICE_DATA = [
   {
+    key: 'listening',
+    label: 'Listening',
+    color: '#7c3aed',
+    bgColor: '#f5f3ff',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+      </svg>
+    ),
+    tasks: [],
+    route: '/exam/listening',
+  },
+  {
     key: 'speaking',
     label: 'Speaking',
     color: '#2563eb',
@@ -63,13 +77,7 @@ const PRACTICE_DATA = [
         <line x1="8" y1="23" x2="16" y2="23" />
       </svg>
     ),
-    tasks: [
-      { label: 'Read Aloud', indicator: 'up', ai: true },
-      { label: 'Repeat Sentence', indicator: 'up', ai: true },
-      { label: 'Describe Image', indicator: 'dash', ai: true },
-      { label: 'Respond to a Situation', indicator: 'dash', ai: true },
-      { label: 'Answer Short Question', indicator: 'down', ai: true },
-    ],
+    tasks: [],
     route: '/exam/speaking',
   },
   {
@@ -83,10 +91,7 @@ const PRACTICE_DATA = [
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
       </svg>
     ),
-    tasks: [
-      { label: 'Summarize Written Text', indicator: 'dash', ai: true },
-      { label: 'Write an Email', indicator: 'dash', ai: true },
-    ],
+    tasks: [],
     route: '/exam/writing',
   },
   {
@@ -100,36 +105,8 @@ const PRACTICE_DATA = [
         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
       </svg>
     ),
-    tasks: [
-      { label: 'Reading & Writing: Fill In The Blanks', indicator: 'up', ai: false },
-      { label: 'Multiple Choice, Choose Multiple Answer', indicator: 'down', ai: false },
-      { label: 'Re-Order Paragraph', indicator: 'dash', ai: false },
-      { label: 'Reading: Fill In The Blanks', indicator: 'dash', ai: false },
-      { label: 'Multiple Choice, Choose Single Answer', indicator: 'down', ai: false },
-    ],
+    tasks: [],
     route: '/exam/reading',
-  },
-  {
-    key: 'listening',
-    label: 'Listening',
-    color: '#7c3aed',
-    bgColor: '#f5f3ff',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-      </svg>
-    ),
-    tasks: [
-      { label: 'Summarize Spoken Text', indicator: 'dash', ai: true },
-      { label: 'Listening: Multiple Choice, Choose Multiple Answer', indicator: 'down', ai: false },
-      { label: 'Listening: Fill In The Blanks', indicator: 'up', ai: false },
-      { label: 'Listening: Multiple Choice, Choose Single Answer', indicator: 'down', ai: false },
-      { label: 'Select Missing Word', indicator: 'dash', ai: false },
-      { label: 'Highlight Incorrect Words', indicator: 'up', ai: false },
-      { label: 'Write From Dictation', indicator: 'up', ai: true },
-    ],
-    route: '/exam/listening',
   },
 ];
 

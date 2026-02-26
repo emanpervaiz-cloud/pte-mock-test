@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import AudioPlayer from '../common/AudioPlayer';
+import ScoreDisplay from '../common/ScoreDisplay';
+import AIEvaluationService from '../../services/aiEvaluationService';
 
 const SummarizeSpokenText = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
   const [summary, setSummary] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [audioPlayed, setAudioPlayed] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // AI Evaluation State
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
 
   // Calculate word count whenever summary changes
   useEffect(() => {
@@ -22,8 +30,7 @@ const SummarizeSpokenText = ({ question, onNext }) => {
     setAudioPlayed(true);
   };
 
-  const handleSubmit = () => {
-    // Save the answer
+  const handleSave = () => {
     saveAnswer(question.id, {
       questionId: question.id,
       section: 'listening',
@@ -31,8 +38,32 @@ const SummarizeSpokenText = ({ question, onNext }) => {
       response: summary,
       meta: { wordCount: wordCount, audioPlayed: audioPlayed }
     });
+    setIsSaved(true);
+  };
 
-    // Move to next question
+  const handleGetScore = async () => {
+    if (!isSaved) handleSave();
+
+    setEvalLoading(true);
+    setEvalError(null);
+    try {
+      const evaluator = new AIEvaluationService();
+      // Use evaluateWriting for Summarize Spoken Text since the student's output is written text
+      // We pass the transcript or instruction as the 'prompt' context for the LLM
+      const result = await evaluator.evaluateWriting(
+        `Audio Transcript Topic: ${question.transcript || question.title || question.instruction}`,
+        summary,
+        'summarize_spoken_text'
+      );
+      setEvaluation(result);
+    } catch (err) {
+      setEvalError(err.message || 'Failed to evaluate. Please try again.');
+    }
+    setEvalLoading(false);
+  };
+
+  const handleSubmit = () => {
+    if (!isSaved) handleSave();
     onNext();
   };
 
@@ -69,13 +100,23 @@ const SummarizeSpokenText = ({ question, onNext }) => {
         <p><strong>Note:</strong> You will only be able to play the audio once.</p>
       </div>
 
-      <div className="action-buttons">
+      {/* Score Display (AI Webhook payload) */}
+      <ScoreDisplay
+        evaluation={evaluation}
+        loading={evalLoading}
+        error={evalError}
+        onGetScore={handleGetScore}
+        hasResponse={wordCount >= 10 && audioPlayed}
+        questionType="writing"
+      />
+
+      <div className="action-buttons" style={{ display: 'flex', gap: 12, marginTop: 16 }}>
         <button
-          className="btn btn-primary"
+          style={{ padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 600 }}
           onClick={handleSubmit}
           disabled={wordCount < question.minWords || wordCount > question.maxWords || !audioPlayed}
         >
-          Submit Summary
+          Submit Summary →
         </button>
       </div>
     </div>

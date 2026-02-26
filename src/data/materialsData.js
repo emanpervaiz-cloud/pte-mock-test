@@ -863,37 +863,7 @@ export const ESSAY_DATABASE = {
     }
 };
 
-export const CATEGORIES = [
-    {
-        id: 'templates',
-        title: '📝 Essay Templates',
-        color: '#e3f2fd',
-        items: [
-            { title: 'Universal Essay Template', size: '1.2 MB', type: 'PDF' },
-            { title: 'Describe Image Structures', size: '0.8 MB', type: 'PDF' },
-            { title: 'Retell Lecture Keywords', size: '0.5 MB', type: 'PDF' },
-        ]
-    },
-    {
-        id: 'guides',
-        title: '📖 Study Guides',
-        color: '#f3e5f5',
-        items: [
-            { title: 'PTE 79+ Strategy Guide', size: '3.5 MB', type: 'PDF' },
-            { title: 'Grammar Cheat Sheet', size: '1.1 MB', type: 'PDF' },
-            { title: 'Collocation List 2024', size: '2.0 MB', type: 'PDF' },
-        ]
-    },
-    {
-        id: 'audio',
-        title: '🎧 Audio Practice',
-        color: '#e8f5e9',
-        items: [
-            { title: 'Real Test Audio Samples', size: '15 MB', type: 'ZIP' },
-            { title: 'Dictation High Frequency', size: '8 MB', type: 'ZIP' },
-        ]
-    }
-];
+export const CATEGORIES = [];
 
 export const ESSAY_RUBRIC = {
     "rubric_meta": {
