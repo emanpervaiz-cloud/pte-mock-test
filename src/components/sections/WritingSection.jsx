@@ -37,7 +37,7 @@ const WritingSection = () => {
       // Move to reading section
       setCurrentSection('reading');
       setCurrentQuestionIndex(0);
-      navigate('/exam/reading');
+      navigate('/exam/reading', { replace: true });
     } else {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);

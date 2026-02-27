@@ -93,7 +93,7 @@ const ReadingSection = () => {
       // Move to listening section
       setCurrentSection('listening');
       setCurrentQuestionIndex(0);
-      navigate('/exam/listening');
+      navigate('/exam/listening', { replace: true });
     } else {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);

@@ -70,7 +70,8 @@ const SpeakingSection = () => {
       // Set section in context before navigating for consistency
       setCurrentSection('writing');
       setCurrentQuestionIndex(0);
-      navigate('/exam/writing');
+      // Navigate with replace to force component remount
+      navigate('/exam/writing', { replace: true });
     } else {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);

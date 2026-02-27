@@ -188,7 +188,7 @@ const ListeningSection = () => {
     if (isLastQuestion) {
       // Move to results section
       setCurrentQuestionIndex(0);
-      navigate('/exam/results');
+      navigate('/exam/results', { replace: true });
     } else {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);
