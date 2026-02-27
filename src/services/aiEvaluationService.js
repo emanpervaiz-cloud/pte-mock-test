@@ -66,24 +66,51 @@ class AIEvaluationService {
 PROMPT/TASK: "${prompt}"
 STUDENT TRANSCRIPT: "${transcript}"
 
-Evaluate the response using these dimensions (0-10 each):
-1. Fluency & Coherence - flow, pacing, logical organization
-2. Pronunciation & Intonation - clarity, stress, rhythm  
-3. Grammatical Range & Accuracy - sentence variety, correctness
-4. Vocabulary & Lexical Resource - word choice, range, precision
-5. Task Achievement - how well the response addresses the prompt
+WORD COUNT: ${transcript ? transcript.split(/\s+/).filter(w => w.length > 0).length : 0}
 
-Return ONLY a JSON object in this exact format:
+CRITICAL INSTRUCTIONS:
+1. Analyze the ACTUAL transcript content - do NOT use generic feedback
+2. Reference specific words, phrases, or patterns from the transcript in your feedback
+3. If the response is short (under 20 words), mention this specifically
+4. If there are pauses/hesitations visible in text (like "um", "uh", or fragmented sentences), point them out
+5. If vocabulary is repetitive, cite the repeated words
+6. If grammar errors exist, give specific examples from the text
+
+Evaluate these dimensions (0-10 each):
+
+1. FLUENCY & COHERENCE: Assess flow and logical organization. 
+   - For short responses: "Response was brief with only X words, limiting fluency demonstration"
+   - For hesitant speech: "Contains hesitations like [specific words]"
+   - For good flow: "Smooth transitions between ideas"
+
+2. PRONUNCIATION & INTONATION: Based on text clarity and word choice complexity
+   - Simple words: "Used basic vocabulary suggesting simple pronunciation"
+   - Complex words: "Attempted challenging terms like [specific words]"
+
+3. GRAMMATICAL RANGE & ACCURACY: Check for errors in the transcript
+   - Count sentence structures used
+   - Note any grammatical errors with examples
+
+4. VOCABULARY & LEXICAL RESOURCE: Analyze word choice
+   - List unique words used
+   - Note repetitions: "Repeated [word] X times"
+   - Comment on word sophistication
+
+5. TASK ACHIEVEMENT: How well the response addresses the prompt
+   - Did they answer the question?
+   - Was the content relevant?
+
+Return JSON in this exact format:
 {
-  "fluency_coherence": { "score": 0-10, "feedback": "specific feedback" },
-  "pronunciation_intonation": { "score": 0-10, "feedback": "specific feedback" },
-  "grammar_range_accuracy": { "score": 0-10, "feedback": "specific feedback" },
-  "vocabulary_lexical_resource": { "score": 0-10, "feedback": "specific feedback" },
-  "task_achievement": { "score": 0-10, "feedback": "specific feedback" },
+  "fluency_coherence": { "score": 0-10, "feedback": "specific observation from transcript" },
+  "pronunciation_intonation": { "score": 0-10, "feedback": "based on vocabulary complexity" },
+  "grammar_range_accuracy": { "score": 0-10, "feedback": "specific grammar observations" },
+  "vocabulary_lexical_resource": { "score": 0-10, "feedback": "word choice analysis with examples" },
+  "task_achievement": { "score": 0-10, "feedback": "how well prompt was addressed" },
   "overall_pte_score": 10-90,
   "cefr_level": "A1-C2",
-  "top_strength": "one sentence",
-  "priority_improvement": "one sentence"
+  "top_strength": "most specific positive from this response",
+  "priority_improvement": "most specific actionable improvement"
 }`;
 
     try {
@@ -244,29 +271,61 @@ Return ONLY a JSON object in this exact format:
     
     const model = isOpenRouter ? 'openai/gpt-4o-mini' : 'gpt-4o-mini';
 
+    const wordCount = response ? response.split(/\s+/).filter(w => w.length > 0).length : 0;
+    
     const systemPrompt = `You are a certified PTE Academic writing examiner. Evaluate the following ${questionType} response.
 
 TASK/PROMPT: "${prompt}"
 STUDENT RESPONSE: "${response}"
 
-Evaluate the response using these dimensions (0-10 each):
-1. Fluency & Coherence - logical structure, paragraph organization, cohesive devices
-2. Spelling & Punctuation - accuracy of writing conventions
-3. Grammatical Range & Accuracy - sentence variety and correctness
-4. Vocabulary & Lexical Resource - range and precision of academic language
-5. Task Achievement - addressing the prompt, meeting word counts
+WORD COUNT: ${wordCount}
 
-Return ONLY a JSON object in this exact format:
+CRITICAL INSTRUCTIONS:
+1. Analyze the ACTUAL response content - do NOT use generic feedback
+2. Reference specific sentences, phrases, or words from the response in your feedback
+3. Count and mention specific issues: "Contains 3 spelling errors: [list them]"
+4. For grammar: Quote the error and provide correction
+5. For vocabulary: List repeated words and suggest alternatives
+6. For coherence: Comment on actual paragraph structure used
+
+Evaluate these dimensions (0-10 each):
+
+1. FLUENCY & COHERENCE: Analyze the actual paragraph and sentence structure
+   - Quote topic sentences
+   - Note transitions used ("however", "therefore", etc.)
+   - Comment on idea flow between sentences
+
+2. SPELLING & PUNCTUATION: Find actual errors in the text
+   - List misspelled words with corrections
+   - Note punctuation issues with examples
+   - Count total errors
+
+3. GRAMMATICAL RANGE & ACCURACY: Analyze actual grammar used
+   - Quote incorrect sentences
+   - Provide corrections
+   - Count sentence types (simple/compound/complex)
+
+4. VOCABULARY & LEXICAL RESOURCE: Analyze word choice
+   - List sophisticated words used
+   - Note repetitions: "'important' used 4 times, try: crucial, vital, essential"
+   - Suggest 3-5 better word choices
+
+5. TASK ACHIEVEMENT: Check against prompt requirements
+   - Did they answer all parts?
+   - Word count appropriate?
+   - Content relevant?
+
+Return JSON in this exact format:
 {
-  "fluency_coherence": { "score": 0-10, "feedback": "specific feedback" },
-  "pronunciation_intonation": { "score": 0-10, "feedback": "spelling and punctuation feedback" },
-  "grammar_range_accuracy": { "score": 0-10, "feedback": "specific feedback" },
-  "vocabulary_lexical_resource": { "score": 0-10, "feedback": "specific feedback" },
-  "task_achievement": { "score": 0-10, "feedback": "specific feedback" },
+  "fluency_coherence": { "score": 0-10, "feedback": "specific structural observations with quotes" },
+  "pronunciation_intonation": { "score": 0-10, "feedback": "specific spelling/punctuation errors found" },
+  "grammar_range_accuracy": { "score": 0-10, "feedback": "grammar errors with corrections" },
+  "vocabulary_lexical_resource": { "score": 0-10, "feedback": "word analysis with specific examples" },
+  "task_achievement": { "score": 0-10, "feedback": "how well this specific prompt was addressed" },
   "overall_pte_score": 10-90,
   "cefr_level": "A1-C2",
-  "top_strength": "one sentence",
-  "priority_improvement": "one sentence"
+  "top_strength": "most specific positive from this writing",
+  "priority_improvement": "most specific issue to fix with example from text"
 }`;
 
     try {
