@@ -21,18 +21,6 @@ export const LISTENING_PASSAGES = [
                 "difficulty": "Hard"
             },
             {
-                "type": "Multiple Choice (Single Answer)",
-                "question": "According to the lecture, what do 'fractal' patterns primarily help with?",
-                "options": [
-                    "A. Increasing property values in urban areas",
-                    "B. Lowering cortisol levels and reducing stress",
-                    "C. Improving traffic flow and navigation",
-                    "D. Encouraging more physical activity outdoors"
-                ],
-                "correct_answer": "B",
-                "difficulty": "Medium"
-            },
-            {
                 "type": "True / False / Not Given",
                 "question": "Based on the lecture, decide whether each statement is True, False, or Not Given.",
                 "statements": [
