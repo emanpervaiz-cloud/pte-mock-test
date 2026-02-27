@@ -113,6 +113,12 @@ const ReadingSection = () => {
   useEffect(() => {
     setCurrentSection('reading');
   }, [setCurrentSection]);
+  
+  // Reset current question when component mounts
+  useEffect(() => {
+    setCurrentQuestion(0);
+    setCurrentQuestionIndex(0);
+  }, []);
 
   return (
     <div className="exam-container exam-theme">
