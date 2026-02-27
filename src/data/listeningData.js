@@ -19,41 +19,6 @@ export const LISTENING_PASSAGES = [
                     "Goal is to prevent urban fatigue and support psychological health."
                 ],
                 "difficulty": "Hard"
-            },
-            {
-                "type": "Multiple Choice (Single Answer)",
-                "question": "According to the lecture, what do 'fractal' patterns primarily help with?",
-                "options": [
-                    "A. Increasing property values in urban areas",
-                    "B. Lowering cortisol levels and reducing stress",
-                    "C. Improving traffic flow and navigation",
-                    "D. Encouraging more physical activity outdoors"
-                ],
-                "correct_answer": "B",
-                "difficulty": "Medium"
-            },
-            {
-                "type": "True / False / Not Given",
-                "question": "Based on the lecture, decide whether each statement is True, False, or Not Given.",
-                "statements": [
-                    {
-                        "statement": "Skin conductance and heart rate were used to measure stress levels.",
-                        "answer": "True"
-                    },
-                    {
-                        "statement": "Fractal patterns are only found in modern architecture.",
-                        "answer": "False"
-                    },
-                    {
-                        "statement": "Green spaces in cities have been proven to eliminate depression.",
-                        "answer": "Not Given"
-                    },
-                    {
-                        "statement": "Evidence-based design is a growing trend in urban planning.",
-                        "answer": "True"
-                    }
-                ],
-                "difficulty": "Medium"
             }
         ]
     },
