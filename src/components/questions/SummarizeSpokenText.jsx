@@ -10,6 +10,7 @@ const SummarizeSpokenText = ({ question, onNext }) => {
   const [wordCount, setWordCount] = useState(0);
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // AI Evaluation State
   const [evaluation, setEvaluation] = useState(null);
