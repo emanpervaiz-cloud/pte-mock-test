@@ -32,8 +32,8 @@ const SelectMissingWord = ({ question, onNext }) => {
       meta: { audioPlayed: audioPlayed }
     });
 
-    // Move to next question
-    onNext();
+    // Show answer first, then user clicks Next to proceed
+    setIsSubmitted(true);
   };
 
   const renderTranscriptWithBlank = () => {
