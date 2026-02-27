@@ -49,12 +49,11 @@ export const LISTENING_PASSAGES = [
         "passage_id": "listening_3",
         "title": "Technology and Smartphones",
         "audioUrl": "/assets/listening/listening_3.wav",
-        "transcript": "Smartphones have become an essential part of modern life. People use them for communication, entertainment, shopping, and even managing their health. As technology continues to advance, smartphones are expected to become even more powerful and deeply integrated into our daily routines.",
+        "transcript": "",
         "questions": [
             {
                 "type": "Select Missing Word",
                 "question": "Listen to the recording and select the missing word that completes the sentence.",
-                "context": "Smartphones have become an essential part of modern life. People use them for communication, entertainment, shopping, and even managing their health. As technology continues to advance, smartphones are expected to become even more powerful and deeply integrated into our daily ___.",
                 "options": [
                     "A) failures",
                     "B) routines",

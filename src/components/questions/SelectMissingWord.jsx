@@ -88,10 +88,65 @@ const SelectMissingWord = ({ question, onNext }) => {
         />
       </div>
 
-      <div className="transcript-section">
-        <h3>Complete the passage:</h3>
-        <div className="transcript-text">
-          {renderTranscriptWithBlank()}
+      <div className="question-section" style={{ 
+        padding: '24px', 
+        background: '#f8f9fe', 
+        borderRadius: '16px', 
+        marginBottom: '24px',
+        textAlign: 'center'
+      }}>
+        <h3 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Select the missing word:</h3>
+        <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
+          Listen to the audio carefully and select the word that completes the final sentence.
+        </p>
+      </div>
+
+      <div className="options-section" style={{ marginBottom: '24px' }}>
+        <h4 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Options:</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {question.options && question.options.map((option, idx) => {
+            const optionId = option.id || option.charAt(0);
+            const optionText = option.text || option.substring(3);
+            const isSelected = selectedOption === optionId;
+            
+            return (
+              <button
+                key={idx}
+                onClick={() => handleOptionSelect(optionId)}
+                disabled={isSubmitted}
+                style={{
+                  padding: '16px 24px',
+                  borderRadius: '12px',
+                  border: '2px solid',
+                  borderColor: isSelected ? '#673ab7' : '#e2e8f0',
+                  backgroundColor: isSelected ? '#f3f0ff' : '#ffffff',
+                  color: isSelected ? '#673ab7' : '#1e293b',
+                  fontSize: '16px',
+                  textAlign: 'left',
+                  cursor: isSubmitted ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}
+              >
+                <span style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: isSelected ? '#673ab7' : '#e2e8f0',
+                  color: isSelected ? '#fff' : '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 'bold',
+                  fontSize: '14px'
+                }}>
+                  {optionId}
+                </span>
+                <span>{optionText}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
