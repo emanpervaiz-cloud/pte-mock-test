@@ -87,16 +87,19 @@ const ReadingSection = () => {
   const currentQuestionData = readingQuestions[currentQuestion];
 
   const handleNextQuestion = () => {
+    console.log('Reading: handleNextQuestion called', { currentQuestion, total: readingQuestions.length });
+    
     if (currentQuestion < readingQuestions.length - 1) {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);
       setCurrentQuestionIndex(nextIndex);
       window.scrollTo(0, 0);
     } else {
+      console.log('Reading: Navigating to listening section...');
       // Move to listening section
       setCurrentSection('listening');
       setCurrentQuestionIndex(0);
-      navigate('/exam/listening');
+      navigate('/exam/listening', { replace: true });
     }
   };
 

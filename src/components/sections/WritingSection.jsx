@@ -31,16 +31,19 @@ const WritingSection = () => {
   const currentQuestionData = writingQuestions[currentQuestion];
 
   const handleNextQuestion = () => {
+    console.log('Writing: handleNextQuestion called', { currentQuestion, total: writingQuestions.length });
+    
     if (currentQuestion < writingQuestions.length - 1) {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);
       setCurrentQuestionIndex(nextIndex);
       window.scrollTo(0, 0);
     } else {
+      console.log('Writing: Navigating to reading section...');
       // Move to reading section
       setCurrentSection('reading');
       setCurrentQuestionIndex(0);
-      navigate('/exam/reading');
+      navigate('/exam/reading', { replace: true });
     }
   };
 

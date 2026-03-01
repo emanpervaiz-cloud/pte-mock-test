@@ -62,18 +62,19 @@ const SpeakingSection = () => {
   const currentQuestionData = speakingQuestions[currentQuestion];
 
   const handleNextQuestion = () => {
-    console.log('handleNextQuestion called', currentQuestion, speakingQuestions.length);
+    console.log('Speaking: handleNextQuestion called', { currentQuestion, total: speakingQuestions.length });
+    
     if (currentQuestion < speakingQuestions.length - 1) {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);
       setCurrentQuestionIndex(nextIndex);
       window.scrollTo(0, 0);
     } else {
-      console.log('Navigating to writing section...');
+      console.log('Speaking: Navigating to writing section...');
       // Set section in context before navigating for consistency
       setCurrentSection('writing');
       setCurrentQuestionIndex(0);
-      navigate('/exam/writing');
+      navigate('/exam/writing', { replace: true });
     }
   };
 
