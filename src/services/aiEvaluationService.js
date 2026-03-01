@@ -42,9 +42,44 @@ class AIEvaluationService {
   constructor() {
     // Default to the provided n8n webhook URL if env variable is missing
     this.webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'https://n8n.srv826531.hstgr.cloud/webhook-test/b225b16c-c602-450e-b858-f9bbe4ba5dd6';
+    this.geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    this.useGemini = !!this.geminiApiKey;
+  }
+  
+  // Helper method to call Gemini API
+  async callGemini(prompt, systemPrompt) {
+    if (!this.geminiApiKey) {
+      throw new Error('Gemini API key not configured');
+    }
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: systemPrompt },
+            { text: prompt }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 2048,
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
 
-  // Evaluate speaking responses with hybrid scoring engine (Backend)
+  // Evaluate speaking responses with Gemini or Backend
   async evaluateSpeaking(prompt, audioBlobOrText, questionType) {
     let transcript = audioBlobOrText;
 
@@ -53,6 +88,71 @@ class AIEvaluationService {
       transcript = await this.transcribeAudio(audioBlobOrText);
     }
 
+    // Use Gemini if API key is available
+    if (this.useGemini) {
+      try {
+        const evaluationPrompt = `Evaluate this speaking response for a PTE Academic exam.
+
+Question: ${prompt}
+Student's Transcript: ${transcript}
+Question Type: ${questionType}
+
+Please evaluate based on these criteria (score each 0-10):
+1. Fluency & Coherence - speech flow, logical sequencing, discourse markers, unnatural pauses
+2. Pronunciation & Intonation - phoneme accuracy, word stress, sentence rhythm
+3. Grammatical Range & Accuracy - sentence structures, grammatical correctness, error patterns
+4. Vocabulary & Lexical Resource - word range, precision, appropriateness
+5. Task Achievement - addresses prompt, stays on topic, expected length
+
+Provide specific feedback with examples from the transcript. Identify:
+- Grammar mistakes with corrections
+- Fluency issues (pauses, repetitions)
+- Pronunciation tips
+- Vocabulary suggestions
+
+Return JSON format:
+{
+  "fluencyScore": number,
+  "pronunciationScore": number,
+  "grammarScore": number,
+  "vocabularyScore": number,
+  "taskScore": number,
+  "overallScore": number,
+  "feedback": "detailed feedback with specific examples",
+  "grammarErrors": ["error1 -> correction1", "error2 -> correction2"],
+  "fluencyIssues": ["issue1", "issue2"]
+}`;
+
+        const geminiResponse = await this.callGemini(evaluationPrompt, EXAMINER_SYSTEM_PROMPT);
+        
+        // Parse Gemini response
+        let evaluation;
+        try {
+          // Try to extract JSON from response
+          const jsonMatch = geminiResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            evaluation = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error('No JSON found in Gemini response');
+          }
+        } catch (parseError) {
+          console.error('Error parsing Gemini response:', parseError);
+          // Create structured evaluation from text
+          evaluation = this.parseGeminiTextResponse(geminiResponse);
+        }
+
+        return {
+          ...evaluation,
+          transcript: transcript,
+          source: 'gemini'
+        };
+      } catch (geminiError) {
+        console.error('Gemini evaluation failed:', geminiError);
+        // Fall through to backend or fallback
+      }
+    }
+
+    // Fallback to backend
     try {
       const backendUrl = 'http://localhost:5000/api/scoring/evaluate-speaking';
       const requestBody = {
@@ -86,6 +186,26 @@ class AIEvaluationService {
         transcript: transcript
       };
     }
+  }
+  
+  // Parse Gemini text response into structured evaluation
+  parseGeminiTextResponse(text) {
+    // Extract scores using regex
+    const fluencyMatch = text.match(/fluency.*?(\d+)/i);
+    const grammarMatch = text.match(/grammar.*?(\d+)/i);
+    const vocabMatch = text.match(/vocab.*?(\d+)/i);
+    const pronunciationMatch = text.match(/pronunciation.*?(\d+)/i);
+    
+    return {
+      fluencyScore: parseInt(fluencyMatch?.[1]) || 5,
+      grammarScore: parseInt(grammarMatch?.[1]) || 5,
+      vocabularyScore: parseInt(vocabMatch?.[1]) || 5,
+      pronunciationScore: parseInt(pronunciationMatch?.[1]) || 5,
+      overallScore: 50,
+      feedback: text.substring(0, 500),
+      grammarErrors: [],
+      fluencyIssues: []
+    };
   }
 
   // Transcribe audio using OpenAI Whisper API
