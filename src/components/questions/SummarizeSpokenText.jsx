@@ -70,6 +70,11 @@ const SummarizeSpokenText = ({ question, onNext }) => {
     }
     if (!isSaved) handleSave();
     setIsSubmitted(true);
+    
+    // Auto navigate to next question after showing answer for 3 seconds
+    setTimeout(() => {
+      onNext();
+    }, 3000);
   };
 
   return (

@@ -18,10 +18,7 @@ const SelectMissingWord = ({ question, onNext }) => {
   };
 
   const handleSubmit = () => {
-    console.log('SelectMissingWord handleSubmit called, isSubmitted:', isSubmitted);
-    
     if (isSubmitted) {
-      console.log('Already submitted, calling onNext...');
       onNext();
       return;
     }
@@ -35,9 +32,13 @@ const SelectMissingWord = ({ question, onNext }) => {
       meta: { audioPlayed: audioPlayed }
     });
 
-    // Show answer first, then user clicks Next to proceed
-    console.log('Setting isSubmitted to true');
+    // Show answer and auto-proceed to next after delay
     setIsSubmitted(true);
+    
+    // Auto navigate to next question after showing answer for 2 seconds
+    setTimeout(() => {
+      onNext();
+    }, 2000);
   };
 
   const renderTranscriptWithBlank = () => {
