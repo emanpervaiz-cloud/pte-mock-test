@@ -225,20 +225,46 @@ Return JSON format:
         return "[Audio response recorded]";
       }
 
-      // Use OpenRouter's OpenAI-compatible audio transcriptions endpoint
-      const formData = new FormData();
-      const extension = audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
-      formData.append('file', audioBlob, `audio.${extension}`);
-      formData.append('model', 'openai/whisper-1');
-
-      const response = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
+      // Use Gemini for audio transcription since OpenRouter doesn't support direct audio uploads
+      if (this.geminiApiKey) {
+        try {
+          return await this.transcribeWithGemini(audioBlob);
+        } catch (geminiError) {
+          console.error('Gemini transcription failed:', geminiError);
+        }
+      }
+      
+      // Fallback: Use OpenRouter with base64 encoded audio via chat completions
+      const base64Audio = await this.blobToBase64(audioBlob);
+      
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.openRouterKey}`,
+          'Content-Type': 'application/json',
           'HTTP-Referer': window.location.origin,
           'X-Title': 'PTE Mock Test'
         },
-        body: formData
+        body: JSON.stringify({
+          model: 'google/gemini-2.0-flash-exp:free',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Listen to this audio and transcribe the speech accurately with proper punctuation. Return only the transcript text.'
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:audio/webm;base64,${base64Audio}`
+                  }
+                }
+              ]
+            }
+          ]
+        })
       });
 
       if (!response.ok) {
@@ -254,7 +280,7 @@ Return JSON format:
         return `[Transcription failed: ${data.error.message}]`;
       }
 
-      return data.text || "[No speech detected]";
+      return data.choices?.[0]?.message?.content || "[No speech detected]";
     } catch (error) {
       console.error('Transcription error:', error);
       return "[Transcription error occurred]";
@@ -272,6 +298,42 @@ Return JSON format:
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
+  }
+  
+  // Transcribe using Gemini API
+  async transcribeWithGemini(audioBlob) {
+    const base64Audio = await this.blobToBase64(audioBlob);
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: 'Transcribe this audio accurately with proper punctuation. Return only the transcript text.' },
+            { 
+              inline_data: {
+                mime_type: audioBlob.type || 'audio/webm',
+                data: base64Audio
+              }
+            }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 1024,
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '[No speech detected]';
   }
 
   // Transcribe using OpenAI Whisper directly
