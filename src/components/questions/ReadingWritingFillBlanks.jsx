@@ -26,6 +26,11 @@ const ReadingWritingFillBlanks = ({ question, onNext }) => {
       return;
     }
     
+    // Don't submit if no answers selected
+    if (Object.keys(answers).length === 0) {
+      return;
+    }
+    
     // Save the answers
     saveAnswer(question.id, {
       questionId: question.id,

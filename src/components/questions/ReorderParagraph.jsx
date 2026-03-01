@@ -42,6 +42,11 @@ const ReorderParagraph = ({ question, onNext }) => {
       return;
     }
     
+    // Don't submit if no sentences ordered
+    if (orderedSentences.length === 0) {
+      return;
+    }
+    
     // Save the answer
     saveAnswer(question.id, {
       questionId: question.id,

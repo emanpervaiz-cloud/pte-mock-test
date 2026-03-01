@@ -33,6 +33,11 @@ const MultipleChoice = ({ question, onNext }) => {
       return;
     }
     
+    // Don't submit if no answer selected
+    if (selectedOptions.length === 0) {
+      return;
+    }
+    
     // Save the answer
     saveAnswer(question.id, {
       questionId: question.id,
