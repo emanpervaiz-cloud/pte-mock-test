@@ -274,10 +274,19 @@ Return JSON format:
     }
     
     const data = await response.json();
-    console.log('n8n transcription response:', data);
+    console.log('n8n transcription response:', JSON.stringify(data, null, 2));
     
     // Handle different response formats from n8n
-    return data.transcript || data.text || data.output || '[No transcript received from n8n]';
+    // AI Agent output can be in data.output or data.text or direct response
+    const transcript = data.transcript || 
+                      data.text || 
+                      data.output || 
+                      (typeof data === 'string' ? data : null) ||
+                      (data[0] && data[0].text) ||
+                      '[No transcript received from n8n]';
+    
+    console.log('Extracted transcript:', transcript);
+    return transcript;
   }
 
   // Helper method to convert blob to base64
