@@ -212,20 +212,7 @@ Return JSON format:
   // Transcribe audio using OpenRouter API (Whisper via OpenRouter)
   async transcribeAudio(audioBlob) {
     try {
-      // Try OpenAI Whisper first if key available
-      const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      
-      if (openAiKey) {
-        return await this.transcribeWithWhisper(audioBlob, openAiKey);
-      }
-      
-      // Fallback to OpenRouter Whisper
-      if (!this.openRouterKey) {
-        console.warn('No API key found for transcription');
-        return "[Audio response recorded]";
-      }
-
-      // Use Gemini for audio transcription since OpenRouter doesn't support direct audio uploads
+      // Priority 1: Use Gemini for audio transcription (supports audio natively)
       if (this.geminiApiKey) {
         try {
           return await this.transcribeWithGemini(audioBlob);
@@ -234,53 +221,19 @@ Return JSON format:
         }
       }
       
-      // Fallback: Use OpenRouter with base64 encoded audio via chat completions
-      const base64Audio = await this.blobToBase64(audioBlob);
+      // Priority 2: Try OpenAI Whisper if key available
+      const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      if (openAiKey) {
+        try {
+          return await this.transcribeWithWhisper(audioBlob, openAiKey);
+        } catch (whisperError) {
+          console.error('Whisper transcription failed:', whisperError);
+        }
+      }
       
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.openRouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'PTE Mock Test'
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-exp:free',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Listen to this audio and transcribe the speech accurately with proper punctuation. Return only the transcript text.'
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:audio/webm;base64,${base64Audio}`
-                  }
-                }
-              ]
-            }
-          ]
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenRouter Transcription HTTP Error:', response.status, errorText);
-        return `[Transcription failed: HTTP ${response.status}]`;
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        console.error('OpenRouter Transcription Error:', data.error);
-        return `[Transcription failed: ${data.error.message}]`;
-      }
-
-      return data.choices?.[0]?.message?.content || "[No speech detected]";
+      // No transcription service available
+      console.warn('No transcription service available. Please add VITE_GEMINI_API_KEY or VITE_OPENAI_API_KEY');
+      return "[Audio transcription unavailable - please configure API keys]";
     } catch (error) {
       console.error('Transcription error:', error);
       return "[Transcription error occurred]";
