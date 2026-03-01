@@ -214,6 +214,8 @@ Return JSON format:
   async transcribeAudio(audioBlob) {
     try {
       // Priority 1: Use Gemini for audio transcription (supports audio natively)
+      console.log('Checking Gemini key:', this.geminiApiKey ? 'EXISTS' : 'MISSING');
+      console.log('Checking OpenAI key:', this.openAiKey ? 'EXISTS' : 'MISSING');
       if (this.geminiApiKey) {
         try {
           return await this.transcribeWithGemini(audioBlob);
