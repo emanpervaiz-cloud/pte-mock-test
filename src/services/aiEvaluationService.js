@@ -213,24 +213,26 @@ Return JSON format:
   // Transcribe audio using OpenRouter API (Whisper via OpenRouter)
   async transcribeAudio(audioBlob) {
     try {
-      // Priority 1: Use Gemini for audio transcription (supports audio natively)
-      console.log('Checking Gemini key:', this.geminiApiKey ? 'EXISTS' : 'MISSING');
+      // Priority 1: Try OpenAI Whisper (best for audio transcription)
       console.log('Checking OpenAI key:', this.openAiKey ? 'EXISTS' : 'MISSING');
-      if (this.geminiApiKey) {
+      console.log('Checking Gemini key:', this.geminiApiKey ? 'EXISTS' : 'MISSING');
+      
+      if (this.openAiKey) {
         try {
-          return await this.transcribeWithGemini(audioBlob);
-        } catch (geminiError) {
-          console.error('Gemini transcription failed:', geminiError);
+          console.log('Using OpenAI Whisper for transcription');
+          return await this.transcribeWithWhisper(audioBlob, this.openAiKey);
+        } catch (whisperError) {
+          console.error('Whisper transcription failed:', whisperError);
         }
       }
       
-      // Priority 2: Try OpenAI Whisper if key available
-      const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (openAiKey) {
+      // Priority 2: Use Gemini for audio transcription
+      if (this.geminiApiKey) {
         try {
-          return await this.transcribeWithWhisper(audioBlob, openAiKey);
-        } catch (whisperError) {
-          console.error('Whisper transcription failed:', whisperError);
+          console.log('Using Gemini for transcription');
+          return await this.transcribeWithGemini(audioBlob);
+        } catch (geminiError) {
+          console.error('Gemini transcription failed:', geminiError);
         }
       }
       
@@ -244,10 +246,11 @@ Return JSON format:
       // }
       
       // Fallback: Use Web Speech API (browser built-in, no API key needed)
-      try {
-        return await this.transcribeWithWebSpeech(audioBlob);
-      } catch (speechError) {
-        console.error('Web Speech API failed:', speechError);
+      // Note: This is a placeholder - actual transcription requires API keys
+      
+      // Check if we have any API key configured
+      if (!this.geminiApiKey && !this.openAiKey) {
+        return "[Speech recorded - Please add VITE_GEMINI_API_KEY or VITE_OPENAI_API_KEY in Vercel environment variables for automatic transcription.]";
       }
       
       // No transcription service available
