@@ -456,11 +456,11 @@ Return JSON format:
     return data.text || "[No speech detected]";
   }
 
-  // Evaluate writing responses with n8n + OpenRouter
+  // Evaluate writing responses with Gemini API only
   async evaluateWriting(prompt, response, questionType) {
     console.log('evaluateWriting called, geminiKey exists:', !!this.geminiApiKey);
     
-    // Priority 1: Use Gemini for direct writing evaluation (direct API call)
+    // Use Gemini for direct writing evaluation
     if (this.geminiApiKey) {
       console.log('Gemini key found, calling evaluateWritingWithGemini');
       try {
@@ -472,16 +472,6 @@ Return JSON format:
       }
     } else {
       console.log('No Gemini key, skipping Gemini evaluation');
-    }
-    
-    // Priority 2: Use n8n webhook for writing evaluation (fallback)
-    if (this.webhookUrl) {
-      console.log('Trying n8n webhook');
-      try {
-        return await this.evaluateWritingWithN8n(prompt, response, questionType);
-      } catch (n8nError) {
-        console.error('n8n writing evaluation failed:', n8nError);
-      }
     }
     
     // Fallback to backend
