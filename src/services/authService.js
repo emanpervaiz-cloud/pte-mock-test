@@ -1,7 +1,79 @@
 /**
  * Authentication service for handling secure user sessions using localStorage.
  * This simulates a persistent login session.
+ * 
+ * EmailJS Configuration for welcome emails:
+ * - Service ID: service_pte_mock_test
+ * - Template ID: template_welcome
+ * - Public Key: Stored in Vercel env (VITE_EMAILJS_PUBLIC_KEY)
  */
+
+// EmailJS SDK loader
+const loadEmailJS = () => {
+    return new Promise((resolve, reject) => {
+        if (window.emailjs) {
+            resolve(window.emailjs);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+        script.onload = () => resolve(window.emailjs);
+        script.onerror = () => reject(new Error('Failed to load EmailJS'));
+        document.head.appendChild(script);
+    });
+};
+
+// Send welcome email using EmailJS
+const sendWelcomeEmail = async (userName, userEmail) => {
+    try {
+        const emailjs = await loadEmailJS();
+        
+        // Initialize EmailJS with public key
+        emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'YOUR_PUBLIC_KEY');
+        
+        const templateParams = {
+            to_name: userName,
+            to_email: userEmail,
+            from_name: 'THE MIGRATION PTE',
+            message: `Welcome to THE MIGRATION PTE Mock Test Platform!
+
+Dear ${userName},
+
+Thank you for registering with THE MIGRATION PTE Mock Test Platform. We're excited to help you achieve your dream PTE score for Australian migration.
+
+Here's what you can do now:
+✓ Take AI-powered mock tests
+✓ Get instant scoring and detailed feedback
+✓ Track your progress over time
+✓ Access expert study materials
+
+Your registered email: ${userEmail}
+
+If you have any questions, feel free to reach out to our support team.
+
+Best regards,
+THE MIGRATION Team
+
+---
+This is an automated message. Please do not reply to this email.`,
+            reply_to: 'support@themigration.com'
+        };
+        
+        await emailjs.send(
+            import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_pte_mock',
+            import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_welcome',
+            templateParams
+        );
+        
+        console.log('Welcome email sent successfully to:', userEmail);
+        return true;
+    } catch (error) {
+        console.error('Failed to send welcome email:', error);
+        // Don't fail registration if email fails
+        return false;
+    }
+};
+
 export const AuthService = {
     /**
      * Authenticates a user against the local storage 'database'.
@@ -84,6 +156,9 @@ export const AuthService = {
 
                 localStorage.setItem('pte_auth_token', mockToken);
                 localStorage.setItem('pte_user', JSON.stringify(sessionUser));
+                
+                // Send welcome email
+                sendWelcomeEmail(name, email);
 
                 resolve({ success: true });
             }, 800);
