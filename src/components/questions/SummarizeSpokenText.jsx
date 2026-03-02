@@ -113,6 +113,25 @@ const SummarizeSpokenText = ({ question, onNext }) => {
       </div>
 
       {/* AI Score Button - Shows when user has written summary */}
+      {wordCount >= 5 && audioPlayed && !evaluation && !evalLoading && (
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0' }}>
+          <button
+            onClick={handleGetScore}
+            style={{
+              padding: '14px 36px', borderRadius: 14,
+              background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+              color: '#fff', border: 'none',
+              fontWeight: 700, fontSize: 16, cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(13, 148, 136, 0.3)',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}
+          >
+            <span style={{ fontSize: 22 }}>📊</span>
+            Get AI Score
+          </button>
+        </div>
+      )}
+
       <ScoreDisplay
         evaluation={evaluation}
         loading={evalLoading}
