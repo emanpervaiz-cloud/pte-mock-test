@@ -110,13 +110,13 @@ const SummarizeSpokenText = ({ question, onNext }) => {
         <p><strong>Note:</strong> You will only be able to play the audio once.</p>
       </div>
 
-      {/* Score Display (AI Webhook payload) */}
+      {/* AI Score Button - Shows when user has written summary */}
       <ScoreDisplay
         evaluation={evaluation}
         loading={evalLoading}
         error={evalError}
         onGetScore={handleGetScore}
-        hasResponse={wordCount >= 10 && audioPlayed}
+        hasResponse={wordCount >= 5 && audioPlayed}
         questionType="writing"
       />
 
