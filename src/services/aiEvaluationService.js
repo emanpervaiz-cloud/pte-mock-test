@@ -485,6 +485,8 @@ Return JSON format:
   // Evaluate writing with n8n webhook
   async evaluateWritingWithN8n(prompt, response, questionType) {
     console.log('Using n8n for writing evaluation');
+    console.log('Webhook URL:', this.webhookUrl);
+    console.log('Sending data:', { action: 'evaluate_writing', prompt: prompt?.substring(0, 50), response: response?.substring(0, 50), questionType });
     
     const n8nResponse = await fetch(this.webhookUrl, {
       method: 'POST',
@@ -500,8 +502,12 @@ Return JSON format:
       })
     });
     
+    console.log('n8n response status:', n8nResponse.status);
+    
     if (!n8nResponse.ok) {
-      throw new Error(`n8n webhook error: ${n8nResponse.status}`);
+      const errorText = await n8nResponse.text();
+      console.error('n8n error response:', errorText);
+      throw new Error(`n8n webhook error: ${n8nResponse.status} - ${errorText}`);
     }
     
     const responseText = await n8nResponse.text();
