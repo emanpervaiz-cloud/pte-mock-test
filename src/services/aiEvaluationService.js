@@ -435,10 +435,10 @@ Return JSON format:
 
   // Evaluate writing responses with n8n + OpenRouter
   async evaluateWriting(prompt, response, questionType) {
-    // Priority 1: Use n8n with OpenRouter for writing evaluation
-    if (this.webhookUrl && this.openRouterKey) {
+    // Priority 1: Use n8n webhook for writing evaluation (if webhook configured)
+    if (this.webhookUrl) {
       try {
-        console.log('Using n8n with OpenRouter for writing evaluation');
+        console.log('Using n8n webhook for writing evaluation');
         return await this.evaluateWritingWithN8n(prompt, response, questionType);
       } catch (n8nError) {
         console.error('n8n writing evaluation failed:', n8nError);
