@@ -435,23 +435,23 @@ Return JSON format:
 
   // Evaluate writing responses with n8n + OpenRouter
   async evaluateWriting(prompt, response, questionType) {
-    // Priority 1: Use n8n webhook for writing evaluation (if webhook configured)
-    if (this.webhookUrl) {
-      try {
-        console.log('Using n8n webhook for writing evaluation');
-        return await this.evaluateWritingWithN8n(prompt, response, questionType);
-      } catch (n8nError) {
-        console.error('n8n writing evaluation failed:', n8nError);
-      }
-    }
-    
-    // Priority 2: Use Gemini for direct writing evaluation
+    // Priority 1: Use Gemini for direct writing evaluation (direct API call)
     if (this.geminiApiKey) {
       try {
         console.log('Using Gemini for writing evaluation');
         return await this.evaluateWritingWithGemini(prompt, response, questionType);
       } catch (geminiError) {
         console.error('Gemini writing evaluation failed:', geminiError);
+      }
+    }
+    
+    // Priority 2: Use n8n webhook for writing evaluation (fallback)
+    if (this.webhookUrl) {
+      try {
+        console.log('Using n8n webhook for writing evaluation');
+        return await this.evaluateWritingWithN8n(prompt, response, questionType);
+      } catch (n8nError) {
+        console.error('n8n writing evaluation failed:', n8nError);
       }
     }
     
