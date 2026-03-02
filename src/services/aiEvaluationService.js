@@ -273,8 +273,18 @@ Return JSON format:
       throw new Error(`n8n webhook error: ${response.status}`);
     }
     
-    const data = await response.json();
-    console.log('n8n transcription response:', JSON.stringify(data, null, 2));
+    const responseText = await response.text();
+    console.log('n8n raw response:', responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.log('Response is not JSON, using as text:', responseText);
+      return responseText || '[Empty response from n8n]';
+    }
+    
+    console.log('n8n parsed response:', JSON.stringify(data, null, 2));
     
     // Handle different response formats from n8n
     // AI Agent output can be in data.output or data.text or direct response
@@ -283,6 +293,7 @@ Return JSON format:
                       data.output || 
                       (typeof data === 'string' ? data : null) ||
                       (data[0] && data[0].text) ||
+                      (data[0] && data[0].output) ||
                       '[No transcript received from n8n]';
     
     console.log('Extracted transcript:', transcript);
