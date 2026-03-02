@@ -91,81 +91,240 @@ const LandingPage = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fb', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
-      {/* Sidebar Placeholder or Sidebar consistent with Dashboard */}
-      <aside style={{
-        width: 240,
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
+      {/* Navigation Bar - Matching THE MIGRATION website */}
+      <nav style={{
         background: '#fff',
-        borderRight: '1px solid #e8ecf4',
+        borderBottom: '1px solid #e8ecf4',
+        padding: '0 48px',
+        height: 72,
         display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
-        flexShrink: 0,
-        boxShadow: '2px 0 12px rgba(0,0,0,0.04)',
+        zIndex: 100,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
       }}>
         {/* Logo */}
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            width: 40, height: 40, borderRadius: 12,
-            background: 'linear-gradient(135deg, #ff8a65, #ff6f00)',
+            width: 42, height: 42, borderRadius: 8,
+            background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 800, fontSize: 20,
-          }}>A</div>
-          <span style={{ fontWeight: 700, fontSize: 18, color: '#3e2723', letterSpacing: '-0.5px' }}>Migration</span>
+          }}>P</div>
+          <span style={{ fontWeight: 800, fontSize: 22, color: '#0f172a', letterSpacing: '-0.5px' }}>THE MIGRATION</span>
         </div>
 
-        <div style={{ flex: 1, padding: '20px 0' }}>
+        {/* Nav Links */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           {[
-            { icon: '📊', label: 'Dashboard', path: '/' },
-            { icon: '📝', label: 'Practice', path: '/landing', active: true },
-            { icon: '🎓', label: 'Mock Test', path: '/intro' },
-            { icon: '📁', label: 'Materials', path: '/materials' }
+            { label: 'Home', path: '/' },
+            { label: 'Education', path: '/landing', active: true },
+            { label: 'Mock Test', path: '/intro' },
+            { label: 'Materials', path: '/materials' },
           ].map((item) => (
             <div
               key={item.label}
               onClick={() => navigate(item.path)}
               style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '12px 24px', cursor: 'pointer',
-                background: item.active ? 'linear-gradient(90deg, #ede7f6, #f3e5f5)' : 'transparent',
-                borderRight: item.active ? '4px solid #673ab7' : '4px solid transparent',
-                color: item.active ? '#512da8' : '#5a6270',
-                fontWeight: item.active ? 600 : 400,
-                fontSize: 14,
-                transition: 'all 0.2s',
+                cursor: 'pointer',
+                color: item.active ? '#0d9488' : '#475569',
+                fontWeight: item.active ? 600 : 500,
+                fontSize: 15,
+                transition: 'color 0.2s',
+                position: 'relative',
               }}
+              onMouseEnter={e => !item.active && (e.target.style.color = '#0d9488')}
+              onMouseLeave={e => !item.active && (e.target.style.color = '#475569')}
             >
-              <span style={{ fontSize: 18 }}>{item.icon}</span>
-              <span>{item.label}</span>
+              {item.label}
+              {item.active && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: -26,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  background: '#0d9488',
+                  borderRadius: '2px 2px 0 0',
+                }} />
+              )}
             </div>
           ))}
         </div>
-      </aside>
 
-      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <header style={{ marginBottom: 40 }}>
-            <h1 style={{ fontSize: 32, fontWeight: 800, color: '#1a1f36', marginBottom: 12 }}>Migration PTE Mock Test</h1>
-            <p style={{ fontSize: 16, color: '#5a6270', lineHeight: 1.6 }}>
-              Experience the real PTE Academic exam with our AI-powered mock test.
-              Get instant scoring and detailed feedback.
+        {/* CTA Button */}
+        <button
+          onClick={() => navigate('/intro')}
+          style={{
+            padding: '12px 28px',
+            borderRadius: 8,
+            background: '#0d9488',
+            color: '#fff',
+            fontWeight: 600,
+            fontSize: 15,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.25)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#0f766e'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = '#0d9488'; e.currentTarget.style.transform = 'translateY(0)'; }}
+        >
+          Book Consultation
+        </button>
+      </nav>
+
+      {/* Hero Section */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0d9488 0%, #134e4a 100%)',
+        padding: '80px 48px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Background Pattern */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.1,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }} />
+        
+        <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div style={{ maxWidth: 600 }}>
+            <h1 style={{
+              fontSize: 48,
+              fontWeight: 800,
+              color: '#fff',
+              marginBottom: 20,
+              lineHeight: 1.2,
+            }}>
+              Your Journey to PTE Success Starts Here
+            </h1>
+            <p style={{
+              fontSize: 18,
+              color: 'rgba(255,255,255,0.9)',
+              lineHeight: 1.7,
+              marginBottom: 32,
+            }}>
+              Experience the real PTE Academic exam with our AI-powered mock test. 
+              Get instant scoring, detailed feedback, and expert guidance to achieve 
+              your target score for Australian migration.
             </p>
-          </header>
+            <div style={{ display: 'flex', gap: 16 }}>
+              <button
+                onClick={() => document.getElementById('registration-form').scrollIntoView({ behavior: 'smooth' })}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: 8,
+                  background: 'transparent',
+                  color: '#fff',
+                  fontWeight: 600,
+                  fontSize: 16,
+                  border: '2px solid #fff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#0d9488'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+              >
+                Check Your Eligibility
+              </button>
+              <button
+                onClick={() => document.getElementById('registration-form').scrollIntoView({ behavior: 'smooth' })}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: 8,
+                  background: '#fff',
+                  color: '#0d9488',
+                  fontWeight: 700,
+                  fontSize: 16,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)'; }}
+              >
+                Start Mock Test →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div style={{ padding: '80px 48px', background: '#f8fafc' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 60 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>
+              Why Choose Our PTE Mock Test?
+            </h2>
+            <p style={{ fontSize: 18, color: '#64748b', maxWidth: 600, margin: '0 auto' }}>
+              Designed by migration experts to help you achieve your dream score
+            </p>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+            {[
+              { icon: '🎯', title: 'AI-Powered Scoring', desc: 'Instant evaluation with detailed feedback' },
+              { icon: '📊', title: 'Real Exam Format', desc: 'Authentic PTE Academic test experience' },
+              { icon: '🎓', title: 'Expert Guidance', desc: 'Tips from certified PTE trainers' },
+              { icon: '📈', title: 'Progress Tracking', desc: 'Monitor your improvement over time' },
+            ].map((feature, i) => (
+              <div key={i} style={{
+                background: '#fff',
+                borderRadius: 16,
+                padding: 32,
+                textAlign: 'center',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                border: '1px solid #e2e8f0',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.1)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.05)'; }}
+              >
+                <div style={{ fontSize: 48, marginBottom: 16 }}>{feature.icon}</div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{feature.title}</h3>
+                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6 }}>{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Registration Form Section */}
+      <div id="registration-form" style={{ padding: '80px 48px', background: '#fff' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>
+              Start Your PTE Journey
+            </h2>
+            <p style={{ fontSize: 18, color: '#64748b' }}>
+              Fill in your details below to begin the mock test
+            </p>
+          </div>
 
           <div style={{
             background: '#fff',
-            borderRadius: 20,
-            padding: 40,
-            boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
-            border: '1px solid #eef2f6',
+            borderRadius: 24,
+            padding: 48,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
+            border: '1px solid #e2e8f0',
             display: 'grid',
-            gridTemplateColumns: 'minmax(300px, 1fr) 300px',
-            gap: 40
+            gridTemplateColumns: '1fr 1fr',
+            gap: 48,
           }}>
             <div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1a1f36', marginBottom: 24 }}>Registration</h2>
+              <h3 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Registration</h3>
+              <p style={{ fontSize: 15, color: '#64748b', marginBottom: 32 }}>Complete the form to access your personalized mock test</p>
+              
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <label htmlFor="fullName" style={{ fontSize: 14, fontWeight: 600, color: '#3e4e68' }}>Full Name</label>
@@ -184,7 +343,7 @@ const LandingPage = () => {
                       outline: 'none',
                       transition: 'border-color 0.2s',
                     }}
-                    onFocus={e => e.target.style.borderColor = '#673ab7'}
+                    onFocus={e => e.target.style.borderColor = '#0d9488'}
                     onBlur={e => e.target.style.borderColor = errors.fullName ? '#ff5252' : '#e2e8f0'}
                   />
                   {errors.fullName && <span style={{ fontSize: 12, color: '#ff5252' }}>{errors.fullName}</span>}
@@ -207,7 +366,7 @@ const LandingPage = () => {
                       outline: 'none',
                       transition: 'border-color 0.2s',
                     }}
-                    onFocus={e => e.target.style.borderColor = '#673ab7'}
+                    onFocus={e => e.target.style.borderColor = '#0d9488'}
                     onBlur={e => e.target.style.borderColor = errors.email ? '#ff5252' : '#e2e8f0'}
                   />
                   {errors.email && <span style={{ fontSize: 12, color: '#ff5252' }}>{errors.email}</span>}
@@ -230,7 +389,7 @@ const LandingPage = () => {
                       outline: 'none',
                       transition: 'border-color 0.2s',
                     }}
-                    onFocus={e => e.target.style.borderColor = '#673ab7'}
+                    onFocus={e => e.target.style.borderColor = '#0d9488'}
                     onBlur={e => e.target.style.borderColor = errors.phoneNumber ? '#ff5252' : '#e2e8f0'}
                   />
                   {errors.phoneNumber && <span style={{ fontSize: 12, color: '#ff5252' }}>{errors.phoneNumber}</span>}
@@ -253,7 +412,7 @@ const LandingPage = () => {
                       backgroundColor: '#fff',
                       cursor: 'pointer'
                     }}
-                    onFocus={e => e.target.style.borderColor = '#673ab7'}
+                    onFocus={e => e.target.style.borderColor = '#0d9488'}
                     onBlur={e => e.target.style.borderColor = errors.country ? '#ff5252' : '#e2e8f0'}
                   >
                     <option value="">Select your country</option>
@@ -281,7 +440,7 @@ const LandingPage = () => {
                       outline: 'none',
                       transition: 'border-color 0.2s',
                     }}
-                    onFocus={e => e.target.style.borderColor = '#673ab7'}
+                    onFocus={e => e.target.style.borderColor = '#0d9488'}
                     onBlur={e => e.target.style.borderColor = errors.age ? '#ff5252' : '#e2e8f0'}
                   />
                   {errors.age && <span style={{ fontSize: 12, color: '#ff5252' }}>{errors.age}</span>}
@@ -291,19 +450,19 @@ const LandingPage = () => {
                   type="submit"
                   style={{
                     marginTop: 10,
-                    padding: '14px',
+                    padding: '16px',
                     borderRadius: 12,
-                    background: 'linear-gradient(135deg, #673ab7, #5e35b1)',
+                    background: '#0d9488',
                     color: '#fff',
                     fontWeight: 700,
                     fontSize: 16,
                     border: 'none',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(103, 58, 183, 0.2)',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                    transition: 'all 0.2s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(103, 58, 183, 0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(103, 58, 183, 0.2)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(13, 148, 136, 0.4)'; e.currentTarget.style.background = '#0f766e'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(13, 148, 136, 0.3)'; e.currentTarget.style.background = '#0d9488'; }}
                 >
                   Start PTE Mock Test →
                 </button>
@@ -327,15 +486,15 @@ const LandingPage = () => {
                 ))}
               </ul>
 
-              <div style={{ marginTop: 40, background: '#fff9c4', padding: 20, borderRadius: 16 }}>
-                <p style={{ margin: 0, fontSize: 14, color: '#827717', lineHeight: 1.5, fontWeight: 500 }}>
+              <div style={{ marginTop: 40, background: '#f0fdfa', padding: 20, borderRadius: 16, border: '1px solid #ccfbf1' }}>
+                <p style={{ margin: 0, fontSize: 14, color: '#0f766e', lineHeight: 1.5, fontWeight: 500 }}>
                   <strong>Important:</strong> Ensure your microphone and headphones are working correctly before you begin.
                 </p>
               </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
