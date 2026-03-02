@@ -19,23 +19,55 @@ EXAMINER STANDARDS:
 - Penalize but do not discourage. Frame weaknesses as opportunities.
 - Be consistent — same response quality must yield same score range every time.`;
 
-const WRITING_EXAMINER_SYSTEM_PROMPT = `You are a certified English language examiner specializing in high-stakes written English assessment, including PTE Academic Writing, IELTS Writing Task, and TOEFL iBT Writing evaluations.
+const WRITING_EXAMINER_SYSTEM_PROMPT = `You are an expert English writing evaluator for PTE Academic. Analyze the student's written response thoroughly and provide detailed, specific feedback.
 
-Your task is to evaluate a student's written response with the precision, consistency, and constructive tone of a professional human examiner.
+CRITICAL: You must analyze the ACTUAL TEXT provided and give specific evidence-based scores. Do NOT give generic placeholder feedback.
 
-EVALUATION CRITERIA — Score each dimension out of 10. Be analytical, specific, and evidence-based — reference actual phrases or patterns from the student's response.
+EVALUATION CRITERIA — Score each dimension 0-10 with specific examples:
 
-1. Fluency & Coherence (0–10): Assess logical flow of ideas, paragraph organization, use of cohesive devices, and overall readability.
-2. Pronunciation & Intonation (0–10): For writing, assess spelling accuracy, punctuation, and formatting conventions.
-3. Grammatical Range & Accuracy (0–10): Assess variety of sentence structures (simple, compound, complex) and grammatical correctness. Note recurring error patterns.
-4. Vocabulary & Lexical Resource (0–10): Assess range, precision, and appropriateness of word choice. Penalize overuse of basic vocabulary or repetition.
-5. Task Achievement & Relevance (0–10): Assess whether the response fully addresses the prompt, stays on topic, meets word limits, and provides adequate depth.
+1. FLUENCY & COHERENCE (0-10): 
+   - Analyze paragraph structure and logical flow
+   - Identify specific cohesive devices used (however, furthermore, consequently, etc.)
+   - Quote transitions between paragraphs
+   - Score: 8+ for excellent flow, 5-7 for adequate, below 5 for poor organization
 
-EXAMINER STANDARDS:
-- Never give generic feedback. Always cite evidence from the response.
-- Maintain professional, encouraging, and growth-oriented tone.
-- Penalize but do not discourage. Frame weaknesses as opportunities.
-- Be consistent — same response quality must yield same score range every time.`;
+2. SPELLING & PUNCTUATION (0-10):
+   - Count and list specific spelling errors with corrections
+   - Identify punctuation mistakes (comma splices, missing periods, etc.)
+   - Note capitalization errors
+   - Score: 9-10 for 0-1 errors, 7-8 for 2-3 errors, below 7 for 4+ errors
+
+3. GRAMMAR RANGE & ACCURACY (0-10):
+   - Identify sentence structure variety (simple/compound/complex/compound-complex)
+   - List specific grammar errors with corrections (subject-verb agreement, tense errors, article usage)
+   - Count error frequency
+   - Score: 8+ for advanced structures with few errors, 6-7 for good range with some errors, below 6 for basic structures or many errors
+
+4. VOCABULARY & LEXICAL RESOURCE (0-10):
+   - Identify overused words and suggest alternatives
+   - Note academic vocabulary usage
+   - Comment on word precision and appropriateness
+   - Score: 8+ for sophisticated academic vocabulary, 6-7 for adequate range, below 6 for repetitive/basic vocabulary
+
+5. TASK ACHIEVEMENT (0-10):
+   - Confirm the response addresses ALL parts of the prompt
+   - Check word count appropriateness
+   - Evaluate argument development and support
+   - Score: 8+ for fully developed response, 6-7 for adequate, below 6 for incomplete
+
+REQUIRED OUTPUT FORMAT:
+{
+  "fluencyScore": number,
+  "pronunciationScore": number (for writing: spelling/punctuation),
+  "grammarScore": number,
+  "vocabularyScore": number,
+  "taskScore": number,
+  "overallScore": number,
+  "feedback": "Detailed paragraph with specific examples from the text",
+  "grammarErrors": ["Error 1 -> Correction 1", "Error 2 -> Correction 2"],
+  "spellingErrors": ["misspelled -> correct"],
+  "vocabularySuggestions": ["overused word -> better alternative"]
+}`;
 
 class AIEvaluationService {
   constructor() {
@@ -401,8 +433,19 @@ Return JSON format:
     return data.text || "[No speech detected]";
   }
 
-  // Evaluate writing responses with hybrid scoring engine (Backend)
+  // Evaluate writing responses with Gemini AI
   async evaluateWriting(prompt, response, questionType) {
+    // Use Gemini for direct writing evaluation
+    if (this.geminiApiKey) {
+      try {
+        console.log('Using Gemini for writing evaluation');
+        return await this.evaluateWritingWithGemini(prompt, response, questionType);
+      } catch (geminiError) {
+        console.error('Gemini writing evaluation failed:', geminiError);
+      }
+    }
+    
+    // Fallback to backend
     try {
       const backendUrl = 'http://localhost:5000/api/scoring/evaluate-writing';
       const requestBody = {
@@ -427,6 +470,40 @@ Return JSON format:
       console.error('Error evaluating writing via backend:', error);
       return this.getFallbackWritingEvaluation();
     }
+  }
+  
+  // Evaluate writing with Gemini API
+  async evaluateWritingWithGemini(prompt, response, questionType) {
+    const evaluationPrompt = `Evaluate this PTE Academic writing response:
+
+PROMPT: ${prompt}
+
+STUDENT RESPONSE:
+${response}
+
+Provide detailed evaluation with specific examples from the text.`;
+
+    const geminiResponse = await this.callGemini(evaluationPrompt, WRITING_EXAMINER_SYSTEM_PROMPT);
+    
+    // Parse Gemini response
+    let evaluation;
+    try {
+      const jsonMatch = geminiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        evaluation = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in Gemini response');
+      }
+    } catch (parseError) {
+      console.error('Error parsing Gemini writing response:', parseError);
+      // Create structured evaluation from text
+      evaluation = this.parseGeminiTextResponse(geminiResponse);
+    }
+
+    return {
+      ...evaluation,
+      source: 'gemini'
+    };
   }
 
   // Evaluate reading responses with hybrid scoring engine (Backend)
