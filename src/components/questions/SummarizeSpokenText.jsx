@@ -110,6 +110,11 @@ const SummarizeSpokenText = ({ question, onNext }) => {
         <p><strong>Note:</strong> You will only be able to play the audio once.</p>
       </div>
 
+      {/* Debug info */}
+      <div style={{ padding: '10px', background: '#f0f0f0', fontSize: '12px', color: '#666', margin: '10px 0' }}>
+        Debug: words={wordCount}, audioPlayed={audioPlayed ? 'yes' : 'no'}, hasEvaluation={evaluation ? 'yes' : 'no'}, loading={evalLoading ? 'yes' : 'no'}
+      </div>
+
       {/* AI Score Button - Shows when user has written summary */}
       {wordCount >= 5 && audioPlayed && !evaluation && !evalLoading && (
         <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0' }}>
