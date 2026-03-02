@@ -96,7 +96,7 @@ const SpeakingSection = () => {
   // Set the current section when component mounts
   useEffect(() => {
     setCurrentSection('speaking');
-  }, [setCurrentSection]);
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f7fb', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>

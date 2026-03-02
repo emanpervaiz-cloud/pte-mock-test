@@ -135,7 +135,7 @@ const ReadingSection = () => {
   // Set the current section when component mounts
   useEffect(() => {
     setCurrentSection('reading');
-  }, [setCurrentSection]);
+  }, []);
 
   return (
     <div className="exam-container exam-theme">
