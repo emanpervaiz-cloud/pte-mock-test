@@ -85,6 +85,13 @@ class AIEvaluationService {
       openAiKeyExists: !!this.openAiKey,
       webhookUrl: this.webhookUrl
     });
+    
+    // Hardcoded Gemini key for testing (remove after testing)
+    if (!this.geminiApiKey) {
+      console.log('Using hardcoded Gemini key for testing');
+      this.geminiApiKey = 'AIzaSyDqkroRSVXTP5G0AfidR7tYNzv3bksqmO8';
+      this.useGemini = true;
+    }
   }
   
   // Helper method to call Gemini API
