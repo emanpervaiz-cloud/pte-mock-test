@@ -5,6 +5,8 @@ import ScoreDisplay from '../common/ScoreDisplay';
 import AIEvaluationService from '../../services/aiEvaluationService';
 
 const SummarizeSpokenText = ({ question, onNext }) => {
+  console.log('SummarizeSpokenText mounted:', { questionId: question?.id, type: question?.type });
+  
   const { saveAnswer } = useExam();
   const [summary, setSummary] = useState('');
   const [wordCount, setWordCount] = useState(0);
