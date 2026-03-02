@@ -264,104 +264,142 @@ Return JSON format:
     };
   }
 
-  // Transcribe audio using OpenRouter API (Whisper via OpenRouter)
+  // Transcribe audio with n8n as PRIMARY, Gemini as BACKUP
   async transcribeAudio(audioBlob) {
+    console.log('=== TRANSCRIPTION START ===');
+    console.log('Audio blob size:', audioBlob?.size, 'type:', audioBlob?.type);
+    
     try {
-      // Priority 1: Use Gemini for audio transcription (you have this key)
-      console.log('Checking Gemini key:', this.geminiApiKey ? 'EXISTS' : 'MISSING');
-      console.log('Checking OpenAI key:', this.openAiKey ? 'EXISTS' : 'MISSING');
+      // PRIORITY 1: Try n8n webhook FIRST (as requested for backup workflow)
+      if (this.webhookUrl) {
+        try {
+          console.log('🎯 PRIORITY 1: Trying n8n webhook for transcription');
+          const n8nResult = await this.transcribeWithN8n(audioBlob);
+          if (n8nResult && !n8nResult.includes('[No transcript') && !n8nResult.includes('[Empty response')) {
+            console.log('✅ n8n transcription SUCCESS');
+            return n8nResult;
+          }
+          console.log('⚠️ n8n returned empty/invalid result, trying backup...');
+        } catch (n8nError) {
+          console.error('❌ n8n transcription FAILED:', n8nError.message);
+        }
+      } else {
+        console.log('⚠️ No n8n webhook URL configured');
+      }
       
+      // PRIORITY 2: Use Gemini as BACKUP
       if (this.geminiApiKey) {
         try {
-          console.log('Using Gemini for transcription');
-          return await this.transcribeWithGemini(audioBlob);
+          console.log('🔄 PRIORITY 2: Using Gemini as BACKUP for transcription');
+          const geminiResult = await this.transcribeWithGemini(audioBlob);
+          if (geminiResult && !geminiResult.includes('[No speech detected')) {
+            console.log('✅ Gemini backup transcription SUCCESS');
+            return geminiResult;
+          }
+          console.log('⚠️ Gemini returned empty result, trying next backup...');
         } catch (geminiError) {
-          console.error('Gemini transcription failed:', geminiError);
+          console.error('❌ Gemini backup transcription FAILED:', geminiError.message);
         }
       }
       
-      // Priority 2: Try OpenAI Whisper (fallback)
+      // PRIORITY 3: Try OpenAI Whisper (final fallback)
       if (this.openAiKey) {
         try {
-          console.log('Using OpenAI Whisper for transcription');
+          console.log('🔄 PRIORITY 3: Using OpenAI Whisper as final fallback');
           return await this.transcribeWithWhisper(audioBlob, this.openAiKey);
         } catch (whisperError) {
-          console.error('Whisper transcription failed:', whisperError);
+          console.error('❌ Whisper transcription FAILED:', whisperError.message);
         }
       }
       
-      // Priority 3: Try n8n webhook with OpenRouter
-      if (this.webhookUrl && this.openRouterKey) {
-        try {
-          console.log('Using n8n with OpenRouter for transcription');
-          return await this.transcribeWithN8n(audioBlob);
-        } catch (n8nError) {
-          console.error('n8n transcription failed:', n8nError);
-        }
-      }
+      // All methods failed
+      console.error('=== ALL TRANSCRIPTION METHODS FAILED ===');
+      return "[Transcription unavailable - All services failed. Please try again or contact support.]";
       
-      // Check if we have any API key configured
-      if (!this.geminiApiKey && !this.openAiKey && !this.openRouterKey) {
-        return "[Speech recorded - Please add VITE_GEMINI_API_KEY, VITE_OPENAI_API_KEY, or VITE_OPENROUTER_API_KEY in Vercel environment variables for automatic transcription.]";
-      }
-      
-      // All transcription methods failed
-      console.error('All transcription methods failed');
-      return "[Transcription failed - please check console for errors]";
     } catch (error) {
-      console.error('Transcription error:', error);
-      return "[Transcription error occurred]";
+      console.error('=== TRANSCRIPTION CRITICAL ERROR ===', error);
+      return "[Transcription error - Please refresh and try again]";
     }
   }
   
-  // Transcribe using n8n webhook with OpenRouter
+  // Transcribe using n8n webhook - PRIMARY method
   async transcribeWithN8n(audioBlob) {
-    console.log('Using n8n webhook for transcription with OpenRouter');
-    const base64Audio = await this.blobToBase64(audioBlob);
+    console.log('🎙️ N8N TRANSCRIPTION: Starting...');
     
-    const response = await fetch(this.webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'transcribe_audio',
-        audio: base64Audio,
-        mimeType: audioBlob.type || 'audio/webm',
-        openRouterKey: this.openRouterKey,
-        useOpenRouter: !!this.openRouterKey
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`n8n webhook error: ${response.status}`);
-    }
-    
-    const responseText = await response.text();
-    console.log('n8n raw response:', responseText);
-    
-    let data;
     try {
-      data = JSON.parse(responseText);
-    } catch (e) {
-      console.log('Response is not JSON, using as text:', responseText);
-      return responseText || '[Empty response from n8n]';
+      const base64Audio = await this.blobToBase64(audioBlob);
+      console.log('🎙️ N8N: Audio converted to base64, length:', base64Audio?.length);
+      
+      // Set timeout for n8n request (30 seconds)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      
+      console.log('🎙️ N8N: Sending request to webhook:', this.webhookUrl);
+      const response = await fetch(this.webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'transcribe_audio',
+          audio: base64Audio,
+          mimeType: audioBlob.type || 'audio/webm',
+          timestamp: new Date().toISOString(),
+          source: 'pte_mock_test'
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('🎙️ N8N: Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`n8n webhook error: ${response.status} ${response.statusText}`);
+      }
+      
+      const responseText = await response.text();
+      console.log('🎙️ N8N: Raw response:', responseText.substring(0, 200));
+      
+      // Handle empty response
+      if (!responseText || responseText.trim() === '') {
+        console.error('🎙️ N8N: Empty response received');
+        return '[Empty response from n8n]';
+      }
+      
+      // Try to parse JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('🎙️ N8N: Parsed JSON response');
+      } catch (e) {
+        // Not JSON, use as plain text
+        console.log('🎙️ N8N: Response is plain text');
+        return responseText.trim();
+      }
+      
+      // Extract transcript from various possible formats
+      const transcript = 
+        data.transcript || 
+        data.text || 
+        data.output ||
+        data.result ||
+        data.message ||
+        (typeof data === 'string' ? data : null) ||
+        (data[0] && (data[0].text || data[0].output || data[0].transcript)) ||
+        '[No transcript received from n8n]';
+      
+      console.log('🎙️ N8N: Extracted transcript:', transcript.substring(0, 100) + '...');
+      return transcript;
+      
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.error('🎙️ N8N: Request timed out after 30 seconds');
+        throw new Error('n8n transcription timeout');
+      }
+      console.error('🎙️ N8N: Error during transcription:', error.message);
+      throw error;
     }
-    
-    console.log('n8n parsed response:', JSON.stringify(data, null, 2));
-    
-    // Handle different response formats from n8n
-    // AI Agent output can be in data.output or data.text or direct response
-    const transcript = data.transcript || 
-                      data.text || 
-                      data.output || 
-                      (typeof data === 'string' ? data : null) ||
-                      (data[0] && data[0].text) ||
-                      (data[0] && data[0].output) ||
-                      '[No transcript received from n8n]';
-    
-    console.log('Extracted transcript:', transcript);
-    return transcript;
   }
 
   // Transcribe using Web Speech API (browser built-in)
