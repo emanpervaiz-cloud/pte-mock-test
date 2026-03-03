@@ -35,7 +35,8 @@ const actionTypes = {
   SET_SCORES: 'SET_SCORES',
   RESET_EXAM: 'RESET_EXAM',
   SET_EXAM_MODE: 'SET_EXAM_MODE',
-  SET_CURRENT_MOCK_SECTION_INDEX: 'SET_CURRENT_MOCK_SECTION_INDEX'
+  SET_CURRENT_MOCK_SECTION_INDEX: 'SET_CURRENT_MOCK_SECTION_INDEX',
+  RESET_MOCK_TEST: 'RESET_MOCK_TEST'
 };
 
 actionTypes.SET_USE_ALTERNATE = 'SET_USE_ALTERNATE';
@@ -104,6 +105,13 @@ const examReducer = (state, action) => {
           ...action.payload
         }
       };
+    case actionTypes.RESET_MOCK_TEST:
+      return {
+        ...initialState,
+        user: state.user,
+        examMode: 'mock',
+        examStarted: true
+      };
     case actionTypes.RESET_EXAM:
       return initialState;
     default:
@@ -145,9 +153,9 @@ export const ExamProvider = ({ children }) => {
   };
 
   const saveAnswer = (questionId, answer) => {
-    dispatch({ 
-      type: actionTypes.SAVE_ANSWER, 
-      payload: { questionId, answer } 
+    dispatch({
+      type: actionTypes.SAVE_ANSWER,
+      payload: { questionId, answer }
     });
   };
 
@@ -183,16 +191,20 @@ export const ExamProvider = ({ children }) => {
     dispatch({ type: actionTypes.RESET_EXAM });
   };
 
+  const resetMockTest = () => {
+    dispatch({ type: actionTypes.RESET_MOCK_TEST });
+  };
+
   // Lightweight authentication helpers (local only)
   const login = (user) => {
     const u = { ...user, lastLoginAt: new Date().toISOString(), lastTestTaken: user.lastTestTaken || null };
     dispatch({ type: actionTypes.SET_USER, payload: u });
-    try { localStorage.setItem('pte_user', JSON.stringify(u)); } catch {}
+    try { localStorage.setItem('pte_user', JSON.stringify(u)); } catch { }
   };
 
   const logout = () => {
     dispatch({ type: actionTypes.SET_USER, payload: null });
-    try { localStorage.removeItem('pte_user'); } catch {}
+    try { localStorage.removeItem('pte_user'); } catch { }
   };
 
   const value = {
@@ -206,6 +218,7 @@ export const ExamProvider = ({ children }) => {
     completeExam,
     setScores,
     resetExam,
+    resetMockTest,
     setExamMode,
     setCurrentMockSectionIndex,
     login,

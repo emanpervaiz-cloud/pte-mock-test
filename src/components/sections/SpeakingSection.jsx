@@ -9,9 +9,10 @@ import RetellLecture from '../questions/RetellLecture';
 import AnswerShortQuestion from '../questions/AnswerShortQuestion';
 import { useNavigate } from 'react-router-dom';
 
-const SpeakingSection = () => {
-  const { state, setCurrentQuestionIndex, setCurrentSection } = useExam();
+const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false }) => {
+  const { state, setCurrentQuestionIndex, setCurrentSection, resetMockTest } = useExam();
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const navigate = useNavigate();
 
   // Speaking questions data - Only including the user's voice notes as they are the priority
@@ -70,19 +71,27 @@ const SpeakingSection = () => {
       setCurrentQuestionIndex(nextIndex);
       window.scrollTo(0, 0);
     } else {
-      console.log('Speaking: Navigating to Writing section...');
-      try {
-        // Set section in context before navigating for consistency
-        setCurrentSection('writing');
-        setCurrentQuestionIndex(0);
-        console.log('Speaking: About to navigate to /exam/writing');
-        navigate('/exam/writing', { replace: true });
-        console.log('Speaking: Navigation called successfully');
-      } catch (error) {
-        console.error('Speaking: Navigation error:', error);
-        // Fallback navigation
-        window.location.href = '/exam/writing';
+      console.log('Speaking: Section complete', { isMockTest });
+      if (isMockTest) {
+        if (onSectionComplete) onSectionComplete();
+      } else {
+        // Individual Practice Mode: Navigate to results
+        navigate('/results/speaking');
       }
+    }
+  };
+
+  const handleTimeout = () => {
+    if (isMockTest) {
+      setShowTimeoutModal(true);
+      // Let the user see the message for a moment then reset
+      setTimeout(() => {
+        resetMockTest();
+        navigate('/');
+      }, 3000);
+    } else {
+      // Practice mode: skip to results on timeout
+      navigate('/results/speaking');
     }
   };
 
@@ -118,12 +127,29 @@ const SpeakingSection = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>
-            <span style={{ color: 'var(--secondary-color)' }}>●</span> Section Test
-          </div>
-          <Timer initialTime={1200} /> {/* 20 minutes */}
+          {!isMockTest && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>
+              <span style={{ color: 'var(--secondary-color)' }}>●</span> Practice Mode
+            </div>
+          )}
+          {isMockTest && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger-color)', fontSize: 13, fontWeight: 700 }}>
+              <span style={{ color: 'var(--danger-color)' }}>●</span> MOCK TEST LIVE
+            </div>
+          )}
+          <Timer initialTime={1200} onComplete={handleTimeout} /> {/* 20 minutes */}
         </div>
       </header>
+
+      {showTimeoutModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', textAlign: 'center', padding: 20 }}>
+          <div style={{ background: '#fff', color: 'var(--text-main)', padding: 40, borderRadius: 24, maxWidth: 450, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <h2 style={{ color: 'var(--danger-color)', marginBottom: 16 }}>⏰ Time Expired!</h2>
+            <p style={{ fontSize: 18, marginBottom: 24, lineHeight: 1.6 }}>The time limit for this section has been reached. In Mock Test mode, the test must be completed within the fixed time limits.</p>
+            <p style={{ fontWeight: 700, color: 'var(--primary-color)' }}>Restarting Mock Test...</p>
+          </div>
+        </div>
+      )}
 
       <main style={{ padding: '32px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -231,7 +257,9 @@ const SpeakingSection = () => {
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              {currentQuestion === speakingQuestions.length - 1 ? 'Next: Writing Section →' : 'Next Question →'}
+              {currentQuestion === speakingQuestions.length - 1
+                ? (isMockTest ? 'Submit Section →' : 'View Results →')
+                : 'Next Question →'}
             </button>
           </div>
         </div>

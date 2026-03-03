@@ -12,9 +12,10 @@ import WriteFromDictation from '../questions/WriteFromDictation';
 import { LISTENING_PASSAGES } from '../../data/listeningData';
 import { useNavigate } from 'react-router-dom';
 
-const ListeningSection = () => {
-  const { state, setCurrentQuestionIndex, setCurrentSection } = useExam();
+const ListeningSection = ({ onSectionComplete, onSectionBack, isMockTest = false }) => {
+  const { state, setCurrentQuestionIndex, setCurrentSection, resetMockTest } = useExam();
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -199,19 +200,33 @@ const ListeningSection = () => {
   }
 
   const handleNextQuestion = () => {
-    const isLastQuestion = currentQuestion >= listeningQuestions.length - 1;
+    const isLastQuestion = currentQuestion === listeningQuestions.length - 1;
 
     if (isLastQuestion) {
-      // Listening is first - navigate to Speaking
-      console.log('Listening section completed - navigating to Speaking');
-      setCurrentSection('speaking');
-      setCurrentQuestionIndex(0);
-      navigate('/exam/speaking', { replace: true });
+      console.log('Listening: Section complete', { isMockTest });
+      if (isMockTest) {
+        if (onSectionComplete) onSectionComplete();
+      } else {
+        // Individual Practice Mode
+        navigate('/results/listening');
+      }
     } else {
       const nextIndex = currentQuestion + 1;
       setCurrentQuestion(nextIndex);
       setCurrentQuestionIndex(nextIndex);
       window.scrollTo(0, 0);
+    }
+  };
+
+  const handleTimeout = () => {
+    if (isMockTest) {
+      setShowTimeoutModal(true);
+      setTimeout(() => {
+        resetMockTest();
+        navigate('/');
+      }, 3000);
+    } else {
+      navigate('/results/listening');
     }
   };
 
@@ -247,12 +262,29 @@ const ListeningSection = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>
-            <span style={{ color: 'var(--secondary-color)' }}>●</span> Section Test
-          </div>
-          <Timer initialTime={900} />
+          {!isMockTest && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>
+              <span style={{ color: 'var(--secondary-color)' }}>●</span> Practice Mode
+            </div>
+          )}
+          {isMockTest && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger-color)', fontSize: 13, fontWeight: 700 }}>
+              <span style={{ color: 'var(--danger-color)' }}>●</span> MOCK TEST LIVE
+            </div>
+          )}
+          <Timer initialTime={900} onComplete={handleTimeout} />
         </div>
       </header>
+
+      {showTimeoutModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', textAlign: 'center', padding: 20 }}>
+          <div style={{ background: '#fff', color: 'var(--text-main)', padding: 40, borderRadius: 24, maxWidth: 450, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <h2 style={{ color: 'var(--danger-color)', marginBottom: 16 }}>⏰ Time Expired!</h2>
+            <p style={{ fontSize: 18, marginBottom: 24, lineHeight: 1.6 }}>The time limit for this section has been reached. In Mock Test mode, the test must be completed within the fixed time limits.</p>
+            <p style={{ fontWeight: 700, color: 'var(--primary-color)' }}>Restarting Mock Test...</p>
+          </div>
+        </div>
+      )}
 
       <main style={{ padding: '32px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -364,7 +396,9 @@ const ListeningSection = () => {
                 transition: 'all 0.2s'
               }}
             >
-              {currentQuestion === listeningQuestions.length - 1 ? 'Next Section →' : 'Next Question →'}
+              {currentQuestion === listeningQuestions.length - 1
+                ? (isMockTest ? 'Submit Section →' : 'View Results →')
+                : 'Next Question →'}
             </button>
           </div>
         </div>

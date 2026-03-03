@@ -5,6 +5,7 @@ import ListeningSection from '../sections/ListeningSection';
 import SpeakingSection from '../sections/SpeakingSection';
 import WritingSection from '../sections/WritingSection';
 import ReadingSection from '../sections/ReadingSection';
+import Timer from './Timer';
 
 const MockTestFlow = () => {
   const { state, setExamMode, setCurrentMockSectionIndex } = useExam();
@@ -15,6 +16,7 @@ const MockTestFlow = () => {
     // Set exam mode to mock test
     setExamMode('mock');
     setCurrentMockSectionIndex(0);
+    window.scrollTo(0, 0);
   }, []);
 
   const handleSectionComplete = () => {
@@ -37,10 +39,10 @@ const MockTestFlow = () => {
 
   const getSectionTitle = () => {
     const sections = [
-      'listening (15 minutes) - 3 questions',
-      'speaking (20 minutes) - 6 questions',
-      'writing (10 minutes) - 2 questions',
-      'reading (35 minutes) - 20 questions'
+      'listening (15 minutes)',
+      'speaking (20 minutes)',
+      'writing (10 minutes)',
+      'reading (35 minutes)'
     ];
     return sections[currentSection] || '';
   };
@@ -51,8 +53,7 @@ const MockTestFlow = () => {
     const sectionProps = {
       onSectionComplete: handleSectionComplete,
       onSectionBack: handleSectionBack,
-      isMockTest: true,
-      showNavigation: false
+      isMockTest: true
     };
 
     switch (sectionType) {
@@ -94,11 +95,17 @@ const MockTestFlow = () => {
         zIndex: 1000,
         boxShadow: 'var(--shadow-md)'
       }}>
-        <div className="container">
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>PTE Academic Mock Test</h2>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', opacity: 0.8, color: 'var(--secondary-color)', fontWeight: 600 }}>
-            Section {currentSection + 1} of {state.mockTestSections.length}: {getSectionTitle().toUpperCase()}
-          </p>
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
+          <div style={{ textAlign: 'left' }}>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>PTE Academic Mock Test</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.8, color: 'var(--secondary-color)', fontWeight: 600 }}>
+              SECTION {currentSection + 1} OF {state.mockTestSections.length}: {getSectionTitle().toUpperCase()}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.7, color: '#fff' }}>OVERALL TEST TIME:</div>
+            <Timer initialTime={4800} autoSubmit={false} /> {/* 80 minutes total */}
+          </div>
         </div>
       </div>
 
