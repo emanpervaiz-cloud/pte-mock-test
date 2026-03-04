@@ -241,6 +241,7 @@ Provide feedback on:
 Return JSON format with a "feedback" field and a "suggestions" array."""
         
         result = await self._call_ai_model(evaluation_prompt, self.system_prompts["reading"])
+        ai_feedback = await self._call_ai_for_qualitative_feedback(evaluation_prompt, self.system_prompts["reading"])
         
         # If result is just a text feedback (parsed_json_from_text fallback), 
         # ensure it has the expected structure
@@ -251,6 +252,7 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
         return ScoreResult(
             score=accuracy_percentage,
             feedback=result.get("feedback", f"Student answered {correct_count} out of {total_count} questions correctly."),
+            feedback=ai_feedback.get("feedback", f"Student answered {correct_count} out of {total_count} questions correctly."),
             details={
                 "correct_count": correct_count,
                 "total_count": total_count,
@@ -258,6 +260,8 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
                 "detailed_results": results_detailed,
                 "suggestions": result.get("suggestions", []),
                 "source": result.get("source", "ai")
+                "suggestions": ai_feedback.get("suggestions", []),
+                "source": ai_feedback.get("source", "ai")
             }
         )
 
@@ -296,6 +300,7 @@ Provide feedback on listening skills, note-taking, and accuracy.
 Return JSON format with a "feedback" field and a "suggestions" array."""
         
         result = await self._call_ai_model(evaluation_prompt, self.system_prompts["listening"])
+        ai_feedback = await self._call_ai_for_qualitative_feedback(evaluation_prompt, self.system_prompts["listening"])
         
         # Ensure result has expected structure
         if "feedback" not in result:
@@ -305,6 +310,7 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
         return ScoreResult(
             score=accuracy_percentage,
             feedback=result.get("feedback", f"Student answered {correct_count} out of {total_count} questions correctly."),
+            feedback=ai_feedback.get("feedback", f"Student answered {correct_count} out of {total_count} questions correctly."),
             details={
                 "correct_count": correct_count,
                 "total_count": total_count,
@@ -312,6 +318,8 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
                 "detailed_results": results_detailed,
                 "suggestions": result.get("suggestions", []),
                 "source": result.get("source", "ai")
+                "suggestions": ai_feedback.get("suggestions", []),
+                "source": ai_feedback.get("source", "ai")
             }
         )
 
@@ -331,6 +339,7 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
                 result = await func(prompt, system_prompt)
                 if result and result.get("overallScore") is not None:
                     print(f"Success with provider: {name}")
+                    result['source'] = name
                     return result
             except Exception as e:
                 print(f"Provider {name} failed: {str(e)}")
@@ -348,6 +357,29 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
             "fluencyIssues": [],
             "source": "fallback"
         }
+
+    async def _call_ai_for_qualitative_feedback(self, prompt: str, system_prompt: str) -> Dict[str, Any]:
+        """Call AI model for feedback-oriented tasks (Reading/Listening)"""
+        print(f"Calling AI model for qualitative feedback with prompt length: {len(prompt)}")
+        
+        providers = [
+            ("Gemini", self._call_gemini),
+            ("OpenRouter", self._call_openrouter),
+            ("OpenAI", self._call_openai)
+        ]
+        
+        for name, func in providers:
+            try:
+                print(f"Trying provider for feedback: {name}")
+                result = await func(prompt, system_prompt)
+                # For these tasks, we just need a valid dictionary response
+                if isinstance(result, dict) and "feedback" in result:
+                    result['source'] = name
+                    return result
+            except Exception as e:
+                print(f"Provider {name} failed for feedback: {str(e)}")
+        
+        return {"feedback": "AI feedback is currently unavailable.", "suggestions": [], "source": "fallback"}
 
     async def _call_gemini(self, prompt: str, system_prompt: str) -> Dict[str, Any]:
         """Call Google Gemini API with better error checking"""
