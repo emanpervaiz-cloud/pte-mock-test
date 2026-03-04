@@ -83,11 +83,18 @@ class AIEvaluationService {
 
     this.useGemini = !!this.geminiApiKey;
 
-    console.log('AIEvaluationService initialized (Production Ready Variant):', {
-      geminiKeyExists: !!this.geminiApiKey,
+    // PRODUCTION DEBUGGING: Log key presence explicitly
+    console.warn('--- AI EVALUATION SERVICE DIAGNOSTICS ---');
+    console.warn('Environment:', import.meta.env.MODE);
+    console.warn('Gemini Key Exists:', !!this.geminiApiKey);
+    if (this.geminiApiKey) console.warn('Gemini Key Prefix:', this.geminiApiKey.substring(0, 5) + '...');
+    console.warn('OpenRouter Key Exists:', !!this.openRouterKey);
+    console.warn('OpenAI Key Exists:', !!this.openAiKey);
+    console.warn('Python Server URL:', this.pythonServerUrl);
+    console.warn('--- END DIAGNOSTICS ---');
+
+    console.log('AIEvaluationService initialized (Production Ready Variant)', {
       useGemini: this.useGemini,
-      openRouterKeyExists: !!this.openRouterKey,
-      openAiKeyExists: !!this.openAiKey
     });
   }
 
@@ -139,11 +146,11 @@ class AIEvaluationService {
           console.log(`✅ Gemini SUCCESS using model ${model}`);
           return text;
         } else {
-          console.warn(`Gemini model ${model} returned empty content`);
+          console.warn(`Gemini model ${model} returned empty content`, JSON.stringify(data));
           lastError = new Error(`Empty response from ${model}`);
         }
       } catch (error) {
-        console.error(`CRITICAL error attempting ${model}:`, error);
+        console.error(`💥 CRITICAL error attempting ${model}:`, error.message, error.stack);
         lastError = error;
       }
     }
