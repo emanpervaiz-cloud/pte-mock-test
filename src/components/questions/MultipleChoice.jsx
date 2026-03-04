@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
+import AIEvaluationService from '../../services/aiEvaluationService';
+import ScoreDisplay from '../common/ScoreDisplay';
 
 const MultipleChoice = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // AI Evaluation State
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
+
   useEffect(() => {
     if (question) {
       setSelectedOptions([]);
       setIsSubmitted(false);
+      setEvaluation(null);
+      setEvalLoading(false);
+      setEvalError(null);
     }
   }, [question?.id]);
 
@@ -47,6 +57,39 @@ const MultipleChoice = ({ question, onNext }) => {
     });
 
     setIsSubmitted(true);
+    handleGetAIScore(selectedOptions);
+  };
+
+  const handleGetAIScore = async (currentResponses) => {
+    setEvalLoading(true);
+    setEvalError(null);
+
+    try {
+      const evaluator = new AIEvaluationService();
+
+      // Format current answer for evaluation
+      const questionsWithAnswers = [{
+        id: question.id,
+        type: 'multiple_choice',
+        question: question.question,
+        correct_answer: question.correct,
+        response: currentResponses
+      }];
+
+      const result = await evaluator.evaluateReading(questionsWithAnswers);
+      setEvaluation(result);
+
+      // Store in localStorage
+      const aiEvaluations = JSON.parse(localStorage.getItem('pte_ai_evaluations') || '{}');
+      aiEvaluations[question.id] = result;
+      localStorage.setItem('pte_ai_evaluations', JSON.stringify(aiEvaluations));
+
+    } catch (err) {
+      console.error('AI Evaluation Error:', err);
+      setEvalError('Failed to get AI score. Numerical score shown below.');
+    } finally {
+      setEvalLoading(false);
+    }
   };
 
   return (
@@ -81,43 +124,71 @@ const MultipleChoice = ({ question, onNext }) => {
       </div>
 
       {isSubmitted && (
-        <div className="answer-feedback" style={{
-          marginTop: '20px',
-          padding: '15px',
-          backgroundColor: 'rgba(13, 59, 102, 0.05)',
-          borderRadius: '8px',
-          border: '1px solid var(--primary-color)'
-        }}>
-          <h4 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>
-            {question.multiple ? 'Correct Answers:' : 'Correct Answer:'}
-          </h4>
-          {question.options.map((option) => {
-            const isSelected = selectedOptions.includes(option.id);
-            const isCorrect = Array.isArray(question.correct)
-              ? question.correct.includes(option.id)
-              : question.correct === option.id;
+        <>
+          <div className="answer-feedback" style={{
+            marginTop: '20px',
+            padding: '15px',
+            backgroundColor: 'rgba(13, 59, 102, 0.05)',
+            borderRadius: '8px',
+            border: '1px solid var(--primary-color)'
+          }}>
+            <h4 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>
+              {question.multiple ? 'Correct Answers:' : 'Correct Answer:'}
+            </h4>
+            {question.options.map((option) => {
+              const isSelected = selectedOptions.includes(option.id);
+              const isCorrect = Array.isArray(question.correct)
+                ? question.correct.includes(option.id)
+                : question.correct === option.id;
 
-            if (!isCorrect && !isSelected) return null;
+              if (!isCorrect && !isSelected) return null;
 
-            return (
-              <div key={option.id} style={{
-                marginBottom: '8px',
-                padding: '8px',
-                backgroundColor: isCorrect ? '#dcfce7' : '#fee2e2',
-                borderRadius: '4px',
-                borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`
+              return (
+                <div key={option.id} style={{
+                  marginBottom: '8px',
+                  padding: '8px',
+                  backgroundColor: isCorrect ? '#dcfce7' : '#fee2e2',
+                  borderRadius: '4px',
+                  borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`
+                }}>
+                  <strong>{option.id}.</strong>{' '}
+                  <span style={{ color: isCorrect ? '#22c55e' : '#ef4444' }}>
+                    {option.text}
+                  </span>
+                  {isCorrect && isSelected && <span style={{ color: '#22c55e', marginLeft: '10px' }}>✓ Your answer</span>}
+                  {isCorrect && !isSelected && <span style={{ color: '#22c55e', marginLeft: '10px' }}>✓ Correct</span>}
+                  {!isCorrect && isSelected && <span style={{ color: '#ef4444', marginLeft: '10px' }}>✗ Your answer (Incorrect)</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="evaluation-section" style={{ marginTop: '24px' }}>
+            <ScoreDisplay
+              evaluation={evaluation}
+              loading={evalLoading}
+              error={evalError}
+              questionType="reading"
+            />
+
+            {!evaluation && !evalLoading && (
+              <div className="numerical-score-fallback" style={{
+                padding: '16px',
+                background: '#f8fafc',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                marginTop: '12px'
               }}>
-                <strong>{option.id}.</strong>{' '}
-                <span style={{ color: isCorrect ? '#22c55e' : '#ef4444' }}>
-                  {option.text}
-                </span>
-                {isCorrect && isSelected && <span style={{ color: '#22c55e', marginLeft: '10px' }}>✓ Your answer</span>}
-                {isCorrect && !isSelected && <span style={{ color: '#22c55e', marginLeft: '10px' }}>✓ Correct</span>}
-                {!isCorrect && isSelected && <span style={{ color: '#ef4444', marginLeft: '10px' }}>✗ Your answer (Incorrect)</span>}
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--primary-color)' }}>Numerical Score:</h4>
+                <p style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+                  {Array.isArray(question.correct)
+                    ? selectedOptions.filter(id => question.correct.includes(id)).length
+                    : (selectedOptions.includes(question.correct) ? 1 : 0)} / {Array.isArray(question.correct) ? question.correct.length : 1}
+                </p>
               </div>
-            );
-          })}
-        </div>
+            )}
+          </div>
+        </>
       )}
 
       <div className="action-buttons" style={{ marginTop: '20px' }}>

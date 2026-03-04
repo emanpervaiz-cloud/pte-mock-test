@@ -242,6 +242,12 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
         
         result = await self._call_ai_model(evaluation_prompt, self.system_prompts["reading"])
         
+        # If result is just a text feedback (parsed_json_from_text fallback), 
+        # ensure it has the expected structure
+        if "feedback" not in result:
+             result["feedback"] = str(result)
+             result["suggestions"] = []
+
         return ScoreResult(
             score=accuracy_percentage,
             feedback=result.get("feedback", f"Student answered {correct_count} out of {total_count} questions correctly."),
@@ -250,7 +256,8 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
                 "total_count": total_count,
                 "accuracy_percentage": accuracy_percentage,
                 "detailed_results": results_detailed,
-                "suggestions": result.get("suggestions", [])
+                "suggestions": result.get("suggestions", []),
+                "source": result.get("source", "ai")
             }
         )
 
@@ -290,6 +297,11 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
         
         result = await self._call_ai_model(evaluation_prompt, self.system_prompts["listening"])
         
+        # Ensure result has expected structure
+        if "feedback" not in result:
+             result["feedback"] = str(result)
+             result["suggestions"] = []
+
         return ScoreResult(
             score=accuracy_percentage,
             feedback=result.get("feedback", f"Student answered {correct_count} out of {total_count} questions correctly."),
@@ -298,7 +310,8 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
                 "total_count": total_count,
                 "accuracy_percentage": accuracy_percentage,
                 "detailed_results": results_detailed,
-                "suggestions": result.get("suggestions", [])
+                "suggestions": result.get("suggestions", []),
+                "source": result.get("source", "ai")
             }
         )
 
@@ -338,10 +351,8 @@ Return JSON format with a "feedback" field and a "suggestions" array."""
 
     async def _call_gemini(self, prompt: str, system_prompt: str) -> Dict[str, Any]:
         """Call Google Gemini API with better error checking"""
-        if not self.gemini_api_key:
-            raise ValueError("Gemini API key not configured")
-            
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={self.gemini_api_key}"
+        # Use gemini-1.5-flash for faster response times in real-time scoring
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key={self.gemini_api_key}"
         
         payload = {
             "contents": [{

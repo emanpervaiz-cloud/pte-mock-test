@@ -50,10 +50,16 @@ const MockTestFlow = () => {
   const renderCurrentSection = () => {
     const sectionType = state.mockTestSections[currentSection];
 
+    const nextSectionIndex = currentSection + 1;
+    const nextSectionType = nextSectionIndex < state.mockTestSections.length
+      ? state.mockTestSections[nextSectionIndex]
+      : null;
+
     const sectionProps = {
       onSectionComplete: handleSectionComplete,
       onSectionBack: handleSectionBack,
-      isMockTest: true
+      isMockTest: true,
+      nextModule: nextSectionType ? nextSectionType.charAt(0).toUpperCase() + nextSectionType.slice(1) : null
     };
 
     switch (sectionType) {

@@ -3,7 +3,7 @@ import { useExam } from '../../context/ExamContext';
 import { useNavigate } from 'react-router-dom';
 import scoringEngine from '../../services/scoringEngine';
 
-const ModuleResults = ({ moduleType, onNavigateNext }) => {
+const ModuleResults = ({ moduleType, onNavigateNext, isInline = false }) => {
   const { state, setScores } = useExam();
   const navigate = useNavigate();
   const [scores, setLocalScores] = useState(null);
@@ -123,6 +123,65 @@ const ModuleResults = ({ moduleType, onNavigateNext }) => {
   const moduleScore = scores[moduleType]?.scaledScore || 10;
   const cefrLevel = scores[moduleType]?.cefrLevel || 'A1';
   const feedback = scores[moduleType]?.feedback || '';
+
+  if (isInline) {
+    return (
+      <div style={{ padding: '20px 0' }}>
+        {/* Module Score Card */}
+        <div className="card" style={{ textAlign: 'center', marginBottom: '24px', padding: '32px', background: '#fff', borderRadius: '16px', border: '1px solid var(--accent-color)' }}>
+          <h2 style={{ marginBottom: '8px', color: 'var(--primary-color)' }}>
+            {moduleType === 'speaking' && '🎤 '}
+            {moduleType === 'writing' && '✍️ '}
+            {moduleType === 'reading' && '📖 '}
+            {moduleType === 'listening' && '🎧 '}
+            {moduleType.charAt(0).toUpperCase() + moduleType.slice(1)} Performance
+          </h2>
+          <div style={{
+            fontSize: '72px',
+            fontWeight: '800',
+            color: getScoreColor(moduleScore),
+            lineHeight: '1.1',
+            margin: '12px 0'
+          }}>
+            {moduleScore}
+            <span style={{ fontSize: '24px', color: '#666' }}>/90</span>
+          </div>
+          <div style={{
+            display: 'inline-block',
+            padding: '6px 20px',
+            borderRadius: '20px',
+            background: 'var(--primary-color)',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '16px',
+            marginBottom: '12px'
+          }}>
+            CEFR Level: {cefrLevel}
+          </div>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '12px', fontSize: '15px' }}>{feedback}</p>
+        </div>
+
+        {/* Module Summary */}
+        <div className="card" style={{ padding: '24px', background: '#fff', borderRadius: '16px', border: '1px solid var(--accent-color)' }}>
+          <h3 style={{ color: 'var(--primary-color)', marginBottom: '16px' }}>Practice Summary</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
+            <div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Items Completed</div>
+              <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary-color)' }}>
+                {Object.values(state.answers || {}).filter(a => a.section === moduleType).length}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Estimated Accuracy</div>
+              <div style={{ fontSize: '24px', fontWeight: '800', color: getScoreColor(moduleScore) }}>
+                {Math.round((moduleScore / 90) * 100)}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="exam-container exam-theme">

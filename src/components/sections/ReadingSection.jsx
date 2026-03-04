@@ -8,12 +8,14 @@ import ReorderParagraph from '../questions/ReorderParagraph';
 import ReadingFillBlanks from '../questions/ReadingFillBlanks';
 import ReadingMultipleChoiceAudio from '../questions/ReadingMultipleChoiceAudio';
 import { useNavigate } from 'react-router-dom';
+import ModuleResults from '../common/ModuleResults';
 import { READING_PASSAGES } from '../../data/readingData';
 
-const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false }) => {
+const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, nextModule = null }) => {
   const { state, setCurrentQuestionIndex, setCurrentSection, resetMockTest } = useExam();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
 
   // Map the structured JSON reading passages into individual test questions
@@ -124,8 +126,8 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false }
       if (isMockTest) {
         if (onSectionComplete) onSectionComplete();
       } else {
-        // Individual Practice Mode
-        navigate('/results/reading');
+        // Individual Practice Mode: Show results inline
+        setShowResults(true);
       }
     }
   };
@@ -138,7 +140,8 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false }
         navigate('/');
       }, 3000);
     } else {
-      navigate('/results/reading');
+      // Practice mode: skip to results on timeout
+      setShowResults(true);
     }
   };
 
@@ -247,31 +250,35 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false }
               </div>
             </div>
 
-            <div style={{ flex: 1 }}>
-              {currentQuestionData.passage && currentQuestionData.type !== 'reading_fill_blanks' && currentQuestionData.type !== 'reading_writing_fill_blanks' && (
-                <div style={{ padding: '20px', background: 'rgba(13, 59, 102, 0.03)', borderRadius: '16px', marginBottom: '24px', border: '1px solid var(--accent-color)', color: 'var(--text-main)' }}>
-                  {currentQuestionData.title && <h3 style={{ margin: '0 0 12px', fontSize: 18, color: 'var(--primary-color)' }}>Topic: {currentQuestionData.title}</h3>}
-                  <p style={{ margin: 0, lineHeight: 1.7 }}>{currentQuestionData.passage}</p>
-                </div>
-              )}
+            {showResults ? (
+              <ModuleResults moduleType="reading" isInline={true} />
+            ) : (
+              <div style={{ flex: 1 }}>
+                {currentQuestionData.passage && currentQuestionData.type !== 'reading_fill_blanks' && currentQuestionData.type !== 'reading_writing_fill_blanks' && (
+                  <div style={{ padding: '20px', background: 'rgba(13, 59, 102, 0.03)', borderRadius: '16px', marginBottom: '24px', border: '1px solid var(--accent-color)', color: 'var(--text-main)' }}>
+                    {currentQuestionData.title && <h3 style={{ margin: '0 0 12px', fontSize: 18, color: 'var(--primary-color)' }}>Topic: {currentQuestionData.title}</h3>}
+                    <p style={{ margin: 0, lineHeight: 1.7 }}>{currentQuestionData.passage}</p>
+                  </div>
+                )}
 
-              {/* Render the appropriate question component based on type */}
-              {currentQuestionData.type === 'reading_writing_fill_blanks' && (
-                <ReadingWritingFillBlanks key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'multiple_choice' && (
-                <MultipleChoice key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'reorder_paragraph' && (
-                <ReorderParagraph key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'reading_fill_blanks' && (
-                <ReadingFillBlanks key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'reading_multiple_choice_audio' && (
-                <ReadingMultipleChoiceAudio key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-            </div>
+                {/* Render the appropriate question component based on type */}
+                {currentQuestionData.type === 'reading_writing_fill_blanks' && (
+                  <ReadingWritingFillBlanks key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'multiple_choice' && (
+                  <MultipleChoice key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'reorder_paragraph' && (
+                  <ReorderParagraph key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'reading_fill_blanks' && (
+                  <ReadingFillBlanks key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'reading_multiple_choice_audio' && (
+                  <ReadingMultipleChoiceAudio key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Navigation */}
@@ -280,33 +287,94 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false }
             padding: '20px 32px', background: '#fff', borderRadius: 20,
             border: '1px solid var(--accent-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
           }}>
-            <button
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestion === 0}
-              style={{
-                padding: '10px 24px', borderRadius: 12,
-                background: 'transparent', color: currentQuestion === 0 ? '#cbd5e1' : 'var(--text-secondary)',
-                border: `1.5px solid ${currentQuestion === 0 ? 'var(--accent-color)' : '#d1d9e2'}`,
-                fontWeight: 600, fontSize: 14, cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              ← Previous
-            </button>
-            <button
-              onClick={handleNextQuestion}
-              style={{
-                padding: '10px 32px', borderRadius: 12,
-                background: 'var(--primary-color)',
-                color: '#fff', border: 'none',
-                fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              {currentQuestion === readingQuestions.length - 1
-                ? (isMockTest ? 'Submit Section →' : 'View Results →')
-                : 'Next Question →'}
-            </button>
+            {!showResults ? (
+              <>
+                {!isMockTest && (
+                  <button
+                    onClick={handlePreviousQuestion}
+                    disabled={currentQuestion === 0}
+                    style={{
+                      padding: '10px 24px', borderRadius: 12,
+                      background: 'transparent', color: currentQuestion === 0 ? '#cbd5e1' : 'var(--text-secondary)',
+                      border: `1.5px solid ${currentQuestion === 0 ? 'var(--accent-color)' : '#d1d9e2'}`,
+                      fontWeight: 600, fontSize: 14, cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    ← Previous
+                  </button>
+                )}
+                {!isMockTest && (
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    {currentQuestion === readingQuestions.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => navigate('/')}
+                        style={{
+                          padding: '10px 24px', borderRadius: 12,
+                          background: '#fff', color: 'var(--danger-color)',
+                          border: '1.5px solid #fee2e2',
+                          fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        ✖ Back to Dashboard
+                      </button>
+                    )}
+                    <button
+                      onClick={handleNextQuestion}
+                      style={{
+                        padding: '10px 32px', borderRadius: 12,
+                        background: 'var(--primary-color)',
+                        color: '#fff', border: 'none',
+                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {currentQuestion === readingQuestions.length - 1
+                        ? 'View Results →'
+                        : 'Next Question →'}
+                    </button>
+                  </div>
+                )}
+                {isMockTest && (
+                  <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={handleNextQuestion}
+                      style={{
+                        padding: '10px 32px', borderRadius: 12,
+                        background: 'var(--primary-color)',
+                        color: '#fff', border: 'none',
+                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {currentQuestion === readingQuestions.length - 1
+                        ? (nextModule ? `Next Module: ${nextModule} →` : 'Submit Mock Test →')
+                        : 'Next Question →'}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => navigate('/')}
+                  style={{
+                    padding: '12px 48px', borderRadius: 12,
+                    background: 'var(--primary-color)',
+                    color: '#fff', border: 'none',
+                    fontWeight: 700, fontSize: 16, cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: 'var(--shadow-lg)'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>

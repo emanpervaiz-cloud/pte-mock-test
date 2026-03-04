@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
+import AIEvaluationService from '../../services/aiEvaluationService';
+import ScoreDisplay from '../common/ScoreDisplay';
 
 const ReadingWritingFillBlanks = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // AI Evaluation State
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
+
   useEffect(() => {
     if (question) {
       setAnswers({});
       setIsSubmitted(false);
+      setEvaluation(null);
+      setEvalLoading(false);
+      setEvalError(null);
     }
   }, [question?.id]);
 
@@ -40,6 +50,39 @@ const ReadingWritingFillBlanks = ({ question, onNext }) => {
     });
 
     setIsSubmitted(true);
+    handleGetAIScore(answers);
+  };
+
+  const handleGetAIScore = async (currentAnswers) => {
+    setEvalLoading(true);
+    setEvalError(null);
+
+    try {
+      const evaluator = new AIEvaluationService();
+
+      // Format current answer for evaluation
+      const questionsWithAnswers = [{
+        id: question.id,
+        type: 'reading_writing_fill_blanks',
+        passage: question.passage,
+        correct_answer: question.answers.reduce((acc, a) => ({ ...acc, [`blank_${a.blank}`]: a.correct }), {}),
+        response: currentAnswers
+      }];
+
+      const result = await evaluator.evaluateReading(questionsWithAnswers);
+      setEvaluation(result);
+
+      // Store in localStorage
+      const aiEvaluations = JSON.parse(localStorage.getItem('pte_ai_evaluations') || '{}');
+      aiEvaluations[question.id] = result;
+      localStorage.setItem('pte_ai_evaluations', JSON.stringify(aiEvaluations));
+
+    } catch (err) {
+      console.error('AI Evaluation Error:', err);
+      setEvalError('Failed to get AI score. Numerical score shown below.');
+    } finally {
+      setEvalLoading(false);
+    }
   };
 
   const renderPassageWithBlanks = () => {
@@ -86,34 +129,63 @@ const ReadingWritingFillBlanks = ({ question, onNext }) => {
       </div>
 
       {isSubmitted && (
-        <div className="answer-feedback" style={{
-          marginTop: '20px',
-          padding: '15px',
-          backgroundColor: 'rgba(13, 59, 102, 0.05)',
-          borderRadius: '8px',
-          border: '1px solid var(--primary-color)'
-        }}>
-          <h4 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>Correct Answers:</h4>
-          {question.answers?.map((answer, idx) => {
-            const userAnswer = answers[`blank_${answer.blank}`];
-            const isCorrect = userAnswer === answer.correct;
-            return (
-              <div key={idx} style={{
-                marginBottom: '8px',
-                padding: '8px',
-                backgroundColor: isCorrect ? '#dcfce7' : '#fee2e2',
-                borderRadius: '4px',
-                borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`
+        <>
+          <div className="answer-feedback" style={{
+            marginTop: '20px',
+            padding: '15px',
+            backgroundColor: 'rgba(13, 59, 102, 0.05)',
+            borderRadius: '8px',
+            border: '1px solid var(--primary-color)'
+          }}>
+            <h4 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>Correct Answers:</h4>
+            {question.answers?.map((answer, idx) => {
+              const userAnswer = answers[`blank_${answer.blank}`];
+              const isCorrect = userAnswer === answer.correct;
+              return (
+                <div key={idx} style={{
+                  marginBottom: '8px',
+                  padding: '8px',
+                  backgroundColor: isCorrect ? '#dcfce7' : '#fee2e2',
+                  borderRadius: '4px',
+                  borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`
+                }}>
+                  <strong>Blank {answer.blank}:</strong>{' '}
+                  <span style={{ textDecoration: 'line-through', color: '#ef4444' }}>{userAnswer || 'No answer'}</span>{' '}
+                  <span style={{ color: '#22c55e', fontWeight: 'bold' }}>→ {answer.correct}</span>
+                  {isCorrect && <span style={{ color: '#22c55e', marginLeft: '10px' }}>✓</span>}
+                  {!isCorrect && <span style={{ color: '#ef4444', marginLeft: '10px' }}>✗</span>}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="evaluation-section" style={{ marginTop: '24px' }}>
+            <ScoreDisplay
+              evaluation={evaluation}
+              loading={evalLoading}
+              error={evalError}
+              questionType="reading"
+            />
+
+            {!evaluation && !evalLoading && (
+              <div className="numerical-score-fallback" style={{
+                padding: '16px',
+                background: '#f8fafc',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                marginTop: '12px'
               }}>
-                <strong>Blank {answer.blank}:</strong>{' '}
-                <span style={{ textDecoration: 'line-through', color: '#ef4444' }}>{userAnswer || 'No answer'}</span>{' '}
-                <span style={{ color: '#22c55e', fontWeight: 'bold' }}>→ {answer.correct}</span>
-                {isCorrect && <span style={{ color: '#22c55e', marginLeft: '10px' }}>✓</span>}
-                {!isCorrect && <span style={{ color: '#ef4444', marginLeft: '10px' }}>✗</span>}
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--primary-color)' }}>Numerical Score:</h4>
+                <p style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+                  {question.answers.filter(a => answers[`blank_${a.blank}`] === a.correct).length} / {question.answers.length}
+                </p>
+                <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                  ({((question.answers.filter(a => answers[`blank_${a.blank}`] === a.correct).length / question.answers.length) * 100).toFixed(0)}% Accuracy)
+                </p>
               </div>
-            );
-          })}
-        </div>
+            )}
+          </div>
+        </>
       )}
 
       <div className="action-buttons" style={{ marginTop: '20px' }}>

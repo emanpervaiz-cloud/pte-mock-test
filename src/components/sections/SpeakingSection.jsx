@@ -7,12 +7,14 @@ import RepeatSentence from '../questions/RepeatSentence';
 import DescribeImage from '../questions/DescribeImage';
 import RetellLecture from '../questions/RetellLecture';
 import AnswerShortQuestion from '../questions/AnswerShortQuestion';
+import ModuleResults from '../common/ModuleResults';
 import { useNavigate } from 'react-router-dom';
 
-const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false }) => {
+const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, nextModule = null }) => {
   const { state, setCurrentQuestionIndex, setCurrentSection, resetMockTest } = useExam();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
 
   // Speaking questions data - Only including the user's voice notes as they are the priority
@@ -75,8 +77,8 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false 
       if (isMockTest) {
         if (onSectionComplete) onSectionComplete();
       } else {
-        // Individual Practice Mode: Navigate to results
-        navigate('/results/speaking');
+        // Individual Practice Mode: Show results inline
+        setShowResults(true);
       }
     }
   };
@@ -91,7 +93,7 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false 
       }, 3000);
     } else {
       // Practice mode: skip to results on timeout
-      navigate('/results/speaking');
+      setShowResults(true);
     }
   };
 
@@ -199,24 +201,28 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false 
               </p>
             </div>
 
-            <div style={{ flex: 1 }}>
-              {/* Question components render here */}
-              {currentQuestionData.type === 'read_aloud' && (
-                <ReadAloud key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'repeat_sentence' && (
-                <RepeatSentence key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'describe_image' && (
-                <DescribeImage key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'retell_lecture' && (
-                <RetellLecture key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-              {currentQuestionData.type === 'answer_short_question' && (
-                <AnswerShortQuestion key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
-              )}
-            </div>
+            {showResults ? (
+              <ModuleResults moduleType="speaking" isInline={true} />
+            ) : (
+              <div style={{ flex: 1 }}>
+                {/* Question components render here */}
+                {currentQuestionData.type === 'read_aloud' && (
+                  <ReadAloud key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'repeat_sentence' && (
+                  <RepeatSentence key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'describe_image' && (
+                  <DescribeImage key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'retell_lecture' && (
+                  <RetellLecture key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+                {currentQuestionData.type === 'answer_short_question' && (
+                  <AnswerShortQuestion key={currentQuestionData.id} question={currentQuestionData} onNext={handleNextQuestion} />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Bottom Navigation */}
@@ -226,41 +232,101 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false 
             border: '1px solid #eef2f6', boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
             position: 'relative', zIndex: 10
           }}>
-            <button
-              type="button"
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestion === 0}
-              style={{
-                padding: '10px 24px', borderRadius: 12,
-                background: 'transparent', color: currentQuestion === 0 ? '#cbd5e1' : '#5a6270',
-                border: `1.5px solid ${currentQuestion === 0 ? '#e2e8f0' : '#d1d9e2'}`,
-                fontWeight: 600, fontSize: 14, cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              ← Previous
-            </button>
-            <div style={{ fontSize: 13, color: '#94a3b8', fontWeight: 500 }}>
-              Ensure your answers are saved before proceeding
-            </div>
-            <button
-              type="button"
-              onClick={handleNextQuestion}
-              style={{
-                padding: '10px 32px', borderRadius: 12,
-                background: 'var(--primary-color)',
-                color: '#fff', border: 'none',
-                fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: 'var(--shadow-md)'
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              {currentQuestion === speakingQuestions.length - 1
-                ? (isMockTest ? 'Submit Section →' : 'View Results →')
-                : 'Next Question →'}
-            </button>
+            {!showResults ? (
+              <>
+                {!isMockTest && (
+                  <button
+                    type="button"
+                    onClick={handlePreviousQuestion}
+                    disabled={currentQuestion === 0}
+                    style={{
+                      padding: '10px 24px', borderRadius: 12,
+                      background: 'transparent', color: currentQuestion === 0 ? '#cbd5e1' : '#5a6270',
+                      border: `1.5px solid ${currentQuestion === 0 ? '#e2e8f0' : '#d1d9e2'}`,
+                      fontWeight: 600, fontSize: 14, cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    ← Previous
+                  </button>
+                )}
+                {!isMockTest && (
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    {currentQuestion === speakingQuestions.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => navigate('/')}
+                        style={{
+                          padding: '10px 24px', borderRadius: 12,
+                          background: '#fff', color: 'var(--danger-color)',
+                          border: '1.5px solid #fee2e2',
+                          fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        ✖ Back to Dashboard
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleNextQuestion}
+                      style={{
+                        padding: '10px 32px', borderRadius: 12,
+                        background: 'var(--primary-color)',
+                        color: '#fff', border: 'none',
+                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: 'var(--shadow-md)'
+                      }}
+                    >
+                      {currentQuestion === speakingQuestions.length - 1
+                        ? 'View Results →'
+                        : 'Next Question →'}
+                    </button>
+                  </div>
+                )}
+                {isMockTest && (
+                  <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={handleNextQuestion}
+                      style={{
+                        padding: '10px 32px', borderRadius: 12,
+                        background: 'var(--primary-color)',
+                        color: '#fff', border: 'none',
+                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: 'var(--shadow-md)'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                      {currentQuestion === speakingQuestions.length - 1
+                        ? (nextModule ? `Next Module: ${nextModule} →` : 'Submit Mock Test →')
+                        : 'Next Question →'}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => navigate('/')}
+                  style={{
+                    padding: '12px 48px', borderRadius: 12,
+                    background: 'var(--primary-color)',
+                    color: '#fff', border: 'none',
+                    fontWeight: 700, fontSize: 16, cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: 'var(--shadow-lg)'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>

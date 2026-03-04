@@ -75,68 +75,80 @@ class AIEvaluationService {
     this.webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'https://n8n.srv826531.hstgr.cloud/webhook/b225b16c-c602-450e-b858-f9bbe4ba5dd6';
     // Python scoring server URL
     this.pythonServerUrl = import.meta.env.VITE_PYTHON_SERVER_URL || 'http://localhost:5001/webhook/pte-scoring';
+
+    // Load API Keys from Environment Variables (Vercel will provide these in production)
     this.geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    this.useGemini = !!this.geminiApiKey;
     this.openRouterKey = import.meta.env.VITE_OPENROUTER_API_KEY;
     this.openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-    console.log('AIEvaluationService initialized:', {
-      geminiKeyExists: !!this.geminiApiKey,
-      geminiKeyFirst10: this.geminiApiKey ? this.geminiApiKey.substring(0, 10) + '...' : 'none',
-      openRouterKeyExists: !!this.openRouterKey,
-      openAiKeyExists: !!this.openAiKey,
-      webhookUrl: this.webhookUrl,
-      pythonServerUrl: this.pythonServerUrl
-    });
+    this.useGemini = !!this.geminiApiKey;
 
-    // Hardcoded Gemini key for testing (remove after testing)
-    // DISABLED - using actual API key from environment
-    // if (!this.geminiApiKey) {
-    //   console.log('Using hardcoded Gemini key for testing');
-    //   this.geminiApiKey = 'AIzaSyDqkroRSVXTP5G0AfidR7tYNzv3bksqmO8';
-    //   this.useGemini = true;
-    // }
+    console.log('AIEvaluationService initialized (Production Ready Variant):', {
+      geminiKeyExists: !!this.geminiApiKey,
+      useGemini: this.useGemini,
+      openRouterKeyExists: !!this.openRouterKey,
+      openAiKeyExists: !!this.openAiKey
+    });
   }
 
   // Helper method to call Gemini API
   async callGemini(prompt, systemPrompt) {
-    console.log('callGemini called, key exists:', !!this.geminiApiKey);
-
     if (!this.geminiApiKey) {
       throw new Error('Gemini API key not configured');
     }
 
-    console.log('Calling Gemini API...');
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${this.geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: systemPrompt },
-            { text: prompt }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 2048,
+    // Try multiple model endpoints to avoid 404 errors
+    const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        console.log(`Internal callGemini: Trying model ${model}...`);
+
+        // Use v1beta for better compatibility and system_instruction support
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiApiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemPrompt }]
+            },
+            contents: [{
+              parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+              temperature: 0.3,
+              maxOutputTokens: 2048,
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error(`Gemini model ${model} failed with status ${response.status}:`, errorData);
+          lastError = new Error(`Gemini API error (${model}): ${response.status} - ${errorData.error?.message || JSON.stringify(errorData)}`);
+          continue; // Try next model
         }
-      })
-    });
 
-    console.log('Gemini API response status:', response.status);
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Gemini API error:', response.status, errorData);
-      throw new Error(`Gemini API error: ${response.status} - ${JSON.stringify(errorData)}`);
+        if (text) {
+          console.log(`✅ Gemini SUCCESS using model ${model}`);
+          return text;
+        } else {
+          console.warn(`Gemini model ${model} returned empty content`);
+          lastError = new Error(`Empty response from ${model}`);
+        }
+      } catch (error) {
+        console.error(`CRITICAL error attempting ${model}:`, error);
+        lastError = error;
+      }
     }
 
-    const data = await response.json();
-    console.log('Gemini API success, response length:', data.candidates?.[0]?.content?.parts?.[0]?.text?.length);
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    throw lastError || new Error('All Gemini model attempts failed');
   }
 
   // Generic helper to call any chat-completion LLM (OpenRouter, OpenAI)
@@ -180,50 +192,10 @@ class AIEvaluationService {
       transcript = await this.transcribeAudio(audioBlobOrText);
     }
 
-    // 1. Try DIRECT LLM (OpenRouter or OpenAI)
-    const directLLMProviders = [];
-    if (this.openRouterKey) {
-      directLLMProviders.push({
-        name: 'openrouter',
-        apiKey: this.openRouterKey,
-        apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
-        model: 'openai/gpt-4o'
-      });
-    }
-    if (this.openAiKey) {
-      directLLMProviders.push({
-        name: 'openai',
-        apiKey: this.openAiKey,
-        apiUrl: 'https://api.openai.com/v1/chat/completions',
-        model: 'gpt-4o'
-      });
-    }
-
-    for (const provider of directLLMProviders) {
+    // 1. Try Gemini FIRST if API key is available
+    if (this.geminiApiKey) {
       try {
-        console.log(`🚀 Trying ${provider.name} for speaking...`);
-        const result = await this.evaluateWritingWithLLM(prompt, transcript, questionType, provider.apiKey, provider.apiUrl, provider.model);
-        console.log(`✅ ${provider.name} SUCCESS`);
-        return { ...result, transcript, source: provider.name };
-      } catch (e) {
-        console.error(`❌ ${provider.name} failed:`, e.message);
-      }
-    }
-
-    // 2. Try n8n Python scoring
-    try {
-      console.log('🔄 Trying n8n Python scoring...');
-      const n8nResult = await this.evaluateWithPythonServer(prompt, transcript, 'speaking', questionType);
-      if (n8nResult && n8nResult.success) {
-        return { ...n8nResult.result, transcript: transcript, source: 'n8n-python' };
-      }
-    } catch (n8nError) {
-      console.error('❌ n8n failure:', n8nError.message);
-    }
-
-    // Use Gemini if API key is available
-    if (this.useGemini) {
-      try {
+        console.log('🚀 Trying Gemini for speaking evaluation...');
         const evaluationPrompt = `Evaluate this speaking response for a PTE Academic exam.
 
 Question: ${prompt}
@@ -274,16 +246,60 @@ Return JSON format:
           evaluation = this.parseGeminiTextResponse(geminiResponse);
         }
 
+        console.log('✅ Gemini speaking evaluation SUCCESS');
         return {
           ...evaluation,
           transcript: transcript,
           source: 'gemini'
         };
       } catch (geminiError) {
-        console.error('Gemini evaluation failed:', geminiError);
-        // Fall through to backend or fallback
+        console.error('❌ Gemini evaluation failed, falling back:', geminiError);
+        // Fall through to other providers
       }
     }
+
+    // 2. Try DIRECT LLM (OpenRouter or OpenAI)
+    const directLLMProviders = [];
+    if (this.openRouterKey) {
+      directLLMProviders.push({
+        name: 'openrouter',
+        apiKey: this.openRouterKey,
+        apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+        model: 'openai/gpt-4o'
+      });
+    }
+    if (this.openAiKey) {
+      directLLMProviders.push({
+        name: 'openai',
+        apiKey: this.openAiKey,
+        apiUrl: 'https://api.openai.com/v1/chat/completions',
+        model: 'gpt-4o'
+      });
+    }
+
+    for (const provider of directLLMProviders) {
+      try {
+        console.log(`🚀 Trying ${provider.name} for speaking...`);
+        const result = await this.evaluateWritingWithLLM(prompt, transcript, questionType, provider.apiKey, provider.apiUrl, provider.model);
+        console.log(`✅ ${provider.name} SUCCESS`);
+        return { ...result, transcript, source: provider.name };
+      } catch (e) {
+        console.error(`❌ ${provider.name} failed:`, e.message);
+      }
+    }
+
+    // 3. Try n8n Python scoring
+    try {
+      console.log('🔄 Trying n8n Python scoring...');
+      const n8nResult = await this.evaluateWithPythonServer(prompt, transcript, 'speaking', questionType);
+      if (n8nResult && n8nResult.success) {
+        return { ...n8nResult.result, transcript: transcript, source: 'n8n-python' };
+      }
+    } catch (n8nError) {
+      console.error('❌ n8n failure:', n8nError.message);
+    }
+
+    // Logic moved to Gemini provider at head of chain
 
     // Fallback to backend
     try {
@@ -330,14 +346,14 @@ Return JSON format:
     const pronunciationMatch = text.match(/pronunciation.*?(\d+)/i);
 
     return {
-      fluencyScore: parseInt(fluencyMatch?.[1]) || 5,
-      grammarScore: parseInt(grammarMatch?.[1]) || 5,
-      vocabularyScore: parseInt(vocabMatch?.[1]) || 5,
-      pronunciationScore: parseInt(pronunciationMatch?.[1]) || 5,
-      overallScore: 50,
-      feedback: text.substring(0, 500),
+      fluencyScore: parseInt(fluencyMatch?.[1]) || 2,
+      grammarScore: parseInt(grammarMatch?.[1]) || 2,
+      vocabularyScore: parseInt(vocabMatch?.[1]) || 2,
+      pronunciationScore: parseInt(pronunciationMatch?.[1]) || 2,
+      overallScore: 20,
+      feedback: text.substring(0, 1000),
       grammarErrors: [],
-      fluencyIssues: []
+      fluencyIssues: ["Evaluation parsed from text. Accuracy may vary."]
     };
   }
 
@@ -596,9 +612,20 @@ Return JSON format:
       openAi: !!this.openAiKey
     });
 
-    // --- PROVIDER CHAIN: Try each available AI service until one succeeds ---
+    // 1. Try Gemini FIRST if API key is available
+    if (this.geminiApiKey) {
+      try {
+        console.log('🚀 Trying Gemini for writing evaluation...');
+        const result = await this.evaluateWritingWithGemini(prompt, response, questionType);
+        console.log('✅ Gemini evaluation SUCCESS');
+        return { ...result, source: 'gemini' };
+      } catch (geminiError) {
+        console.error('❌ Gemini writing evaluation failed:', geminiError.message);
+        // Fall through
+      }
+    }
 
-    // 1. Try DIRECT LLM (OpenRouter or OpenAI)
+    // 2. Try DIRECT LLM (OpenRouter or OpenAI)
     const directLLMProviders = [];
     if (this.openRouterKey) {
       directLLMProviders.push({
@@ -648,17 +675,7 @@ Return JSON format:
       console.error('❌ n8n Python scoring failed:', n8nError.message);
     }
 
-    // 3. Try Gemini API
-    if (this.geminiApiKey) {
-      try {
-        console.log('🔄 Trying Gemini evaluation...');
-        const result = await this.evaluateWritingWithGemini(prompt, response, questionType);
-        console.log('✅ Gemini evaluation SUCCESS');
-        return result;
-      } catch (geminiError) {
-        console.error('❌ Gemini writing evaluation failed:', geminiError.message);
-      }
-    }
+    // Logic moved to Gemini provider at head of chain
 
     // 4. Try Legacy Backend Fallback
     try {
@@ -953,16 +970,19 @@ Provide detailed evaluation with specific examples from the text.`;
   async evaluateReading(questionsWithAnswers) {
     console.log('🚀 [Reading] Starting evaluation...');
 
-    // 1. Try n8n Python scoring first
-    try {
-      console.log('🔄 Trying n8n Python scoring for reading...');
-      const n8nResult = await this.evaluateWithPythonServer(null, questionsWithAnswers, 'reading');
-      if (n8nResult && n8nResult.success) {
-        return { ...n8nResult.result, source: 'n8n-python' };
+    // 1. Try Gemini FIRST if API key is available
+    if (this.geminiApiKey) {
+      try {
+        console.log('🚀 [Reading] Trying Gemini for evaluation...');
+        const result = await this.evaluateObjectiveWithLLM('reading', questionsWithAnswers, null, null, 'gemini');
+        console.log('✅ [Reading] Gemini success');
+        return { ...result, source: 'gemini' };
+      } catch (geminiError) {
+        console.error('❌ [Reading] Gemini failed:', geminiError.message);
       }
-    } catch (n8nError) {
-      console.error('❌ n8n Python scoring failed:', n8nError.message);
     }
+
+    // 2. Try n8n Python scoring
 
     // 2. Try Direct LLM fallback (Resilient Chain)
     const providers = [];
@@ -1000,16 +1020,19 @@ Provide detailed evaluation with specific examples from the text.`;
   async evaluateListening(questionsWithAnswers) {
     console.log('🚀 [Listening] Starting evaluation...');
 
-    // 1. Try n8n Python scoring first
-    try {
-      console.log('🔄 Trying n8n Python scoring for listening...');
-      const n8nResult = await this.evaluateWithPythonServer(null, questionsWithAnswers, 'listening');
-      if (n8nResult && n8nResult.success) {
-        return { ...n8nResult.result, source: 'n8n-python' };
+    // 1. Try Gemini FIRST if API key is available
+    if (this.geminiApiKey) {
+      try {
+        console.log('🚀 [Listening] Trying Gemini for evaluation...');
+        const result = await this.evaluateObjectiveWithLLM('listening', questionsWithAnswers, null, null, 'gemini');
+        console.log('✅ [Listening] Gemini success');
+        return { ...result, source: 'gemini' };
+      } catch (geminiError) {
+        console.error('❌ [Listening] Gemini failed:', geminiError.message);
       }
-    } catch (n8nError) {
-      console.error('❌ n8n Python scoring failed:', n8nError.message);
     }
+
+    // 2. Try n8n Python scoring
 
     // 2. Try Direct LLM fallback (Resilient Chain)
     const providers = [];
@@ -1066,7 +1089,13 @@ Return JSON format:
   "suggestions": ["suggestion1", "suggestion2"]
 }`;
 
-    const content = await this.callChatLLM(systemPrompt, `Analyze my ${section} performance.`, apiKey, apiUrl, model);
+    let content;
+    if (model === 'gemini') {
+      content = await this.callGemini(systemPrompt, `Analyze my ${section} performance.`);
+    } else {
+      content = await this.callChatLLM(systemPrompt, `Analyze my ${section} performance.`, apiKey, apiUrl, model);
+    }
+
     const parsed = JSON.parse(content.match(/\{[\s\S]*\}/)[0]);
 
     return {
