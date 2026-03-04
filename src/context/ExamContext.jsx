@@ -158,9 +158,18 @@ export const ExamProvider = ({ children }) => {
   };
 
   const saveAnswer = (questionId, answer) => {
+    const upgradedAnswer = {
+      ...answer,
+      meta: {
+        ...answer.meta,
+        questionStartTime: state.questionStartTime,
+        moduleStartTime: state.moduleStartTime,
+        saveTime: new Date().toISOString()
+      }
+    };
     dispatch({
       type: actionTypes.SAVE_ANSWER,
-      payload: { questionId, answer }
+      payload: { questionId, answer: upgradedAnswer }
     });
   };
 
