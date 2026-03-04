@@ -95,8 +95,8 @@ const RetellLecture = ({ question, onNext }) => {
 
       const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
       const result = await evaluator.evaluateSpeaking(
-        question.instruction || question.prompt || 'Retell the lecture you heard',
-        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s, Task: Retell Lecture]`,
+        `LECTURE CONTEXT: "${question.transcript || question.prompt}"\n\nTASK: Retell the lecture you just heard in your own words. Focus on capturing main ideas accurately with good fluency and pronunciation.`,
+        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s]`,
         'retell_lecture'
       );
       setEvaluation(result);

@@ -89,8 +89,8 @@ const ReadAloud = ({ question, onNext }) => {
 
       const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
       const result = await evaluator.evaluateSpeaking(
-        question.prompt || question.instruction || 'Read the following text aloud',
-        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s, Text to read: "${question.prompt || ''}"]`,
+        `TEXT TO READ: "${question.prompt}"\n\nTASK: Read the text above aloud accurately. Focus on fluency, pronunciation, and intonation.`,
+        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s]`,
         'read_aloud'
       );
       setEvaluation(result);

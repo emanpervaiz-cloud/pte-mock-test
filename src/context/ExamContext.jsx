@@ -20,7 +20,9 @@ const initialState = {
     reading: null,
     listening: null,
     overall: null
-  }
+  },
+  moduleStartTime: null,
+  questionStartTime: null
 };
 
 // Action types
@@ -52,12 +54,14 @@ const examReducer = (state, action) => {
     case actionTypes.SET_CURRENT_SECTION:
       return {
         ...state,
-        currentSection: action.payload
+        currentSection: action.payload,
+        moduleStartTime: new Date().toISOString()
       };
     case actionTypes.SET_CURRENT_QUESTION_INDEX:
       return {
         ...state,
-        currentQuestionIndex: action.payload
+        currentQuestionIndex: action.payload,
+        questionStartTime: new Date().toISOString()
       };
     case actionTypes.SAVE_ANSWER:
       return {
@@ -90,7 +94,8 @@ const examReducer = (state, action) => {
     case actionTypes.START_EXAM:
       return {
         ...state,
-        examStarted: true
+        examStarted: true,
+        moduleStartTime: new Date().toISOString()
       };
     case actionTypes.COMPLETE_EXAM:
       return {

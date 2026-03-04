@@ -1,58 +1,30 @@
 // AI Evaluation Service for PTE Mock Test
 
-const SPEAKING_EXAMINER_SYSTEM_PROMPT = `You are a certified English language examiner specializing in high-stakes spoken English assessment, including PTE Academic, IELTS Speaking, and TOEFL iBT evaluations.
+const SPEAKING_EXAMINER_SYSTEM_PROMPT = `You are a certified English language examiner specializing in high-stakes spoken English assessment (PTE Academic).
 
-Your task is to evaluate a student's response with the precision, consistency, and constructive tone of a professional human examiner.
+Your task is to evaluate a student's response with extreme precision. Be rigorous.
 
-EVALUATION CRITERIA — Score each dimension out of 10. Be analytical, specific, and evidence-based — reference actual phrases or patterns from the student's response.
+EVALUATION CRITERIA — Score each 0-10:
+1. Fluency & Coherence (0–10): Logical flow, no unnatural pauses, good use of discourse markers.
+2. Pronunciation & Intonation (0–10): CLEAR articulation, correct word stress, natural rhythm.
+3. Grammatical Range & Accuracy (0–10): Variety of structures, zero tolerance for basic errors in high scores.
+4. Vocabulary & Lexical Resource (0–10): Precise academic word choice, no repetition.
+5. Task Achievement & Relevance (0–10): Fully addresses the prompt.
 
-1. Fluency & Coherence (0–10): Assess speech flow, logical sequencing, use of discourse markers, and absence of unnatural pauses or repetition.
-2. Pronunciation & Intonation (0–10): Assess phoneme accuracy, word stress, sentence rhythm, and natural intonation patterns. Note any L1 interference if detectable.
-3. Grammatical Range & Accuracy (0–10): Assess variety of sentence structures (simple, compound, complex) and grammatical correctness. Note recurring error patterns.
-4. Vocabulary & Lexical Resource (0–10): Assess range, precision, and appropriateness of word choice. Penalize overuse of basic vocabulary or repetition.
-5. Task Achievement & Relevance (0–10): Assess whether the response fully addresses the prompt, stays on topic, and meets the expected length and depth.
+CRITICAL: If the student just reads the prompt or copies the text without original input, or if the transcription is clearly nonsense, penalize heavily. Reference specific evidence.`;
 
-EXAMINER STANDARDS:
-- Never give generic feedback. Always cite evidence from the response.
-- Maintain professional, encouraging, and growth-oriented tone.
-- Penalize but do not discourage. Frame weaknesses as opportunities.
-- Be consistent — same response quality must yield same score range every time.`;
+const WRITING_EXAMINER_SYSTEM_PROMPT = `You are an expert English writing evaluator for PTE Academic. 
 
-const WRITING_EXAMINER_SYSTEM_PROMPT = `You are an expert English writing evaluator for PTE Academic. Analyze the student's written response thoroughly and provide detailed, specific feedback.
+CRITICAL - PLAGIARISM DETECTION:
+If the STUDENT RESPONSE is a direct copy (or near-direct copy) of the PASSAGE/PROMPT provided, you MUST award a score of 0 for ALL categories.
+In such cases, the "feedback" field MUST start exactly with: "Paragraph copied — score awarded: 0." 
 
-CRITICAL: You must analyze the ACTUAL TEXT provided and give specific evidence-based scores. Do NOT give generic placeholder feedback.
-
-EVALUATION CRITERIA — Score each dimension 0-10 with specific examples:
-
-1. FLUENCY & COHERENCE (0-10): 
-   - Analyze paragraph structure and logical flow
-   - Identify specific cohesive devices used (however, furthermore, consequently, etc.)
-   - Quote transitions between paragraphs
-   - Score: 8+ for excellent flow, 5-7 for adequate, below 5 for poor organization
-
-2. SPELLING & PUNCTUATION (0-10):
-   - Count and list specific spelling errors with corrections
-   - Identify punctuation mistakes (comma splices, missing periods, etc.)
-   - Note capitalization errors
-   - Score: 9-10 for 0-1 errors, 7-8 for 2-3 errors, below 7 for 4+ errors
-
-3. GRAMMAR RANGE & ACCURACY (0-10):
-   - Identify sentence structure variety (simple/compound/complex/compound-complex)
-   - List specific grammar errors with corrections (subject-verb agreement, tense errors, article usage)
-   - Count error frequency
-   - Score: 8+ for advanced structures with few errors, 6-7 for good range with some errors, below 6 for basic structures or many errors
-
-4. VOCABULARY & LEXICAL RESOURCE (0-10):
-   - Identify overused words and suggest alternatives
-   - Note academic vocabulary usage
-   - Comment on word precision and appropriateness
-   - Score: 8+ for sophisticated academic vocabulary, 6-7 for adequate range, below 6 for repetitive/basic vocabulary
-
-5. TASK ACHIEVEMENT (0-10):
-   - Confirm the response addresses ALL parts of the prompt
-   - Check word count appropriateness
-   - Evaluate argument development and support
-   - Score: 8+ for fully developed response, 6-7 for adequate, below 6 for incomplete
+EVALUATION CRITERIA (0-10):
+1. FLUENCY & COHERENCE: Logical flow and paragraph structure.
+2. SPELLING & PUNCTUATION: Accurate spelling and standard punctuation.
+3. GRAMMAR RANGE & ACCURACY: Complex sentence structures and correctness.
+4. VOCABULARY & LEXICAL RESOURCE: Academic vocabulary and precision.
+5. TASK ACHIEVEMENT: Addressing all parts of the prompt in own words.
 
 REQUIRED OUTPUT FORMAT:
 {
@@ -62,10 +34,10 @@ REQUIRED OUTPUT FORMAT:
   "vocabularyScore": number,
   "taskScore": number,
   "overallScore": number,
-  "feedback": "Detailed paragraph with specific examples from the text",
-  "grammarErrors": ["Error 1 -> Correction 1", "Error 2 -> Correction 2"],
+  "feedback": "Detailed feedback. If plagiarized, must start with: Paragraph copied — score awarded: 0.",
+  "grammarErrors": ["Error -> Correction"],
   "spellingErrors": ["misspelled -> correct"],
-  "vocabularySuggestions": ["overused word -> better alternative"]
+  "vocabularySuggestions": ["word -> alternative"]
 }`;
 
 class AIEvaluationService {
@@ -285,22 +257,22 @@ class AIEvaluationService {
   async evaluateObjectiveWithAI(section, objective) {
     const systemPrompt = `Analyze these PTE ${section} results. Provide feedback and suggestions in JSON format.`;
     const userPrompt = `Score: ${objective.correct_count}/${objective.total_count}\nAccuracy: ${objective.accuracy_percentage}%\nDetails: ${JSON.stringify(objective.detailed_results)}`;
-    
+
     // Try OpenRouter -> Gemini
     if (this.openRouterKey) {
       try {
         const resp = await this.callChatLLM(systemPrompt, userPrompt, this.openRouterKey, this.openRouterUrl, 'openai/gpt-4o');
         const parsed = JSON.parse(resp.match(/\{[\s\S]*\}/)?.[0] || '{}');
         return { ...parsed, source: 'openrouter' };
-      } catch (e) {}
+      } catch (e) { }
     }
-    
+
     if (this.geminiApiKey) {
       const resp = await this.callGemini(userPrompt, systemPrompt);
       const parsed = JSON.parse(resp.match(/\{[\s\S]*\}/)?.[0] || '{}');
       return { ...parsed, source: 'gemini' };
     }
-    
+
     throw new Error('No AI provider for objective feedback');
   }
 
@@ -380,7 +352,7 @@ class AIEvaluationService {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) return JSON.parse(jsonMatch[0]);
     } catch (e) { console.warn('Regex JSON parse failed, using rough parser'); }
-    
+
     // Rough parser for non-JSON or partial JSON
     const scores = { fluencyScore: 5, grammarScore: 5, spellingScore: 5, vocabularyScore: 5, taskScore: 5, overallScore: 50, feedback: content };
     const matches = content.match(/(\w+)Score":\s*(\d+)/g);

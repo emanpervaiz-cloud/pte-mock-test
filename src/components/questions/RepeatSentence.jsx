@@ -90,8 +90,8 @@ const RepeatSentence = ({ question, onNext }) => {
 
       const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
       const result = await evaluator.evaluateSpeaking(
-        question.instruction || question.prompt || 'Repeat the sentence you heard',
-        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s, Question: Repeat Sentence]`,
+        `SENTENCE TO REPEAT: "${question.transcript || question.prompt}"\n\nTASK: Repeat the sentence exactly as you heard it. Accuracy in words, fluency, and pronunciation is critical.`,
+        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s]`,
         'repeat_sentence'
       );
       setEvaluation(result);

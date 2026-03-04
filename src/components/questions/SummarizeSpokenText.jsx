@@ -71,7 +71,7 @@ const SummarizeSpokenText = ({ question, onNext }) => {
       // Use evaluateWriting for Summarize Spoken Text since the student's output is written text
       // We pass the transcript or instruction as the 'prompt' context for the LLM
       const result = await evaluator.evaluateWriting(
-        `Audio Transcript Topic: ${question.transcript || question.title || question.instruction}`,
+        `AUDIO TRANSCRIPT CONTEXT: "${question.transcript || question.title || question.instruction}"\n\nTASK: Summarize the spoken lecture in your own words. Do NOT copy the transcript directly if provided. Direct copying will result in a score of 0.`,
         summary,
         'summarize_spoken_text'
       );

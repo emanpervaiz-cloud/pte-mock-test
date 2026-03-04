@@ -49,13 +49,13 @@ const SummarizeWrittenText = ({ question, onNext }) => {
       const evaluator = new AIEvaluationService();
       console.log('SummarizeWrittenText: Calling evaluateWriting...');
       const result = await evaluator.evaluateWriting(
-        `Summarize the following passage in one sentence (5-75 words):\n\n${question.passage}`,
+        `PASSAGE: "${question.passage}"\n\nTASK: Summarize the passage above in ONE SINGLE SENTENCE (5-75 words). Use your own words. Do NOT copy the text directly. Direct copying will result in a score of 0.`,
         summary,
         'summarize_written_text'
       );
       console.log('SummarizeWrittenText: Evaluation result:', result);
       setEvaluation(result);
-      
+
       // Store AI evaluation in localStorage for ResultsPage
       try {
         const aiEvaluations = JSON.parse(localStorage.getItem('pte_ai_evaluations') || '{}');

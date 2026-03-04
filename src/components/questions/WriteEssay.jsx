@@ -43,12 +43,12 @@ const WriteEssay = ({ question, onNext }) => {
     try {
       const evaluator = new AIEvaluationService();
       const result = await evaluator.evaluateWriting(
-        question.prompt,
+        `PROMPT: "${question.prompt}"\n\nTASK: Write an essay in response to the prompt above. Use your own words. Do NOT copy the prompt text directly. Direct copying will result in a score of 0.`,
         essay,
         'write_essay'
       );
       setEvaluation(result);
-      
+
       // Store AI evaluation in localStorage for ResultsPage
       try {
         const aiEvaluations = JSON.parse(localStorage.getItem('pte_ai_evaluations') || '{}');

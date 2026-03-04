@@ -107,8 +107,8 @@ const DescribeImage = ({ question, onNext }) => {
 
       const evaluator = new AIEvaluationService(apiKey, apiUrl, provider);
       const result = await evaluator.evaluateSpeaking(
-        question.instruction || 'Describe the image in detail',
-        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s, Task: Describe Image, Prep time used: ${25 - prepTime}s]`,
+        `IMAGE DESCRIPTION TASK\n\nTASK: Describe the provided image in detail. Focus on accuracy of information, fluency, and pronunciation.`,
+        audioBlob || `[Audio response recorded - Duration: ${recordingTime}s]`,
         'describe_image'
       );
       setEvaluation(result);
