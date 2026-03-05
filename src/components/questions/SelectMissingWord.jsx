@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import AudioPlayer from '../common/AudioPlayer';
 
@@ -7,6 +7,13 @@ const SelectMissingWord = ({ question, onNext }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleOptionSelect = (option) => {
     if (isSubmitted) return;
@@ -56,20 +63,21 @@ const SelectMissingWord = ({ question, onNext }) => {
             key={`blank-${index}`}
             value={selectedOption || ''}
             onChange={(e) => handleOptionSelect(e.target.value)}
-            className="blank-select"
             disabled={isSubmitted}
             style={{
-              padding: '8px 16px',
-              fontSize: '16px',
-              borderRadius: '8px',
-              border: '2px solid var(--primary-color)',
+              padding: isMobile ? '4px 8px' : '8px 16px',
+              fontSize: isMobile ? 14 : 16,
+              borderRadius: 8,
+              border: `2px solid ${selectedOption ? 'var(--primary-color)' : '#cbd5e1'}`,
               backgroundColor: '#fff',
-              color: selectedOption ? '#1e293b' : '#64748b',
+              color: selectedOption ? 'var(--primary-color)' : '#64748b',
               cursor: isSubmitted ? 'not-allowed' : 'pointer',
-              margin: '0 4px'
+              margin: '0 4px',
+              height: isMobile ? 32 : 40,
+              fontWeight: 600
             }}
           >
-            <option value="">Select...</option>
+            <option value="">{isMobile ? "..." : "Select..."}</option>
             {question.options && question.options.map(option => (
               <option key={option.id || option} value={option.id || option}>
                 {option.id ? `${option.id}) ${option.text}` : option}
@@ -84,31 +92,33 @@ const SelectMissingWord = ({ question, onNext }) => {
   };
 
   return (
-    <div className="select-missing-word-question">
-      <div className="audio-section">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
+      <div style={{
+        background: '#fff', padding: isMobile ? 16 : 24, borderRadius: 16, border: '1px solid #eef2f6'
+      }}>
         <AudioPlayer
           src={question.audioUrl}
-          title="Listen to the passage"
+          title={isMobile ? "Listen" : "Listen to the passage"}
           onPlay={handleAudioPlay}
         />
       </div>
 
-      <div className="question-section" style={{
-        padding: '24px',
+      <div style={{
         background: '#f8f9fe',
-        borderRadius: '16px',
-        marginBottom: '24px',
+        borderRadius: 20,
+        padding: isMobile ? '20px 16px' : '24px 32px',
+        border: '1px solid #eef2f6',
         textAlign: 'center'
       }}>
-        <h3 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Select the missing word:</h3>
-        <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
-          Listen to the audio carefully and select the word that completes the final sentence.
+        <h3 style={{ margin: '0 0 12px 0', fontSize: isMobile ? 16 : 18, color: '#1a1f36', fontWeight: 700 }}>Select the missing word:</h3>
+        <p style={{ margin: 0, color: '#64748b', fontSize: 14, lineHeight: 1.5 }}>
+          {isMobile ? "Select the word that completes the final sentence." : "Listen to the audio carefully and select the word that completes the final sentence."}
         </p>
       </div>
 
-      <div className="options-section" style={{ marginBottom: '24px' }}>
-        <h4 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Options:</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <h4 style={{ margin: '0 0 4px', fontSize: 13, color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Options:</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {question.options && question.options.map((option, idx) => {
             const optionId = option.id || option.charAt(0);
             const optionText = option.text || option.substring(3);
@@ -120,60 +130,57 @@ const SelectMissingWord = ({ question, onNext }) => {
                 onClick={() => handleOptionSelect(optionId)}
                 disabled={isSubmitted}
                 style={{
-                  padding: '16px 24px',
-                  borderRadius: '12px',
-                  border: '2px solid',
+                  padding: isMobile ? '14px 16px' : '16px 24px',
+                  borderRadius: 12,
+                  border: '1.5px solid',
                   borderColor: isSelected ? 'var(--primary-color)' : '#e2e8f0',
-                  backgroundColor: isSelected ? 'rgba(13, 59, 102, 0.05)' : '#ffffff',
-                  color: isSelected ? 'var(--primary-color)' : '#1e293b',
-                  fontSize: '16px',
+                  backgroundColor: isSelected ? 'rgba(13, 59, 102, 0.04)' : '#fff',
+                  color: isSelected ? 'var(--primary-color)' : '#475569',
+                  fontSize: isMobile ? 14 : 15,
                   textAlign: 'left',
                   cursor: isSubmitted ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  gap: 16,
+                  transition: 'all 0.2s',
+                  boxShadow: isSelected ? '0 2px 8px rgba(13, 59, 102, 0.08)' : 'none'
                 }}
               >
                 <span style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
+                  width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
                   backgroundColor: isSelected ? 'var(--primary-color)' : '#e2e8f0',
                   color: isSelected ? '#fff' : '#64748b',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  fontSize: '14px'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 700, fontSize: 12
                 }}>
                   {optionId}
                 </span>
-                <span>{optionText}</span>
+                <span style={{ fontWeight: isSelected ? 600 : 500 }}>{optionText}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="instructions">
-        <p><strong>Instructions:</strong> Select the most appropriate word to complete the passage.</p>
-        <p><strong>Note:</strong> You will only be able to play the audio once.</p>
+      <div style={{
+        padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)'
+      }}>
+        <div style={{ marginBottom: 4 }}><strong>Instructions:</strong> Select the most appropriate word to complete the passage.</div>
+        <div style={{ fontStyle: 'italic', color: '#64748b' }}>Note: You can only play the audio once.</div>
       </div>
 
-      <div className="action-buttons" style={{ marginTop: '24px' }}>
+      <div style={{ marginTop: 8 }}>
         <button
-          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={!isSubmitted && selectedOption === null}
           style={{
-            padding: '12px 32px',
-            background: (!isSubmitted && selectedOption === null) ? '#9ca3af' : 'var(--primary-color)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '12px',
-            fontWeight: 700,
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 40px', borderRadius: 12,
+            background: (!isSubmitted && selectedOption === null) ? '#e2e8f0' : 'var(--primary-color)',
+            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
             cursor: (!isSubmitted && selectedOption === null) ? 'not-allowed' : 'pointer',
-            fontSize: '16px'
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(13, 59, 102, 0.15)'
           }}
         >
           {isSubmitted ? 'Next Question →' : 'Submit Answer'}

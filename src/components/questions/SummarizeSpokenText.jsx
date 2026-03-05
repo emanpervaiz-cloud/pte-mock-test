@@ -11,6 +11,13 @@ const SummarizeSpokenText = ({ question, onNext }) => {
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // AI Evaluation State
   const [evaluation, setEvaluation] = useState(null);
@@ -114,36 +121,54 @@ const SummarizeSpokenText = ({ question, onNext }) => {
   };
 
   return (
-    <div className="summarize-spoken-text-question">
-      <div className="audio-section">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
+      <div style={{
+        background: '#fff', padding: isMobile ? 16 : 24, borderRadius: 16, border: '1px solid #eef2f6'
+      }}>
         <AudioPlayer
           src={question.audioUrl}
-          title="Listen to the lecture"
+          title={isMobile ? "Listen" : "Listen to the lecture"}
           onPlay={handleAudioPlay}
         />
       </div>
 
-      <div className="answer-section">
-        <h3>Write your summary:</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <h3 style={{ margin: 0, fontSize: isMobile ? 16 : 18, color: '#1a1f36', fontWeight: 700 }}>Write your summary:</h3>
         <textarea
-          className="response-textarea"
+          style={{
+            width: '100%',
+            minHeight: isMobile ? 180 : 220,
+            padding: isMobile ? '16px' : '20px',
+            borderRadius: 16,
+            border: '1.5px solid #e2e8f0',
+            fontSize: isMobile ? 15 : 16,
+            lineHeight: 1.6,
+            color: '#1a1f36',
+            resize: 'vertical',
+            outline: 'none',
+            transition: 'border-color 0.2s',
+            background: '#fff'
+          }}
           value={summary}
           onChange={handleChange}
           placeholder={`Write your summary (${question.minWords}-${question.maxWords} words)...`}
-          rows={6}
         />
-        <div className="word-count">
-          {wordCount}/{question.maxWords} words
-          {wordCount < question.minWords && wordCount > 0 &&
-            <span className="warning"> Minimum {question.minWords} words required</span>}
-          {wordCount > question.maxWords &&
-            <span className="error"> Maximum {question.maxWords} words exceeded</span>}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', fontSize: 13,
+          color: (wordCount < question.minWords || wordCount > question.maxWords) ? '#ef4444' : '#64748b',
+          fontWeight: 600, padding: '0 4px'
+        }}>
+          <span>{wordCount}/{question.maxWords} words</span>
+          {wordCount > 0 && wordCount < question.minWords && <span>Min {question.minWords} required</span>}
+          {wordCount > question.maxWords && <span>Max {question.maxWords} exceeded</span>}
         </div>
       </div>
 
-      <div className="instructions">
-        <p><strong>Instructions:</strong> Write a summary of the lecture in {question.minWords}-{question.maxWords} words.</p>
-        <p><strong>Note:</strong> You will only be able to play the audio once.</p>
+      <div style={{
+        padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)'
+      }}>
+        <div style={{ marginBottom: 4 }}><strong>Instructions:</strong> Summarize lecture in {question.minWords}-{question.maxWords} words.</div>
+        <div style={{ fontStyle: 'italic', color: '#64748b' }}>Note: You can only play the audio once.</div>
       </div>
 
       {/* AI Score Button - Shows when user has written summary */}
@@ -176,11 +201,19 @@ const SummarizeSpokenText = ({ question, onNext }) => {
         questionType="writing"
       />
 
-      <div className="action-buttons" style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
         <button
-          style={{ padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', background: 'var(--primary-color)', color: '#fff', border: 'none', fontWeight: 600 }}
           onClick={handleSubmit}
           disabled={wordCount > question.maxWords || wordCount === 0}
+          style={{
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 40px', borderRadius: 12,
+            background: (wordCount > question.maxWords || wordCount === 0) ? '#e2e8f0' : 'var(--primary-color)',
+            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
+            cursor: (wordCount > question.maxWords || wordCount === 0) ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(13, 59, 102, 0.15)'
+          }}
         >
           {isSubmitted ? 'Next Question →' : 'Submit Summary →'}
         </button>

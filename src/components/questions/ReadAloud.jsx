@@ -15,8 +15,15 @@ const ReadAloud = ({ question, onNext }) => {
   const [evaluation, setEvaluation] = useState(null);
   const [evalLoading, setEvalLoading] = useState(false);
   const [evalError, setEvalError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const recordingInterval = useRef(null);
   const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const initMic = async () => {
@@ -118,19 +125,29 @@ const ReadAloud = ({ question, onNext }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '10px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24, padding: isMobile ? '5px 0' : '10px 0' }}>
       <div style={{
         background: '#fff',
-        borderRadius: 20,
-        padding: '32px',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '20px 16px' : '32px',
         border: '1px solid #eef2f6',
         boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
         position: 'relative'
       }}>
-        <div style={{ position: 'absolute', top: 16, left: 24, fontSize: 12, fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{
+          position: 'absolute', top: 12, left: isMobile ? 16 : 24,
+          fontSize: 11, fontWeight: 700, color: 'var(--primary-color)',
+          textTransform: 'uppercase', letterSpacing: '0.5px'
+        }}>
           📖 Read Aloud
         </div>
-        <div style={{ marginTop: 20, fontSize: 20, lineHeight: 1.6, color: 'var(--primary-color)', fontWeight: 500 }}>
+        <div style={{
+          marginTop: isMobile ? 12 : 20,
+          fontSize: isMobile ? 17 : 20,
+          lineHeight: 1.6,
+          color: 'var(--primary-color)',
+          fontWeight: 500
+        }}>
           {question.prompt}
         </div>
       </div>
@@ -142,15 +159,24 @@ const ReadAloud = ({ question, onNext }) => {
       )}
 
       <div style={{
-        background: '#fff', borderRadius: 16, padding: '24px 32px', border: '1px solid #eef2f6',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20
+        background: '#fff', borderRadius: 16, padding: isMobile ? '20px 16px' : '24px 32px', border: '1px solid #eef2f6',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between', gap: isMobile ? 16 : 20,
+        textAlign: isMobile ? 'center' : 'left'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'center',
+          gap: isMobile ? 12 : 20
+        }}>
           <button
             onClick={isRecording ? stopRecording : startRecording}
             disabled={recordingTime >= 50 || micError}
             style={{
-              width: 64, height: 64, borderRadius: '50%',
+              width: isMobile ? 60 : 64, height: isMobile ? 60 : 64, borderRadius: '50%',
               background: isRecording ? '#dc2626' : (hasRecorded ? 'var(--success-color)' : 'var(--primary-color)'),
               color: '#fff', border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
@@ -163,10 +189,10 @@ const ReadAloud = ({ question, onNext }) => {
           </button>
 
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary-color)', marginBottom: 4 }}>
+            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: 'var(--primary-color)', marginBottom: 4 }}>
               {isRecording ? 'Recording...' : (hasRecorded ? 'Recorded Successfully' : 'Ready to record')}
             </div>
-            <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: isMobile ? 13 : 14, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
               {isRecording ? `Time elapsed: ${recordingTime}s / 50s` : (hasRecorded ? 'Get your score or continue to the next question' : 'Click the microphone to start reading')}
             </div>
           </div>
@@ -174,7 +200,7 @@ const ReadAloud = ({ question, onNext }) => {
 
         {isRecording && (
           <div style={{
-            height: 10, width: 140, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden'
+            height: 10, width: isMobile ? '100%' : 140, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden'
           }}>
             <div style={{
               height: '100%', background: '#dc2626', width: `${(recordingTime / 50) * 100}%`,
@@ -198,7 +224,8 @@ const ReadAloud = ({ question, onNext }) => {
         <button
           onClick={handleNext}
           style={{
-            padding: '12px 32px', borderRadius: 12,
+            width: isMobile ? '100%' : 'auto',
+            padding: isMobile ? '14px 32px' : '12px 32px', borderRadius: 12,
             background: isRecording ? '#fff' : 'var(--primary-color)',
             color: isRecording ? 'var(--primary-color)' : '#fff',
             border: isRecording ? '1.5px solid var(--primary-color)' : 'none',

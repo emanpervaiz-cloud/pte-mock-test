@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import AudioPlayer from '../common/AudioPlayer';
 
@@ -7,6 +7,13 @@ const HighlightCorrectSummary = ({ question, onNext }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleOptionSelect = (optionId) => {
     if (isSubmitted) return;
@@ -37,52 +44,90 @@ const HighlightCorrectSummary = ({ question, onNext }) => {
   };
 
   return (
-    <div className="highlight-correct-summary-question">
-      <div className="audio-section">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
+      <div style={{
+        background: '#fff', padding: isMobile ? 16 : 24, borderRadius: 16, border: '1px solid #eef2f6'
+      }}>
         <AudioPlayer
           src={question.audioUrl}
-          title="Listen to the talk"
+          title={isMobile ? "Listen" : "Listen to the talk"}
           onPlay={handleAudioPlay}
         />
       </div>
 
-      <div className="question-text">
-        <h3>Which option best summarizes the talk?</h3>
+      <div style={{
+        background: '#fff',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '20px 16px' : '32px',
+        border: '1px solid #eef2f6',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
+      }}>
+        <h3 style={{ margin: 0, fontSize: isMobile ? 16 : 18, color: '#1a1f36', fontWeight: 700, lineHeight: 1.5 }}>
+          Which option best summarizes the talk?
+        </h3>
       </div>
 
-      <div className="options-container">
-        {question.options.map((option) => (
-          <div
-            key={option.id}
-            className={`option-item ${selectedOption === option.id ? 'selected' : ''
-              }`}
-            onClick={() => handleOptionSelect(option.id)}
-          >
-            <input
-              type="radio"
-              checked={selectedOption === option.id}
-              onChange={() => { }}
-              className="option-input"
-            />
-            <div className="option-text">
-              {option.text}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {question.options.map((option) => {
+          const isSelected = selectedOption === option.id;
+          return (
+            <div
+              key={option.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: isMobile ? '16px' : '16px 20px',
+                background: isSelected ? 'rgba(13, 59, 102, 0.04)' : '#fff',
+                borderRadius: 12,
+                border: `1.5px solid ${isSelected ? 'var(--primary-color)' : '#eef2f6'}`,
+                cursor: isSubmitted ? 'default' : 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: isSelected ? '0 2px 8px rgba(13, 59, 102, 0.08)' : 'none'
+              }}
+              onClick={() => handleOptionSelect(option.id)}
+            >
+              <div style={{
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                border: `2px solid ${isSelected ? 'var(--primary-color)' : '#cbd5e1'}`,
+                background: isSelected ? 'var(--primary-color)' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                {isSelected && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
+              </div>
+              <div style={{
+                fontSize: isMobile ? 14 : 15, color: isSelected ? '#1a1f36' : '#475569',
+                fontWeight: isSelected ? 600 : 500, lineHeight: 1.5
+              }}>
+                {option.text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <div className="instructions">
-        <p><strong>Instructions:</strong> Select the option that best summarizes the talk.</p>
-        <p><strong>Note:</strong> You will only be able to play the audio once.</p>
+      <div style={{
+        padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)'
+      }}>
+        <div style={{ marginBottom: 4 }}><strong>Instructions:</strong> Select the option that best summarizes the talk.</div>
+        <div style={{ fontStyle: 'italic', color: '#64748b' }}>Note: You can only play the audio once.</div>
       </div>
 
-      <div className="action-buttons">
+      <div style={{ display: 'flex' }}>
         <button
-          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={selectedOption === null}
+          style={{
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 40px', borderRadius: 12,
+            background: selectedOption === null ? '#e2e8f0' : 'var(--primary-color)',
+            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
+            cursor: selectedOption === null ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(13, 59, 102, 0.15)'
+          }}
         >
-          {isSubmitted ? 'Next Question' : 'Submit Answer'}
+          {isSubmitted ? 'Next Question →' : 'Submit Answer'}
         </button>
       </div>
 

@@ -17,8 +17,15 @@ const RetellLecture = ({ question, onNext }) => {
   const [evaluation, setEvaluation] = useState(null);
   const [evalLoading, setEvalLoading] = useState(false);
   const [evalError, setEvalError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const recordingInterval = useRef(null);
   const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const initMic = async () => {
@@ -122,44 +129,47 @@ const RetellLecture = ({ question, onNext }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '10px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24, padding: isMobile ? '5px 0' : '10px 0' }}>
       <div style={{
         background: '#fff',
-        borderRadius: 20,
-        padding: '32px',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '24px 16px' : '32px',
         border: '1px solid #eef2f6',
         boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
         position: 'relative'
       }}>
-        <div style={{ position: 'absolute', top: 16, left: 24, fontSize: 12, fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{
+          position: 'absolute', top: 12, left: isMobile ? 16 : 24,
+          fontSize: 11, fontWeight: 700, color: 'var(--primary-color)',
+          textTransform: 'uppercase', letterSpacing: '0.5px'
+        }}>
           🎙️ Retell Lecture
         </div>
 
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: isMobile ? 12 : 24 }}>
           {!lecturePlayed ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1f36' }}>Phase 1: Listening</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 20 }}>
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#1a1f36' }}>Phase 1: Listening</div>
               <AudioPlayer
                 src={question.audioUrl || '/placeholder-audio.mp3'}
-                title="Listen to the lecture carefully before retelling"
+                title={isMobile ? "Listen carefully" : "Listen to the lecture carefully before retelling"}
               />
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
                 <button
                   onClick={handleLectureEnd}
                   style={{
-                    padding: '10px 24px', borderRadius: 10, border: '1.5px solid var(--primary-color)',
-                    background: 'var(--accent-color)', color: 'var(--primary-color)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                    width: isMobile ? '100%' : 'auto',
+                    padding: isMobile ? '12px 20px' : '10px 24px', borderRadius: 10, border: '1.5px solid var(--primary-color)',
+                    background: 'var(--accent-color)', color: 'var(--primary-color)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#ede7f6'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#f8f9fe'}
                 >
-                  I've finished listening — Start Retelling Phase
+                  {isMobile ? "Start Retelling →" : "I've finished listening — Start Retelling Phase"}
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1f36', marginBottom: 12 }}>
+            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#1a1f36', marginBottom: 12 }}>
               Phase 2: Retelling the content
             </div>
           )}
@@ -174,15 +184,24 @@ const RetellLecture = ({ question, onNext }) => {
 
       {lecturePlayed && (
         <div style={{
-          background: '#fff', borderRadius: 16, padding: '24px 32px', border: '1px solid #eef2f6',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20
+          background: '#fff', borderRadius: 16, padding: isMobile ? '20px 16px' : '24px 32px', border: '1px solid #eef2f6',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between', gap: isMobile ? 16 : 20,
+          textAlign: isMobile ? 'center' : 'left'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: 'center',
+            gap: isMobile ? 12 : 20
+          }}>
             <button
               onClick={isRecording ? stopRecording : startRecording}
               disabled={recordingTime >= 40 || micError}
               style={{
-                width: 64, height: 64, borderRadius: '50%',
+                width: isMobile ? 60 : 64, height: isMobile ? 60 : 64, borderRadius: '50%',
                 background: isRecording ? '#dc2626' : (hasRecorded ? 'var(--success-color)' : 'var(--primary-color)'),
                 color: '#fff', border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
@@ -195,10 +214,10 @@ const RetellLecture = ({ question, onNext }) => {
             </button>
 
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#1a1f36', marginBottom: 4 }}>
+              <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: '#1a1f36', marginBottom: 4 }}>
                 {isRecording ? 'Retelling lecture...' : (hasRecorded ? 'Retelling recorded' : 'Ready to start retelling')}
               </div>
-              <div style={{ fontSize: 14, color: '#5a6270' }}>
+              <div style={{ fontSize: isMobile ? 13 : 14, color: '#5a6270', lineHeight: 1.4 }}>
                 {isRecording ? `Time: ${recordingTime}s / 40s` : (hasRecorded ? 'Get your score or continue' : 'Click the microphone to begin speaking')}
               </div>
             </div>
@@ -206,7 +225,7 @@ const RetellLecture = ({ question, onNext }) => {
 
           {isRecording && (
             <div style={{
-              height: 10, width: 120, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden'
+              height: 10, width: isMobile ? '100%' : 120, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden'
             }}>
               <div style={{
                 height: '100%', background: '#dc2626', width: `${(recordingTime / 40) * 100}%`,
@@ -231,7 +250,8 @@ const RetellLecture = ({ question, onNext }) => {
         <button
           onClick={handleNext}
           style={{
-            padding: '12px 32px', borderRadius: 12,
+            width: isMobile ? '100%' : 'auto',
+            padding: isMobile ? '14px 32px' : '12px 32px', borderRadius: 12,
             background: isRecording ? '#fff' : 'var(--primary-color)',
             color: isRecording ? 'var(--primary-color)' : '#fff',
             border: isRecording ? '1.5px solid var(--primary-color)' : 'none',

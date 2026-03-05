@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import AudioPlayer from '../common/AudioPlayer';
 
@@ -7,6 +7,13 @@ const WriteFromDictation = ({ question, onNext }) => {
   const [sentence, setSentence] = useState('');
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleChange = (e) => {
     if (isSubmitted) return;
@@ -37,38 +44,61 @@ const WriteFromDictation = ({ question, onNext }) => {
   };
 
   return (
-    <div className="write-from-dictation-question">
-      <div className="audio-section">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
+      <div style={{
+        background: '#fff', padding: isMobile ? 16 : 24, borderRadius: 16, border: '1px solid #eef2f6'
+      }}>
         <AudioPlayer
           src={question.audioUrl}
-          title="Listen to the sentence"
+          title={isMobile ? "Listen" : "Listen to the sentence"}
           onPlay={handleAudioPlay}
         />
       </div>
 
-      <div className="answer-section">
-        <h3>Type the sentence exactly as you hear it:</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <h3 style={{ margin: 0, fontSize: isMobile ? 16 : 18, color: '#1a1f36', fontWeight: 700 }}>Type the sentence:</h3>
         <input
           type="text"
-          className="response-input"
+          style={{
+            width: '100%',
+            height: isMobile ? 52 : 60,
+            padding: '0 20px',
+            borderRadius: 14,
+            border: '1.5px solid #e2e8f0',
+            fontSize: isMobile ? 16 : 18,
+            color: '#1a1f36',
+            outline: 'none',
+            transition: 'border-color 0.2s',
+            background: '#fff'
+          }}
           value={sentence}
           onChange={handleChange}
-          placeholder="Type the sentence here..."
+          placeholder="Type what you heard..."
         />
       </div>
 
-      <div className="instructions">
-        <p><strong>Instructions:</strong> Type the sentence exactly as you hear it.</p>
-        <p><strong>Note:</strong> You will only be able to play the audio once.</p>
+      <div style={{
+        padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)'
+      }}>
+        <div style={{ marginBottom: 4 }}><strong>Instructions:</strong> Type the sentence exactly as you hear it.</div>
+        <div style={{ fontStyle: 'italic', color: '#64748b' }}>Note: You can only play the audio once.</div>
       </div>
 
-      <div className="action-buttons">
+      <div style={{ display: 'flex' }}>
         <button
-          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={sentence.trim() === ''}
+          style={{
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 40px', borderRadius: 12,
+            background: sentence.trim() === '' ? '#e2e8f0' : 'var(--primary-color)',
+            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
+            cursor: sentence.trim() === '' ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(13, 59, 102, 0.15)'
+          }}
         >
-          {isSubmitted ? 'Next Question' : 'Submit Sentence'}
+          {isSubmitted ? 'Next Question →' : 'Submit Sentence'}
         </button>
       </div>
 

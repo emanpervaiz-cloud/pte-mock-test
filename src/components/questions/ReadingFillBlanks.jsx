@@ -13,6 +13,13 @@ const ReadingFillBlanks = ({ question, onNext }) => {
   const [evaluation, setEvaluation] = useState(null);
   const [evalLoading, setEvalLoading] = useState(false);
   const [evalError, setEvalError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (question) {
@@ -121,9 +128,23 @@ const ReadingFillBlanks = ({ question, onNext }) => {
             key={`blank-${blankNumber}`}
             value={currentAnswer}
             onChange={(e) => handleOptionSelect(blankNumber, e.target.value)}
-            className="blank-select"
+            style={{
+              padding: isMobile ? '4px 8px' : '4px 12px',
+              margin: '0 4px',
+              borderRadius: 6,
+              border: `1.5px solid ${currentAnswer ? 'var(--primary-color)' : '#cbd5e1'}`,
+              background: currentAnswer ? 'rgba(13, 59, 102, 0.04)' : '#fff',
+              fontSize: isMobile ? 14 : 15,
+              fontWeight: 600,
+              color: 'var(--primary-color)',
+              minWidth: isMobile ? 100 : 120,
+              cursor: isSubmitted ? 'default' : 'pointer',
+              outline: 'none',
+              height: isMobile ? 32 : 36
+            }}
+            disabled={isSubmitted}
           >
-            <option value="">Select option</option>
+            <option value="">{isMobile ? "..." : "Select option"}</option>
             {availableOptions.map(option => (
               <option key={option} value={option}>{option}</option>
             ))}
@@ -139,57 +160,116 @@ const ReadingFillBlanks = ({ question, onNext }) => {
   };
 
   return (
-    <div className="reading-fill-blanks-question">
-      <div className="passage-section">
-        <div className="passage-text">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '20px 16px' : '32px',
+        border: '1px solid #eef2f6',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
+      }}>
+        <div style={{
+          fontSize: isMobile ? 15 : 16,
+          color: '#334155',
+          lineHeight: isMobile ? 2.2 : 1.8,
+          textAlign: 'justify'
+        }}>
           {renderPassageWithBlanks()}
         </div>
       </div>
 
-      <div className="options-bank">
-        <h3>Available Options:</h3>
-        <div className="options-list">
-          {availableOptions.map((option, index) => (
-            <span key={index} className="option-chip">
+      <div style={{
+        background: '#f8fafc',
+        borderRadius: 16,
+        padding: isMobile ? '16px' : '20px 24px',
+        border: '1px solid #e2e8f0'
+      }}>
+        <h3 style={{ margin: '0 0 12px', fontSize: 14, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Available Options:
+        </h3>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 8,
+          maxHeight: isMobile ? 120 : 'none',
+          overflowY: 'auto',
+          padding: '4px'
+        }}>
+          {availableOptions.length > 0 ? availableOptions.map((option, index) => (
+            <span key={index} style={{
+              background: '#fff',
+              padding: '6px 12px',
+              borderRadius: 8,
+              fontSize: 13,
+              color: 'var(--primary-color)',
+              fontWeight: 600,
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}>
               {option}
             </span>
-          ))}
+          )) : (
+            <span style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>All words placed</span>
+          )}
         </div>
       </div>
 
-      <div className="instructions">
-        <p><strong>Instructions:</strong> Complete the text with the most appropriate words from the options bank. Each word can only be used once.</p>
+      <div style={{
+        padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)',
+        fontStyle: 'italic', display: isSubmitted ? 'none' : 'block'
+      }}>
+        <strong>Instructions:</strong> Complete the text with the most appropriate words from the options bank. Each word can only be used once.
       </div>
 
       {isSubmitted && (
         <>
-          <div className="answer-feedback" style={{
-            marginTop: '20px',
-            padding: '15px',
-            backgroundColor: 'rgba(13, 59, 102, 0.05)',
-            borderRadius: '8px',
-            border: '1px solid var(--primary-color)'
+          <div style={{
+            marginTop: '8px',
+            padding: isMobile ? '16px' : '24px',
+            backgroundColor: 'rgba(13, 59, 102, 0.03)',
+            borderRadius: 16,
+            border: '1px solid #e2e8f0'
           }}>
-            <h4 style={{ color: 'var(--primary-color)', marginBottom: '10px' }}>Correct Answers:</h4>
-            {question.answers?.map((answer, idx) => {
-              const userAnswer = answers[answer.blank];
-              const isCorrect = userAnswer === answer.correct;
-              return (
-                <div key={idx} style={{
-                  marginBottom: '8px',
-                  padding: '8px',
-                  backgroundColor: isCorrect ? '#dcfce7' : '#fee2e2',
-                  borderRadius: '4px',
-                  borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`
-                }}>
-                  <strong>Blank {answer.blank}:</strong>{' '}
-                  <span style={{ textDecoration: 'line-through', color: '#ef4444' }}>{userAnswer || 'No answer'}</span>{' '}
-                  <span style={{ color: '#22c55e', fontWeight: 'bold' }}>→ {answer.correct}</span>
-                  {isCorrect && <span style={{ color: '#22c55e', marginLeft: '10px' }}>✓</span>}
-                  {!isCorrect && <span style={{ color: '#ef4444', marginLeft: '10px' }}>✗</span>}
-                </div>
-              );
-            })}
+            <h4 style={{ color: 'var(--primary-color)', marginBottom: '16px', fontSize: 16, fontWeight: 700 }}>Correct Answers:</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {question.answers?.map((answer, idx) => {
+                const userAnswer = answers[answer.blank];
+                const isCorrect = userAnswer === answer.correct;
+                return (
+                  <div key={idx} style={{
+                    padding: isMobile ? '12px' : '12px 16px',
+                    backgroundColor: isCorrect ? '#f0fdf4' : '#fef2f2',
+                    borderRadius: 10,
+                    border: `1px solid ${isCorrect ? '#bcf0da' : '#fecaca'}`,
+                    fontSize: 14,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10
+                  }}>
+                    <span style={{
+                      fontWeight: 800,
+                      color: isCorrect ? '#166534' : '#991b1b',
+                      minWidth: 80
+                    }}>Blank {answer.blank}:</span>
+                    <span style={{
+                      color: isCorrect ? '#166534' : '#991b1b',
+                      flex: 1,
+                      textDecoration: isCorrect ? 'none' : 'line-through'
+                    }}>
+                      {userAnswer || 'No answer'}
+                    </span>
+                    {!isCorrect && (
+                      <span style={{ color: '#166534', fontWeight: 700 }}>
+                        → {answer.correct}
+                      </span>
+                    )}
+                    <span style={{ fontWeight: 700 }}>
+                      {isCorrect ? '✓' : '✗'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="evaluation-section" style={{ marginTop: '24px' }}>
@@ -221,12 +301,20 @@ const ReadingFillBlanks = ({ question, onNext }) => {
         </>
       )}
 
-      <div className="action-buttons" style={{ marginTop: '20px' }}>
+      <div style={{ marginTop: '8px' }}>
         <button
-          className="btn btn-primary"
           onClick={handleSubmit}
+          style={{
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 40px', borderRadius: 12,
+            background: 'var(--primary-color)',
+            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 12px rgba(13, 59, 102, 0.15)'
+          }}
         >
-          {isSubmitted ? 'Next Question' : 'Submit Answers'}
+          {isSubmitted ? 'Next Question →' : 'Submit Answers'}
         </button>
       </div>
     </div>

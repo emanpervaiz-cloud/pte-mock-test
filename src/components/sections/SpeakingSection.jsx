@@ -15,7 +15,14 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Speaking questions data - Only including the user's voice notes as they are the priority
   const speakingQuestions = [
@@ -114,7 +121,7 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
       {/* Premium Header */}
       <header style={{
         background: '#fff', borderBottom: '1px solid #e8ecf4',
-        padding: '0 24px', height: 64, display: 'flex', alignItems: 'center',
+        padding: isMobile ? '0 16px' : '0 24px', height: 64, display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100,
         boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
       }}>
@@ -125,21 +132,16 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 800, fontSize: 16,
           }}>A</div>
-          <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--primary-color)' }}>Speaking Module</span>
+          {!isMobile && <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--primary-color)' }}>Speaking Module</span>}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          {!isMockTest && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>
-              <span style={{ color: 'var(--secondary-color)' }}>●</span> Practice Mode
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 24 }}>
           {isMockTest && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger-color)', fontSize: 13, fontWeight: 700 }}>
-              <span style={{ color: 'var(--danger-color)' }}>●</span> MOCK TEST LIVE
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--danger-color)', fontSize: isMobile ? 11 : 13, fontWeight: 700 }}>
+              <span style={{ color: 'var(--danger-color)' }}>●</span> {isMobile ? 'LIVE' : 'MOCK TEST LIVE'}
             </div>
           )}
-          <Timer initialTime={1200} onComplete={handleTimeout} /> {/* 20 minutes */}
+          <Timer initialTime={1200} onComplete={handleTimeout} />
         </div>
       </header>
 
@@ -153,20 +155,22 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
         </div>
       )}
 
-      <main style={{ padding: '32px 24px' }}>
+      <main style={{ padding: isMobile ? '16px' : '32px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           {/* Section Indicator */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24,
-            padding: '12px 20px', background: 'rgba(13, 59, 102, 0.05)',
-            borderRadius: 12, color: 'var(--primary-color)'
-          }}>
-            <span style={{ fontSize: 20 }}>🎙️</span>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Section</div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>Speaking & Writing</div>
+          {!isMobile && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24,
+              padding: '12px 20px', background: 'rgba(13, 59, 102, 0.05)',
+              borderRadius: 12, color: 'var(--primary-color)'
+            }}>
+              <span style={{ fontSize: 20 }}>🎙️</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Section</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>Speaking & Writing</div>
+              </div>
             </div>
-          </div>
+          )}
 
           <ProgressBar
             current={currentQuestion + 1}
@@ -177,10 +181,10 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
           <div style={{
             background: '#fff',
             borderRadius: 24,
-            padding: 32,
+            padding: isMobile ? '24px 20px' : 32,
             boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
             border: '1px solid #eef2f6',
-            minHeight: 400,
+            minHeight: isMobile ? 350 : 400,
             display: 'flex',
             flexDirection: 'column'
           }}>
@@ -193,8 +197,8 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
                 Instructions
               </div>
               <p style={{
-                margin: 0, fontSize: 16, color: 'var(--text-main)', lineHeight: 1.6,
-                background: 'var(--accent-color)', padding: '16px 20px', borderRadius: 12,
+                margin: 0, fontSize: isMobile ? 14 : 16, color: 'var(--text-main)', lineHeight: 1.6,
+                background: 'var(--accent-color)', padding: isMobile ? '12px 16px' : '16px 20px', borderRadius: 12,
                 borderLeft: '4px solid var(--primary-color)'
               }}>
                 {currentQuestionData.instruction}
@@ -227,10 +231,14 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
 
           {/* Bottom Navigation */}
           <div style={{
-            marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '20px 32px', background: '#fff', borderRadius: 20,
+            marginTop: 24, display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between', alignItems: 'center',
+            padding: isMobile ? '16px' : '20px 32px',
+            background: '#fff', borderRadius: 20,
             border: '1px solid #eef2f6', boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-            position: 'relative', zIndex: 10
+            position: 'relative', zIndex: 10,
+            gap: isMobile ? 12 : 0
           }}>
             {!showResults ? (
               <>
@@ -240,7 +248,8 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
                     onClick={handlePreviousQuestion}
                     disabled={currentQuestion === 0}
                     style={{
-                      padding: '10px 24px', borderRadius: 12,
+                      width: isMobile ? '100%' : 'auto',
+                      padding: '12px 24px', borderRadius: 12,
                       background: 'transparent', color: currentQuestion === 0 ? '#cbd5e1' : '#5a6270',
                       border: `1.5px solid ${currentQuestion === 0 ? '#e2e8f0' : '#d1d9e2'}`,
                       fontWeight: 600, fontSize: 14, cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
@@ -250,78 +259,55 @@ const SpeakingSection = ({ onSectionComplete, onSectionBack, isMockTest = false,
                     ← Previous
                   </button>
                 )}
-                {!isMockTest && (
-                  <div style={{ display: 'flex', gap: 12 }}>
-                    {currentQuestion === speakingQuestions.length - 1 && (
-                      <button
-                        type="button"
-                        onClick={() => navigate('/')}
-                        style={{
-                          padding: '10px 24px', borderRadius: 12,
-                          background: '#fff', color: 'var(--danger-color)',
-                          border: '1.5px solid #fee2e2',
-                          fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        ✖ Back to Dashboard
-                      </button>
-                    )}
+                <div style={{ display: 'flex', gap: 12, width: isMobile ? '100%' : 'auto', flexDirection: isMobile ? 'column' : 'row' }}>
+                  {!isMockTest && currentQuestion === speakingQuestions.length - 1 && (
                     <button
                       type="button"
-                      onClick={handleNextQuestion}
+                      onClick={() => navigate('/')}
                       style={{
-                        padding: '10px 32px', borderRadius: 12,
-                        background: 'var(--primary-color)',
-                        color: '#fff', border: 'none',
-                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        boxShadow: 'var(--shadow-md)'
+                        width: isMobile ? '100%' : 'auto',
+                        padding: '12px 24px', borderRadius: 12,
+                        background: '#fff', color: 'var(--danger-color)',
+                        border: '1.5px solid #fee2e2',
+                        fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                        transition: 'all 0.2s'
                       }}
                     >
-                      {currentQuestion === speakingQuestions.length - 1
-                        ? 'View Results →'
-                        : 'Next Question →'}
+                      ✖ Back to Dashboard
                     </button>
-                  </div>
-                )}
-                {isMockTest && (
-                  <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      onClick={handleNextQuestion}
-                      style={{
-                        padding: '10px 32px', borderRadius: 12,
-                        background: 'var(--primary-color)',
-                        color: '#fff', border: 'none',
-                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        boxShadow: 'var(--shadow-md)'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                      {currentQuestion === speakingQuestions.length - 1
-                        ? (nextModule ? `Next Module: ${nextModule} →` : 'Submit Mock Test →')
-                        : 'Next Question →'}
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleNextQuestion}
+                    style={{
+                      width: isMobile ? '100%' : 'auto',
+                      padding: '14px 32px', borderRadius: 12,
+                      background: 'var(--primary-color)',
+                      color: '#fff', border: 'none',
+                      fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: 'var(--shadow-md)'
+                    }}
+                  >
+                    {currentQuestion === speakingQuestions.length - 1
+                      ? (isMockTest ? (nextModule ? `Next Module: ${nextModule} →` : 'Submit Mock Test →') : 'View Results →')
+                      : 'Next Question →'}
+                  </button>
+                </div>
               </>
             ) : (
               <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                 <button
                   onClick={() => navigate('/')}
                   style={{
-                    padding: '12px 48px', borderRadius: 12,
+                    width: isMobile ? '100%' : 'auto',
+                    padding: '14px 48px', borderRadius: 12,
                     background: 'var(--primary-color)',
                     color: '#fff', border: 'none',
                     fontWeight: 700, fontSize: 16, cursor: 'pointer',
                     transition: 'all 0.2s',
                     boxShadow: 'var(--shadow-lg)'
                   }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
                   Return to Dashboard
                 </button>

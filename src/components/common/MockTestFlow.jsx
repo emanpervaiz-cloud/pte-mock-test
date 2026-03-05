@@ -11,6 +11,13 @@ const MockTestFlow = () => {
   const { state, setExamMode, setCurrentMockSectionIndex } = useExam();
   const navigate = useNavigate();
   const [currentSection, setCurrentSection] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Set exam mode to mock test
@@ -101,16 +108,31 @@ const MockTestFlow = () => {
         zIndex: 1000,
         boxShadow: 'var(--shadow-md)'
       }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
+        <div className="container" style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center',
+          justifyContent: 'space-between',
+          padding: isMobile ? '0 16px' : '0 24px',
+          gap: isMobile ? 8 : 12
+        }}>
           <div style={{ textAlign: 'left' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>PTE Academic Mock Test</h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.8, color: 'var(--secondary-color)', fontWeight: 600 }}>
+            <h2 style={{ margin: 0, fontSize: isMobile ? '16px' : '18px', fontWeight: 700 }}>PTE Academic Mock Test</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '10px', opacity: 0.8, color: 'var(--secondary-color)', fontWeight: 600 }}>
               SECTION {currentSection + 1} OF {state.mockTestSections.length}: {getSectionTitle().toUpperCase()}
             </p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.7, color: '#fff' }}>OVERALL TEST TIME:</div>
-            <Timer initialTime={4800} autoSubmit={false} /> {/* 80 minutes total */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            width: isMobile ? '100%' : 'auto',
+            justifyContent: isMobile ? 'space-between' : 'flex-end',
+            borderTop: isMobile ? '1px solid rgba(255,255,255,0.1)' : 'none',
+            paddingTop: isMobile ? 8 : 0
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.7, color: '#fff' }}>TIME REMAINING:</div>
+            <Timer initialTime={4800} autoSubmit={false} />
           </div>
         </div>
       </div>

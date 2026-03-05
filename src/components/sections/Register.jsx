@@ -12,7 +12,14 @@ const Register = () => {
     const [error, setError] = useState('');
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Validation
     useEffect(() => {
@@ -64,12 +71,12 @@ const Register = () => {
             minHeight: '100vh',
             background: 'var(--bg-color)',
             fontFamily: "'Inter', sans-serif",
-            padding: '20px'
+            padding: isMobile ? '16px' : '20px'
         }}>
             <div style={{
                 background: '#ffffff',
-                padding: '48px 40px',
-                borderRadius: '24px',
+                padding: isMobile ? '32px 24px' : '48px 40px',
+                borderRadius: isMobile ? '20px' : '24px',
                 boxShadow: '0 12px 48px rgba(0, 0, 0, 0.06)',
                 width: '100%',
                 maxWidth: '440px',
@@ -78,12 +85,12 @@ const Register = () => {
             }}>
                 {/* Logo */}
                 <div style={{
-                    width: 64, height: 64, borderRadius: 18, margin: '0 auto 24px',
+                    width: isMobile ? 56 : 64, height: isMobile ? 56 : 64, borderRadius: 18, margin: '0 auto 24px',
                     background: 'var(--primary-color)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: '0 8px 16px rgba(13, 59, 102, 0.2)'
                 }}>
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width={isMobile ? 28 : 32} height={isMobile ? 28 : 32} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 7h-9" />
                         <path d="M14 17H5" />
                         <circle cx="17" cy="17" r="3" />
@@ -91,10 +98,10 @@ const Register = () => {
                     </svg>
                 </div>
 
-                <h2 style={{ margin: '0 0 10px', color: '#1e293b', fontSize: '28px', fontWeight: 800, letterSpacing: '-0.5px' }}>
+                <h2 style={{ margin: '0 0 10px', color: '#1e293b', fontSize: isMobile ? '24px' : '28px', fontWeight: 800, letterSpacing: '-0.5px' }}>
                     Create Account
                 </h2>
-                <p style={{ margin: '0 0 36px', color: '#64748b', fontSize: '15px', fontWeight: 400 }}>
+                <p style={{ margin: '0 0 32px', color: '#64748b', fontSize: '15px', fontWeight: 400 }}>
                     Join to start your PTE exam preparation
                 </p>
 
@@ -112,7 +119,7 @@ const Register = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '20px' }}>
                     {/* Name Field */}
                     <div style={{ textAlign: 'left' }}>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
@@ -255,7 +262,7 @@ const Register = () => {
                             background: isFormValid ? 'var(--secondary-color)' : 'var(--accent-color)',
                             color: isFormValid ? 'var(--primary-color)' : '#94a3b8',
                             border: 'none',
-                            padding: '16px',
+                            padding: isMobile ? '14px' : '16px',
                             borderRadius: '12px',
                             fontSize: '16px',
                             fontWeight: 700,
@@ -268,8 +275,8 @@ const Register = () => {
                             gap: '10px',
                             boxShadow: isFormValid ? '0 4px 12px rgba(250, 169, 22, 0.25)' : 'none'
                         }}
-                        onMouseEnter={e => isFormValid && (e.currentTarget.style.transform = 'translateY(-2px)')}
-                        onMouseLeave={e => isFormValid && (e.currentTarget.style.transform = 'translateY(0)')}
+                        onMouseEnter={e => isFormValid && !isMobile && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                        onMouseLeave={e => isFormValid && !isMobile && (e.currentTarget.style.transform = 'translateY(0)')}
                     >
                         {loading ? (
                             <>

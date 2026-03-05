@@ -16,8 +16,15 @@ const RepeatSentence = ({ question, onNext }) => {
   const [evaluation, setEvaluation] = useState(null);
   const [evalLoading, setEvalLoading] = useState(false);
   const [evalError, setEvalError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const recordingInterval = useRef(null);
   const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const initMic = async () => {
@@ -123,11 +130,11 @@ const RepeatSentence = ({ question, onNext }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '10px 0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: isMobile ? '5px 0' : '10px 0' }}>
       <div style={{
         background: '#fff',
         borderRadius: 20,
-        padding: '32px',
+        padding: isMobile ? '24px 16px' : '32px',
         border: '1px solid #eef2f6',
         boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
         position: 'relative'
@@ -165,15 +172,28 @@ const RepeatSentence = ({ question, onNext }) => {
       )}
 
       <div style={{
-        background: '#fff', borderRadius: 16, padding: '24px 32px', border: '1px solid #eef2f6',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20
+        background: '#fff',
+        borderRadius: 16,
+        padding: isMobile ? '20px' : '24px 32px',
+        border: '1px solid #eef2f6',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 20
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'center',
+          gap: isMobile ? 12 : 20,
+          textAlign: isMobile ? 'center' : 'left'
+        }}>
           <button
             onClick={isRecording ? stopRecording : startRecording}
             disabled={micError}
             style={{
-              width: 64, height: 64, borderRadius: '50%',
+              width: isMobile ? 72 : 64, height: isMobile ? 72 : 64, borderRadius: '50%',
               background: isRecording ? '#dc2626' : (hasRecorded ? 'var(--success-color)' : 'var(--primary-color)'),
               color: '#fff', border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
@@ -186,10 +206,10 @@ const RepeatSentence = ({ question, onNext }) => {
           </button>
 
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#1a1f36', marginBottom: 4 }}>
+            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: '#1a1f36', marginBottom: 4 }}>
               {isRecording ? 'Recording repitition...' : (hasRecorded ? 'Response captured' : 'Ready to record')}
             </div>
-            <div style={{ fontSize: 14, color: '#5a6270' }}>
+            <div style={{ fontSize: isMobile ? 13 : 14, color: '#5a6270' }}>
               {isRecording ? `${recordingTime}s / 15s - Speak clearly` : (hasRecorded ? 'You can get your score or proceed' : 'Click the microphone to repeat')}
             </div>
           </div>
@@ -221,16 +241,15 @@ const RepeatSentence = ({ question, onNext }) => {
         <button
           onClick={handleNext}
           style={{
-            padding: '12px 32px', borderRadius: 12,
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 32px', borderRadius: 12,
             background: isRecording ? '#fff' : 'linear-gradient(135deg, #673ab7, #5e35b1)',
             color: isRecording ? '#673ab7' : '#fff',
             border: isRecording ? '1.5px solid #673ab7' : 'none',
-            fontWeight: 700, fontSize: 15, cursor: 'pointer',
+            fontWeight: 700, fontSize: 16, cursor: 'pointer',
             transition: 'all 0.2s ease',
             boxShadow: isRecording ? 'none' : '0 4px 12px rgba(103, 58, 183, 0.2)'
           }}
-          onMouseEnter={e => { if (!isRecording) e.currentTarget.style.transform = 'translateY(-2px)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
         >
           {isRecording ? 'Stop & Next' : 'Continue'} →
         </button>

@@ -5,6 +5,14 @@ import React from 'react';
  * Shows 5-dimension scores with feedback, band descriptor, strengths, and improvements
  */
 const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, questionType }) => {
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     if (!hasResponse && !loading && !evaluation) {
         return null;
     }
@@ -159,14 +167,14 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                 {/* Header */}
                 <div style={{
                     background: 'var(--primary-color)',
-                    padding: '20px 28px',
+                    padding: isMobile ? '16px 20px' : '20px 28px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{ fontSize: 24 }}>✍️</span>
+                        <span style={{ fontSize: isMobile ? 20 : 24 }}>✍️</span>
                         <div>
-                            <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Writing Feedback</div>
-                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>AI-powered analysis</div>
+                            <div style={{ fontSize: isMobile ? 14 : 16, fontWeight: 700, color: '#fff' }}>Writing Feedback</div>
+                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>AI-powered analysis</div>
                         </div>
                     </div>
                 </div>
@@ -174,16 +182,16 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                 {/* Writing Overall Score Section */}
                 <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20,
-                    padding: '24px 28px', borderBottom: '1px solid #e8ecf4',
+                    padding: isMobile ? '20px' : '24px 28px', borderBottom: '1px solid #e8ecf4',
                     background: 'rgba(46, 125, 50, 0.03)'
                 }}>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 13, color: '#5a6270', fontWeight: 600, marginBottom: 4 }}>YOUR SCORE</div>
+                        <div style={{ fontSize: 12, color: '#5a6270', fontWeight: 600, marginBottom: 4 }}>YOUR SCORE</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
-                            <span style={{ fontSize: 48, fontWeight: 800, color: getScoreColor(evaluation.overallScore || 0), lineHeight: 1 }}>
+                            <span style={{ fontSize: isMobile ? 40 : 48, fontWeight: 800, color: getScoreColor(evaluation.overallScore || 0), lineHeight: 1 }}>
                                 {evaluation.overallScore || 0}
                             </span>
-                            <span style={{ fontSize: 20, fontWeight: 700, color: '#94a3b8' }}>/ 10</span>
+                            <span style={{ fontSize: 18, fontWeight: 700, color: '#94a3b8' }}>/ 10</span>
                         </div>
                     </div>
                 </div>
@@ -283,20 +291,20 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
             {/* Header */}
             <div style={{
                 background: 'var(--primary-color)',
-                padding: '20px 28px',
+                padding: isMobile ? '16px 20px' : '20px 28px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 24 }}>🏆</span>
+                    <span style={{ fontSize: isMobile ? 20 : 24 }}>🏆</span>
                     <div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>AI Examiner Score</div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>AI-powered evaluation</div>
+                        <div style={{ fontSize: isMobile ? 14 : 16, fontWeight: 700, color: '#fff' }}>AI Examiner Score</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>AI-powered evaluation</div>
                     </div>
                 </div>
                 <div style={{
                     background: getBandColor(evaluation.band_descriptor),
-                    padding: '6px 16px', borderRadius: 20,
-                    fontSize: 13, fontWeight: 700, color: '#fff',
+                    padding: isMobile ? '4px 12px' : '6px 16px', borderRadius: 20,
+                    fontSize: isMobile ? 11 : 13, fontWeight: 700, color: '#fff',
                     letterSpacing: '0.3px'
                 }}>
                     {evaluation.band_descriptor || 'Evaluating...'}
@@ -305,45 +313,56 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
 
             {/* Total Score */}
             <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32,
-                padding: '24px 28px', borderBottom: '1px solid var(--accent-color)',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: isMobile ? 20 : 32,
+                padding: isMobile ? '24px 20px' : '24px 28px',
+                borderBottom: '1px solid var(--accent-color)',
                 background: 'rgba(13, 59, 102, 0.03)'
             }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 48, fontWeight: 800, color: getScoreColor(evaluation.scaled_score || 0), lineHeight: 1 }}>
-                        {evaluation.total_score || 0}
-                    </div>
-                    <div style={{ fontSize: 13, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>out of 50</div>
-                </div>
-                <div style={{ width: 1, height: 60, background: '#e8ecf4' }} />
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 36, fontWeight: 800, color: getScoreColor(evaluation.scaled_score || 0), lineHeight: 1 }}>
-                        {evaluation.scaled_score || 0}
-                    </div>
-                    <div style={{ fontSize: 13, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>scaled /10</div>
-                </div>
-                <div style={{ width: 1, height: 60, background: '#e8ecf4' }} />
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{
-                        fontSize: 20, fontWeight: 800,
-                        color: 'var(--primary-color)', lineHeight: 1,
-                        padding: '8px 16px', background: 'rgba(13, 59, 102, 0.05)', borderRadius: 12
-                    }}>
-                        {evaluation.cefr_level || 'N/A'}
-                    </div>
-                    <div style={{ fontSize: 13, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>CEFR Level</div>
-                </div>
-                {evaluation.overall_pte_score && (
-                    <>
-                        <div style={{ width: 1, height: 60, background: '#e8ecf4' }} />
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--primary-color)', lineHeight: 1 }}>
-                                {evaluation.overall_pte_score}
-                            </div>
-                            <div style={{ fontSize: 13, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>PTE Score /90</div>
+                <div style={{ display: 'flex', gap: isMobile ? 24 : 32, alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: isMobile ? 40 : 48, fontWeight: 800, color: getScoreColor(evaluation.scaled_score || 0), lineHeight: 1 }}>
+                            {evaluation.total_score || 0}
                         </div>
-                    </>
-                )}
+                        <div style={{ fontSize: 11, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>out of 50</div>
+                    </div>
+                    <div style={{ width: 1, height: 40, background: '#e8ecf4' }} />
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: getScoreColor(evaluation.scaled_score || 0), lineHeight: 1 }}>
+                            {evaluation.scaled_score || 0}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>scaled /10</div>
+                    </div>
+                </div>
+
+                {!isMobile && <div style={{ width: 1, height: 60, background: '#e8ecf4' }} />}
+
+                <div style={{ display: 'flex', gap: isMobile ? 24 : 32, alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                            fontSize: isMobile ? 18 : 20, fontWeight: 800,
+                            color: 'var(--primary-color)', lineHeight: 1,
+                            padding: '8px 16px', background: 'rgba(13, 59, 102, 0.05)', borderRadius: 12
+                        }}>
+                            {evaluation.cefr_level || 'N/A'}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>CEFR Level</div>
+                    </div>
+                    {evaluation.overall_pte_score && (
+                        <>
+                            <div style={{ width: 1, height: 40, background: '#e8ecf4' }} />
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: 'var(--primary-color)', lineHeight: 1 }}>
+                                    {evaluation.overall_pte_score}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#5a6270', fontWeight: 600, marginTop: 4 }}>PTE Score /90</div>
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* Transcript Display (for speaking questions) */}
@@ -429,11 +448,14 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
 
             {/* Strength & Improvement */}
             <div style={{
-                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16,
-                padding: '0 28px 24px'
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: 16,
+                padding: isMobile ? '0 20px 24px' : '0 28px 24px'
             }}>
                 {evaluation.top_strength && (
                     <div style={{
+                        flex: 1,
                         background: '#f0fdf4', borderRadius: 14, padding: '16px 20px',
                         border: '1px solid #bbf7d0'
                     }}>
@@ -447,6 +469,7 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                 )}
                 {evaluation.priority_improvement && (
                     <div style={{
+                        flex: 1,
                         background: '#fff7ed', borderRadius: 14, padding: '16px 20px',
                         border: '1px solid #fed7aa'
                     }}>

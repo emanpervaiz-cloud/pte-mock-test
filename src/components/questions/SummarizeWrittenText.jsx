@@ -11,6 +11,13 @@ const SummarizeWrittenText = ({ question, onNext }) => {
   const [evaluation, setEvaluation] = useState(null);
   const [evalLoading, setEvalLoading] = useState(false);
   const [evalError, setEvalError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const words = summary.trim().split(/\s+/).filter(word => word.length > 0);
@@ -78,33 +85,74 @@ const SummarizeWrittenText = ({ question, onNext }) => {
   };
 
   return (
-    <div className="summarize-written-text-question">
-      <div className="passage-section">
-        <h3>Read the passage below:</h3>
-        <div className="passage-text">
-          <p>{question.passage}</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '20px 16px' : '32px',
+        border: '1px solid #eef2f6',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
+      }}>
+        <h3 style={{ margin: '0 0 16px', fontSize: isMobile ? 16 : 18, color: '#1a1f36', fontWeight: 700 }}>Read the passage below:</h3>
+        <div style={{
+          background: 'rgba(13, 59, 102, 0.03)',
+          padding: isMobile ? 16 : 24,
+          borderRadius: 12,
+          maxHeight: isMobile ? 200 : 'none',
+          overflowY: 'auto'
+        }}>
+          <p style={{ margin: 0, lineHeight: 1.7, fontSize: isMobile ? 15 : 16, color: '#334155' }}>{question.passage}</p>
         </div>
       </div>
 
-      <div className="answer-section">
-        <h3>Write your summary here:</h3>
+      <div style={{
+        background: '#fff',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '20px 16px' : '32px',
+        border: '1px solid #eef2f6',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
+      }}>
+        <h3 style={{ margin: '0 0 16px', fontSize: isMobile ? 16 : 18, color: '#1a1f36', fontWeight: 700 }}>Write your summary here:</h3>
         <textarea
-          className="response-textarea"
+          style={{
+            width: '100%',
+            padding: isMobile ? 16 : 20,
+            borderRadius: 12,
+            border: '1.5px solid #e2e8f0',
+            fontSize: isMobile ? 15 : 16,
+            lineHeight: 1.6,
+            minHeight: isMobile ? 120 : 160,
+            resize: 'vertical',
+            outline: 'none',
+            transition: 'border-color 0.2s',
+            fontFamily: 'inherit'
+          }}
           value={summary}
           onChange={handleChange}
           placeholder="Write your summary in 5-75 words..."
-          rows={4}
+          onFocus={e => e.target.style.borderColor = 'var(--primary-color)'}
+          onBlur={e => e.target.style.borderColor = '#e2e8f0'}
         />
-        <div className="word-count">
-          {wordCount}/75 words
-          {wordCount < 5 && wordCount > 0 && <span className="warning"> Minimum 5 words required</span>}
-          {wordCount > 75 && <span className="error"> Maximum 75 words exceeded</span>}
+        <div style={{
+          marginTop: 12, display: 'flex', justifyContent: 'space-between',
+          fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)'
+        }}>
+          <span>{wordCount}/75 words</span>
+          {wordCount < 5 && wordCount > 0 && <span style={{ color: '#dc2626' }}>Minimum 5 words</span>}
+          {wordCount > 75 && <span style={{ color: '#dc2626' }}>Maximum exceeded</span>}
         </div>
       </div>
 
-      <div className="instructions">
-        <p><strong>Time allowed:</strong> 10 minutes</p>
-        <p><strong>Word limit:</strong> 5-75 words</p>
+      <div style={{
+        display: 'flex', gap: 12, padding: '0 8px',
+        fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>⏱️</span> 10 minutes
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>📝</span> 5-75 words
+        </div>
       </div>
 
       {/* Score Display */}
@@ -117,11 +165,18 @@ const SummarizeWrittenText = ({ question, onNext }) => {
         questionType="writing"
       />
 
-      <div className="action-buttons" style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+      <div style={{ display: 'flex', marginTop: 8 }}>
         <button
-          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={wordCount < 5 || wordCount > 75}
+          style={{
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 40px', borderRadius: 12,
+            background: wordCount < 5 || wordCount > 75 ? '#e2e8f0' : 'var(--primary-color)',
+            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
+            cursor: wordCount < 5 || wordCount > 75 ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s'
+          }}
         >
           Submit & Continue →
         </button>

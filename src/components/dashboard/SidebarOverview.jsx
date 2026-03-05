@@ -5,7 +5,7 @@ const SidebarOverview = ({ history, targetScore, avgScore, lastScore, onStartTes
     const recentHistory = [...history].reverse().slice(0, 5);
 
     return (
-        <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Quick Start CTA */}
             <div style={{

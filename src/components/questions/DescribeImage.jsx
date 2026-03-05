@@ -20,6 +20,13 @@ const DescribeImage = ({ question, onNext }) => {
   const prepInterval = useRef(null);
   const timeoutRef = useRef(null);
   const isRecordingRef = useRef(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const initMic = async () => {
@@ -137,8 +144,12 @@ const DescribeImage = ({ question, onNext }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '10px 0' }}>
       <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #eef2f6', boxShadow: '0 4px 20px rgba(15,15,15,0.03)' }}>
-        <div style={{ padding: '20px 24px', background: '#f8f9fe', borderBottom: '1px solid #eef2f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1a1f36' }}>📊 Observation Task</h4>
+        <div style={{
+          padding: isMobile ? '16px' : '20px 24px',
+          background: '#f8f9fe', borderBottom: '1px solid #eef2f6',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        }}>
+          <h4 style={{ margin: 0, fontSize: isMobile ? 15 : 16, fontWeight: 700, color: '#1a1f36' }}>📊 Observation Task</h4>
           {!isRecording && !hasRecorded && prepTime > 0 && (
             <div style={{
               background: '#fff3e0', color: '#e65100', padding: '6px 12px', borderRadius: 8,
@@ -149,10 +160,10 @@ const DescribeImage = ({ question, onNext }) => {
           )}
         </div>
 
-        <div style={{ padding: 24, textAlign: 'center' }}>
+        <div style={{ padding: isMobile ? 16 : 24, textAlign: 'center' }}>
           <div style={{
             maxWidth: '100%',
-            minHeight: 300,
+            minHeight: isMobile ? 240 : 300,
             background: '#fafafa',
             borderRadius: 12,
             display: 'flex',
@@ -189,10 +200,19 @@ const DescribeImage = ({ question, onNext }) => {
       )}
 
       <div style={{
-        background: '#fff', borderRadius: 16, padding: '24px 32px', border: '1px solid #eef2f6',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20
+        background: '#fff', borderRadius: 16, padding: isMobile ? '20px 16px' : '24px 32px', border: '1px solid #eef2f6',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between', gap: isMobile ? 16 : 20,
+        textAlign: isMobile ? 'center' : 'left'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: 'center',
+          gap: isMobile ? 12 : 20
+        }}>
           <button
             onClick={() => {
               if (prepTime > 0 && !isRecording && !hasRecorded) {
@@ -207,7 +227,7 @@ const DescribeImage = ({ question, onNext }) => {
             }}
             disabled={recordingTime >= 40 || micError}
             style={{
-              width: 64, height: 64, borderRadius: '50%',
+              width: isMobile ? 60 : 64, height: isMobile ? 60 : 64, borderRadius: '50%',
               background: isRecording ? '#dc2626' : (hasRecorded ? 'var(--success-color)' : 'var(--primary-color)'),
               color: '#fff', border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
@@ -220,13 +240,19 @@ const DescribeImage = ({ question, onNext }) => {
           </button>
 
           <div>
-            <div style={{ position: 'absolute', top: 16, left: 24, fontSize: 12, fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              🖼️ Describe Image
-            </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#1a1f36', marginBottom: 4 }}>
+            {!isMobile && (
+              <div style={{
+                position: 'absolute', top: 16, left: 24,
+                fontSize: 12, fontWeight: 700, color: 'var(--primary-color)',
+                textTransform: 'uppercase', letterSpacing: '0.5px'
+              }}>
+                🖼️ Describe Image
+              </div>
+            )}
+            <div style={{ fontSize: isMobile ? 15 : 16, fontWeight: 700, color: '#1a1f36', marginBottom: 4 }}>
               {isRecording ? 'Recording in progress...' : (hasRecorded ? 'Recording complete!' : (prepTime > 0 ? 'Preparing...' : 'Ready to record'))}
             </div>
-            <div style={{ fontSize: 14, color: '#5a6270' }}>
+            <div style={{ fontSize: isMobile ? 13 : 14, color: '#5a6270', lineHeight: 1.4 }}>
               {isRecording ? `Please describe the image (${recordingTime}s / 40s)` : (hasRecorded ? 'Get your score or continue' : 'Click the button to start speaking')}
             </div>
           </div>
@@ -234,7 +260,7 @@ const DescribeImage = ({ question, onNext }) => {
 
         {isRecording && (
           <div style={{
-            height: 12, width: 120, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden'
+            height: 12, width: isMobile ? '100%' : 120, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden'
           }}>
             <div style={{
               height: '100%', background: '#dc2626', width: `${(recordingTime / 40) * 100}%`,
@@ -258,7 +284,8 @@ const DescribeImage = ({ question, onNext }) => {
         <button
           onClick={handleNext}
           style={{
-            padding: '12px 32px', borderRadius: 12,
+            width: isMobile ? '100%' : 'auto',
+            padding: isMobile ? '14px 32px' : '12px 32px', borderRadius: 12,
             background: isRecording ? '#fff' : 'linear-gradient(135deg, #673ab7, #5e35b1)',
             color: isRecording ? '#673ab7' : '#fff',
             border: isRecording ? '1.5px solid #673ab7' : 'none',

@@ -31,8 +31,16 @@ const Dashboard = () => {
   const [showTargetModal, setShowTargetModal] = useState(false);
   const [tempTarget, setTempTarget] = useState(65);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [authOpen, setAuthOpen] = useState(false);
   const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     setHistory(getHistory());
@@ -94,12 +102,12 @@ const Dashboard = () => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
-      {/* Sidebar */}
-      <aside style={{
+      {/* Sidebar - Desktop */}
+      <aside className="sidebar-desktop" style={{
         width: sidebarOpen ? 240 : 72,
         background: 'var(--bg-color)',
         borderRight: '1px solid var(--accent-color)',
-        display: 'flex',
+        display: isMobile ? 'none' : 'flex',
         flexDirection: 'column',
         transition: 'width 0.25s ease',
         flexShrink: 0,
@@ -126,7 +134,7 @@ const Dashboard = () => {
           {NAV_ITEMS.map((item) => (
             <div
               key={item.label}
-              onClick={() => item.path && navigate(item.path)}
+              onClick={() => { item.path && navigate(item.path); if (isMobile) setMobileMenuOpen(false); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14,
                 padding: '12px 20px', cursor: 'pointer', position: 'relative',
@@ -172,31 +180,100 @@ const Dashboard = () => {
         </div>
       </aside>
 
+      {/* Sidebar - Mobile drawer */}
+      {isMobile && (
+        <>
+          <div
+            className={`mobile-overlay ${mobileMenuOpen ? 'open' : ''}`}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <aside className={`sidebar-mobile ${mobileMenuOpen ? 'open' : ''}`} style={{
+            background: 'var(--bg-color)',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100vh',
+          }}>
+            <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--accent-color)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: 'var(--primary-color)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontWeight: 800, fontSize: 14,
+                }}>P</div>
+                <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--primary-color)' }}>THE MIGRATION</span>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: 24, padding: 4 }}
+              >×</button>
+            </div>
+            <nav style={{ flex: 1, padding: '16px 0' }}>
+              {NAV_ITEMS.map((item) => (
+                <div
+                  key={item.label}
+                  onClick={() => { item.path && navigate(item.path); setMobileMenuOpen(false); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '16px 20px', cursor: 'pointer',
+                    background: item.active ? 'var(--accent-color)' : 'transparent',
+                    color: item.active ? 'var(--primary-color)' : 'var(--text-secondary)',
+                    fontWeight: item.active ? 700 : 500,
+                    fontSize: 16,
+                  }}
+                >
+                  <span style={{ fontSize: 22 }}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </nav>
+            <div style={{ padding: '20px', borderTop: '1px solid var(--accent-color)' }}>
+              {user && (
+                <button
+                  onClick={handleLogout}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', background: '#fef2f2', color: '#ef4444', fontWeight: 700, border: '1px solid #fee2e2' }}
+                >Logout</button>
+              )}
+            </div>
+          </aside>
+        </>
+      )}
+
       {/* Main Content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top Bar */}
         <header style={{
           background: 'var(--bg-color)', borderBottom: '1px solid var(--accent-color)',
-          padding: '0 32px', height: 64, display: 'flex', alignItems: 'center',
+          padding: isMobile ? '0 16px' : '0 32px', height: 64, display: 'flex', alignItems: 'center',
           gap: 16, position: 'sticky', top: 0, zIndex: 90,
           boxShadow: 'var(--shadow-sm)',
         }}>
+          {isMobile && (
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px' }}
+            >☰</button>
+          )}
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <span style={{ background: 'rgba(13, 59, 102, 0.08)', color: 'var(--primary-color)', borderRadius: '6px', padding: '4px 12px', fontSize: 13, fontWeight: 700 }}>PTE Academic</span>
-            <button
-              onClick={() => navigate('/landing')}
-              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 14, cursor: 'pointer', padding: '6px 12px', borderRadius: 6, fontWeight: 500 }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-color)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'none'}
-            >Practice Library ▾</button>
+            {!isMobile && (
+              <button
+                onClick={() => navigate('/landing')}
+                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 14, cursor: 'pointer', padding: '6px 12px', borderRadius: 6, fontWeight: 500 }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-color)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+              >Practice Library ▾</button>
+            )}
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
             {user ? (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{user.name}</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>Student</div>
-                </div>
+                {!isMobile && (
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{user.name}</div>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>Student</div>
+                  </div>
+                )}
                 <div style={{
                   width: 36, height: 36, borderRadius: '50%', background: '#e2e8f0',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -204,18 +281,20 @@ const Dashboard = () => {
                 }}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0',
-                    background: '#fff', color: '#ef4444', fontWeight: 600, cursor: 'pointer',
-                    fontSize: 13, transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-color)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-color)'}
-                >
-                  Logout
-                </button>
+                {!isMobile && (
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0',
+                      background: '#fff', color: '#ef4444', fontWeight: 600, cursor: 'pointer',
+                      fontSize: 13, transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-color)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-color)'}
+                  >
+                    Logout
+                  </button>
+                )}
               </div>
             ) : (
               <button
@@ -233,14 +312,21 @@ const Dashboard = () => {
         </header>
 
         {/* Page body */}
-        <div style={{ flex: 1, padding: '32px', display: 'flex', gap: 24, overflowY: 'auto' }}>
+        <div className="dashboard-main" style={{
+          flex: 1,
+          padding: isMobile ? '20px 16px' : '32px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: 24,
+          overflowY: 'auto'
+        }}>
 
           {/* Main Module Grid Column */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '20px' : '32px' }}>
 
             {/* Greeting Section */}
-            <div>
-              <h1 style={{ margin: '0 0 8px', fontSize: '28px', fontWeight: 800, color: 'var(--primary-color)' }}>
+            <div className="practice-greeting">
+              <h1 style={{ margin: '0 0 8px', fontSize: isMobile ? '22px' : '28px', fontWeight: 800, color: 'var(--primary-color)' }}>
                 Welcome back, {user ? user.name : 'Student'} 👋
               </h1>
               <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>
@@ -251,12 +337,12 @@ const Dashboard = () => {
             {/* Modules Grid */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--primary-color)' }}>Practice Modules</h2>
+                <h2 style={{ margin: 0, fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--primary-color)' }}>Practice Modules</h2>
               </div>
 
-              <div style={{
+              <div className="modules-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
                 gap: '20px'
               }}>
                 {modules.map(mod => (
@@ -272,15 +358,17 @@ const Dashboard = () => {
           </div>
 
           {/* Right Sidebar Overview */}
-          <SidebarOverview
-            history={history}
-            targetScore={targetScore}
-            avgScore={avgScore}
-            lastScore={lastScore}
-            onStartTest={handleStartTest}
-            onStartMockTest={handleStartMockTest}
-            onShowTargetModal={() => { setTempTarget(targetScore); setShowTargetModal(true); }}
-          />
+          <div className="dashboard-sidebar-right" style={{ width: isMobile ? '100%' : '320px', flexShrink: 0 }}>
+            <SidebarOverview
+              history={history}
+              targetScore={targetScore}
+              avgScore={avgScore}
+              lastScore={lastScore}
+              onStartTest={handleStartTest}
+              onStartMockTest={handleStartMockTest}
+              onShowTargetModal={() => { setTempTarget(targetScore); setShowTargetModal(true); }}
+            />
+          </div>
 
         </div>
       </div>
@@ -297,14 +385,20 @@ const Dashboard = () => {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'var(--bg-color)', borderRadius: '20px', padding: '32px', width: '480px', maxHeight: '85vh', overflowY: 'auto',
-              boxShadow: 'var(--shadow-md)',
-              border: '1px solid var(--accent-color)'
+              background: 'var(--bg-color)',
+              borderRadius: isMobile ? '16px' : '24px',
+              padding: isMobile ? '24px' : '32px',
+              width: isMobile ? '90%' : '520px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              boxShadow: 'var(--shadow-lg)',
+              border: '1px solid var(--accent-color)',
+              position: 'relative'
             }}>
-            <h3 style={{ margin: '0 0 24px', fontSize: '20px', fontWeight: 700, color: '#0f172a', textAlign: 'center' }}>🎯 Set Your Goal</h3>
+            <h3 style={{ margin: '0 0 20px', fontSize: isMobile ? '18px' : '22px', fontWeight: 800, color: '#0f172a', textAlign: 'center' }}>🎯 Set Your Goal</h3>
 
             {/* Current Target Display */}
-            <div style={{ textAlign: 'center', fontSize: '48px', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '8px' }}>
+            <div style={{ textAlign: 'center', fontSize: isMobile ? '40px' : '48px', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '8px' }}>
               {tempTarget}
             </div>
             <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>Target PTE Score</p>
@@ -313,7 +407,7 @@ const Dashboard = () => {
               type="range" min={30} max={90} step={1}
               value={tempTarget}
               onChange={e => setTempTarget(Number(e.target.value))}
-              style={{ width: '100%', marginBottom: '24px', accentColor: 'var(--primary-color)' }}
+              style={{ width: '100%', marginBottom: '28px', accentColor: 'var(--primary-color)', cursor: 'pointer' }}
             />
 
             {/* PTE Band Levels Reference */}

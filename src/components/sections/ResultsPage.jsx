@@ -11,6 +11,13 @@ const ResultsPage = () => {
   const [scores, setLocalScores] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Calculate scores using AI evaluations if available
@@ -205,45 +212,60 @@ const ResultsPage = () => {
   const classification = scores.overall?.classification || '';
 
   return (
-    <div className="exam-container exam-theme">
-      <header className="exam-header">
-        <div className="container">
-          <h1 className="exam-title">PTE Academic — Test Results</h1>
-        </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-color)', fontFamily: "'Inter', sans-serif" }}>
+      <header style={{
+        background: '#fff', borderBottom: '1px solid var(--accent-color)',
+        padding: isMobile ? '0 16px' : '0 24px', height: 64, display: 'flex', alignItems: 'center',
+        justifyContent: 'center', position: 'sticky', top: 0, zIndex: 100,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+      }}>
+        <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: 'var(--primary-color)', margin: 0 }}>
+          PTE Academic — Test Results
+        </h1>
       </header>
 
-      <main className="main-content">
-        <div className="container">
+      <main style={{ padding: isMobile ? '20px 12px' : '40px 24px' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           {/* Overall Score Card */}
-          <div className="card" style={{ textAlign: 'center', marginBottom: '24px', padding: '32px' }}>
-            <h2 style={{ marginBottom: '8px' }}>Overall Score</h2>
+          <div style={{
+            background: '#fff', textAlign: 'center', marginBottom: '24px',
+            padding: isMobile ? '32px 20px' : '48px 32px', borderRadius: 24,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.04)', border: '1px solid var(--accent-color)'
+          }}>
+            <h2 style={{ marginBottom: '8px', fontSize: isMobile ? 18 : 22, color: '#1a1f36' }}>Overall Score</h2>
             <div style={{
-              fontSize: '72px',
+              fontSize: isMobile ? '56px' : '72px',
               fontWeight: '800',
               color: getScoreColor(overallScore),
               lineHeight: '1.1',
               margin: '12px 0'
             }}>
               {overallScore}
-              <span style={{ fontSize: '24px', color: '#666' }}>/90</span>
+              <span style={{ fontSize: isMobile ? '20px' : '24px', color: '#64748b' }}>/90</span>
             </div>
             <div style={{
               display: 'inline-block',
-              padding: '6px 20px',
-              borderRadius: '20px',
+              padding: '8px 24px',
+              borderRadius: '24px',
               background: 'var(--primary-color)',
               color: '#fff',
-              fontWeight: '600',
-              fontSize: '16px',
-              marginBottom: '12px'
+              fontWeight: '700',
+              fontSize: isMobile ? '14px' : '16px',
+              marginBottom: '16px',
+              boxShadow: '0 4px 12px rgba(13, 59, 102, 0.2)'
             }}>
               CEFR Level: {cefrLevel}
             </div>
-            <p style={{ color: '#555', marginTop: '12px', fontSize: '15px' }}>{classification}</p>
+            <p style={{ color: '#64748b', marginTop: '12px', fontSize: isMobile ? '14px' : '16px', fontWeight: 500 }}>{classification}</p>
           </div>
 
           {/* Section Scores */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+            gap: isMobile ? '16px' : '20px',
+            marginBottom: '24px'
+          }}>
             {[
               { key: 'speaking', label: 'Speaking', icon: '🎤' },
               { key: 'writing', label: 'Writing', icon: '✍️' },
@@ -255,26 +277,30 @@ const ResultsPage = () => {
               const sectionFeedback = scores[key]?.feedback || '';
 
               return (
-                <div key={key} className="card" style={{ padding: '20px' }}>
-                  <h3 style={{ marginBottom: '12px' }}>{icon} {label}</h3>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '36px', fontWeight: '700', color: getScoreColor(sectionScore) }}>
-                      {sectionScore}
-                    </span>
-                    <span style={{ color: '#999' }}>/90</span>
+                <div key={key} style={{
+                  background: '#fff', padding: isMobile ? '20px' : '24px', borderRadius: 20,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid var(--accent-color)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ margin: 0, fontSize: isMobile ? 16 : 18 }}>{icon} {label}</h3>
                     <span style={{
-                      marginLeft: 'auto',
-                      padding: '2px 10px',
-                      borderRadius: '12px',
-                      background: 'var(--accent-color)',
-                      fontSize: '13px',
-                      fontWeight: '600'
+                      padding: '4px 12px', borderRadius: '12px',
+                      background: 'var(--bg-color)', color: 'var(--primary-color)',
+                      fontSize: '13px', fontWeight: '700', border: '1px solid var(--accent-color)'
                     }}>
                       {sectionCefr}
                     </span>
                   </div>
+
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: isMobile ? '32px' : '40px', fontWeight: '800', color: getScoreColor(sectionScore) }}>
+                      {sectionScore}
+                    </span>
+                    <span style={{ color: '#94a3b8', fontSize: '15px' }}>/90</span>
+                  </div>
+
                   {/* Score bar */}
-                  <div style={{ height: '8px', background: '#e0e0e0', borderRadius: '4px', marginBottom: '12px' }}>
+                  <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', marginBottom: '16px', overflow: 'hidden' }}>
                     <div style={{
                       height: '100%',
                       width: getScoreBarWidth(sectionScore),
@@ -283,45 +309,70 @@ const ResultsPage = () => {
                       transition: 'width 1s ease'
                     }} />
                   </div>
-                  <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.5' }}>{sectionFeedback}</p>
+                  <p style={{ margin: 0, fontSize: isMobile ? '13px' : '14px', color: '#64748b', lineHeight: '1.6', fontWeight: 500 }}>
+                    {sectionFeedback}
+                  </p>
                 </div>
               );
             })}
           </div>
 
           {/* Answers Summary */}
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h3>Exam Summary</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginTop: '12px' }}>
+          <div style={{
+            background: '#fff', padding: isMobile ? '20px' : '32px', marginBottom: '32px',
+            borderRadius: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid var(--accent-color)'
+          }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18 }}>Exam Summary</h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
+              gap: isMobile ? '20px' : '24px'
+            }}>
               <div>
-                <div style={{ fontSize: '13px', color: '#888' }}>Total Questions</div>
-                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.keys(state.answers).length}</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 }}>Total</div>
+                <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary-color)' }}>{Object.keys(state.answers).length}</div>
               </div>
               <div>
-                <div style={{ fontSize: '13px', color: '#888' }}>Speaking</div>
-                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'speaking').length}</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 }}>Speaking</div>
+                <div style={{ fontSize: '24px', fontWeight: '800' }}>{Object.values(state.answers).filter(a => a.section === 'speaking').length}</div>
               </div>
               <div>
-                <div style={{ fontSize: '13px', color: '#888' }}>Writing</div>
-                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'writing').length}</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 }}>Writing</div>
+                <div style={{ fontSize: '24px', fontWeight: '800' }}>{Object.values(state.answers).filter(a => a.section === 'writing').length}</div>
               </div>
               <div>
-                <div style={{ fontSize: '13px', color: '#888' }}>Reading</div>
-                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'reading').length}</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 }}>Reading</div>
+                <div style={{ fontSize: '24px', fontWeight: '800' }}>{Object.values(state.answers).filter(a => a.section === 'reading').length}</div>
               </div>
               <div>
-                <div style={{ fontSize: '13px', color: '#888' }}>Listening</div>
-                <div style={{ fontSize: '24px', fontWeight: '700' }}>{Object.values(state.answers).filter(a => a.section === 'listening').length}</div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 }}>Listening</div>
+                <div style={{ fontSize: '24px', fontWeight: '800' }}>{Object.values(state.answers).filter(a => a.section === 'listening').length}</div>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleRetakeExam}>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexDirection: isMobile ? 'column' : 'row' }}>
+            <button
+              onClick={handleRetakeExam}
+              style={{
+                padding: '16px 48px', borderRadius: 12,
+                background: 'var(--primary-color)', color: '#fff',
+                fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(13, 59, 102, 0.2)', transition: 'all 0.2s'
+              }}
+            >
               Retake Exam
             </button>
-            <button className="btn btn-secondary" onClick={() => window.print()}>
+            <button
+              onClick={() => window.print()}
+              style={{
+                padding: '16px 48px', borderRadius: 12,
+                background: '#fff', color: 'var(--primary-color)',
+                fontWeight: 700, fontSize: 16, border: '1.5px solid var(--primary-color)',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
               Print Results
             </button>
           </div>

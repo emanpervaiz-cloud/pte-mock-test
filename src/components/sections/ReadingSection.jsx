@@ -16,7 +16,14 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Map the structured JSON reading passages into individual test questions
   const readingQuestions = READING_PASSAGES.flatMap(passage => {
@@ -162,9 +169,18 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
       {/* Premium Header */}
       <header style={{
         background: '#fff', borderBottom: '1px solid var(--accent-color)',
-        padding: '0 24px', height: 64, display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100,
+        padding: isMobile ? '0 16px' : '0 24px',
+        height: isMobile ? 'auto' : 64,
+        minHeight: 64,
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'stretch' : 'center',
+        justifyContent: 'space-between',
+        position: 'sticky', top: 0, zIndex: 100,
         boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+        gap: isMobile ? 12 : 0,
+        paddingTop: isMobile ? 12 : 0,
+        paddingBottom: isMobile ? 12 : 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
@@ -173,18 +189,25 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 800, fontSize: 16,
           }}>A</div>
-          <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--primary-color)' }}>Reading Module</span>
+          <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--primary-color)' }}>
+            {isMobile ? 'Reading' : 'Reading Module'}
+          </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: isMobile ? 'space-between' : 'flex-end',
+          gap: isMobile ? 16 : 24
+        }}>
           {!isMockTest && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>
-              <span style={{ color: 'var(--secondary-color)' }}>●</span> Practice Mode
+              <span style={{ color: 'var(--secondary-color)' }}>●</span> {isMobile ? 'Practice' : 'Practice Mode'}
             </div>
           )}
           {isMockTest && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger-color)', fontSize: 13, fontWeight: 700 }}>
-              <span style={{ color: 'var(--danger-color)' }}>●</span> MOCK TEST LIVE
+              <span style={{ color: 'var(--danger-color)' }}>●</span> {isMobile ? 'LIVE' : 'MOCK TEST LIVE'}
             </div>
           )}
           <Timer initialTime={2100} onComplete={handleTimeout} />
@@ -201,20 +224,21 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
         </div>
       )}
 
-      <main style={{ padding: '32px 24px' }}>
+      <main style={{ padding: isMobile ? '16px 12px' : '32px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          {/* Section Indicator */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24,
-            padding: '12px 20px', background: 'rgba(13, 59, 102, 0.05)',
-            borderRadius: 12, color: 'var(--primary-color)'
-          }}>
-            <span style={{ fontSize: 20 }}>📖</span>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Section</div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>PTE Reading</div>
+          {!isMobile && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24,
+              padding: '12px 20px', background: 'rgba(13, 59, 102, 0.05)',
+              borderRadius: 12, color: 'var(--primary-color)'
+            }}>
+              <span style={{ fontSize: 20 }}>📖</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Section</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>PTE Reading</div>
+              </div>
             </div>
-          </div>
+          )}
 
           <ProgressBar
             current={currentQuestion + 1}
@@ -225,10 +249,10 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
           <div style={{
             background: '#fff',
             borderRadius: 24,
-            padding: 32,
+            padding: isMobile ? '20px 16px' : 32,
             boxShadow: '0 10px 40px rgba(0,0,0,0.04)',
             border: '1px solid var(--accent-color)',
-            minHeight: 400,
+            minHeight: isMobile ? 'auto' : 400,
             display: 'flex',
             flexDirection: 'column',
             marginBottom: 24
@@ -283,9 +307,16 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
 
           {/* Navigation */}
           <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '20px 32px', background: '#fff', borderRadius: 20,
-            border: '1px solid var(--accent-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: isMobile ? '16px' : '20px 32px',
+            background: '#fff',
+            borderRadius: 20,
+            border: '1px solid var(--accent-color)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+            gap: isMobile ? 16 : 0
           }}>
             {!showResults ? (
               <>
@@ -305,13 +336,19 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
                   </button>
                 )}
                 {!isMockTest && (
-                  <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: 12,
+                    width: isMobile ? '100%' : 'auto'
+                  }}>
                     {currentQuestion === readingQuestions.length - 1 && (
                       <button
                         type="button"
                         onClick={() => navigate('/')}
                         style={{
-                          padding: '10px 24px', borderRadius: 12,
+                          width: isMobile ? '100%' : 'auto',
+                          padding: '12px 24px', borderRadius: 12,
                           background: '#fff', color: 'var(--danger-color)',
                           border: '1.5px solid #fee2e2',
                           fontWeight: 600, fontSize: 14, cursor: 'pointer',
@@ -324,10 +361,11 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
                     <button
                       onClick={handleNextQuestion}
                       style={{
-                        padding: '10px 32px', borderRadius: 12,
+                        width: isMobile ? '100%' : 'auto',
+                        padding: '14px 32px', borderRadius: 12,
                         background: 'var(--primary-color)',
                         color: '#fff', border: 'none',
-                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                        fontWeight: 700, fontSize: 15, cursor: 'pointer',
                         transition: 'all 0.2s'
                       }}
                     >
@@ -342,10 +380,11 @@ const ReadingSection = ({ onSectionComplete, onSectionBack, isMockTest = false, 
                     <button
                       onClick={handleNextQuestion}
                       style={{
-                        padding: '10px 32px', borderRadius: 12,
+                        width: isMobile ? '100%' : 'auto',
+                        padding: '14px 32px', borderRadius: 12,
                         background: 'var(--primary-color)',
                         color: '#fff', border: 'none',
-                        fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                        fontWeight: 700, fontSize: 15, cursor: 'pointer',
                         transition: 'all 0.2s'
                       }}
                     >

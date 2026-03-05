@@ -8,7 +8,7 @@ const ModuleCard = ({ module, onStartPractice }) => {
             style={{
                 background: '#fff',
                 borderRadius: '16px',
-                padding: '20px',
+                padding: '24px 20px',
                 cursor: 'pointer',
                 border: `1px solid var(--accent-color)`,
                 display: 'flex',

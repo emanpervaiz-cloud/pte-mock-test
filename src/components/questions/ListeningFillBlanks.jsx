@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import AudioPlayer from '../common/AudioPlayer';
 
@@ -7,6 +7,14 @@ const ListeningFillBlanks = ({ question, onNext }) => {
   const [answers, setAnswers] = useState({});
   const [availableOptions, setAvailableOptions] = useState([...question.options]);
   const [audioPlayed, setAudioPlayed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleOptionSelect = (blankNumber, selectedOption) => {
     const prevSelection = answers[blankNumber];
@@ -67,9 +75,23 @@ const ListeningFillBlanks = ({ question, onNext }) => {
             key={`blank-${blankNumber}`}
             value={currentAnswer}
             onChange={(e) => handleOptionSelect(blankNumber, e.target.value)}
-            className="blank-select"
+            style={{
+              padding: isMobile ? '4px 8px' : '4px 12px',
+              margin: '0 4px',
+              borderRadius: 6,
+              border: `1.5px solid ${currentAnswer ? 'var(--primary-color)' : '#cbd5e1'}`,
+              background: currentAnswer ? 'rgba(13, 59, 102, 0.04)' : '#fff',
+              fontSize: isMobile ? 14 : 15,
+              fontWeight: 600,
+              color: 'var(--primary-color)',
+              minWidth: isMobile ? 100 : 120,
+              cursor: isSubmitted ? 'default' : 'pointer',
+              outline: 'none',
+              height: isMobile ? 32 : 36
+            }}
+            disabled={isSubmitted}
           >
-            <option value="">Select option</option>
+            <option value="">{isMobile ? "..." : "Select option"}</option>
             {availableOptions.map(option => (
               <option key={option} value={option}>{option}</option>
             ))}
@@ -85,44 +107,77 @@ const ListeningFillBlanks = ({ question, onNext }) => {
   };
 
   return (
-    <div className="listening-fill-blanks-question">
-      <div className="passage-section">
-        <div className="passage-text">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 24 }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: isMobile ? 16 : 20,
+        padding: isMobile ? '20px 16px' : '32px',
+        border: '1px solid #eef2f6',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.04)'
+      }}>
+        <div style={{
+          fontSize: isMobile ? 15 : 16,
+          color: '#334155',
+          lineHeight: isMobile ? 2.2 : 1.8,
+          textAlign: 'justify'
+        }}>
           {renderPassageWithBlanks()}
         </div>
       </div>
 
-      <div className="audio-section">
+      <div style={{
+        background: '#fff', padding: isMobile ? 16 : 24, borderRadius: 16, border: '1px solid #eef2f6'
+      }}>
         <AudioPlayer
           src={question.audioUrl}
-          title="Listen to the passage"
+          title={isMobile ? "Listen" : "Listen to the passage"}
           onPlay={handleAudioPlay}
         />
       </div>
 
-      <div className="options-bank">
-        <h3>Available Options:</h3>
-        <div className="options-list">
+      <div style={{
+        background: '#f8fafc',
+        borderRadius: 16,
+        padding: isMobile ? '16px' : '20px 24px',
+        border: '1px solid #e2e8f0'
+      }}>
+        <h3 style={{ margin: '0 0 12px', fontSize: 13, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Available Options:
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: isMobile ? 100 : 'none', overflowY: 'auto', padding: '4px' }}>
           {availableOptions.map((option, index) => (
-            <span key={index} className="option-chip">
+            <span key={index} style={{
+              background: '#fff', padding: '6px 12px', borderRadius: 8,
+              fontSize: 13, color: 'var(--primary-color)', fontWeight: 600,
+              border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}>
               {option}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="instructions">
-        <p><strong>Instructions:</strong> Complete the text with the most appropriate words from the options bank. Each word can only be used once.</p>
-        <p><strong>Note:</strong> You will only be able to play the audio once.</p>
+      <div style={{
+        padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8
+      }}>
+        <div style={{ marginBottom: 4 }}><strong>Instructions:</strong> Complete the text with the words from the bank.</div>
+        <div style={{ fontStyle: 'italic', color: '#64748b' }}>Note: You can only play the audio once.</div>
       </div>
 
-      <div className="action-buttons">
+      <div style={{ display: 'flex' }}>
         <button
-          className="btn btn-primary"
           onClick={handleSubmit}
           disabled={Object.keys(answers).length === 0 && !isSubmitted}
+          style={{
+            width: isMobile ? '100%' : 'auto',
+            padding: '14px 40px', borderRadius: 12,
+            background: Object.keys(answers).length === 0 && !isSubmitted ? '#e2e8f0' : 'var(--primary-color)',
+            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
+            cursor: Object.keys(answers).length === 0 && !isSubmitted ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s'
+          }}
         >
-          {isSubmitted ? 'Next Question' : 'Submit Answers'}
+          {isSubmitted ? 'Next Question →' : 'Submit Answers'}
         </button>
       </div>
 

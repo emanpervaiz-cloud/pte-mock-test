@@ -5,6 +5,13 @@ import { useExam } from '../../context/ExamContext';
 const ExamIntroduction = () => {
   const navigate = useNavigate();
   const { startExam, setTimer, state, setUser } = useExam();
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleStartExam = () => {
     // Clear previous AI evaluations
@@ -46,50 +53,81 @@ const ExamIntroduction = () => {
       {/* Premium Header */}
       <header style={{
         background: '#fff',
-        padding: '16px 40px',
+        padding: isMobile ? '12px 16px' : '16px 40px',
         display: 'flex',
         justifyContent: 'center',
         borderBottom: '1px solid #e8ecf4',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
+        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10
       }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--primary-color)', letterSpacing: '-0.5px' }}>
+        <h1 style={{
+          margin: 0,
+          fontSize: isMobile ? 16 : 20,
+          fontWeight: 800,
+          color: 'var(--primary-color)',
+          letterSpacing: '-0.5px',
+          textAlign: 'center'
+        }}>
           THE MIGRATION — PTE MOCK TEST
         </h1>
       </header>
 
-      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+      <main style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '20px 16px' : '40px 20px'
+      }}>
         <div style={{
           width: '100%',
           maxWidth: 800,
           background: '#fff',
-          borderRadius: 24,
-          padding: '48px',
+          borderRadius: isMobile ? 20 : 24,
+          padding: isMobile ? '24px' : '48px',
           boxShadow: '0 20px 50px rgba(0,0,0,0.06)',
           display: 'flex',
           flexDirection: 'column',
-          gap: 32
+          gap: isMobile ? 24 : 32
         }}>
           {/* Intro Text */}
           <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: 'var(--primary-color)', margin: '0 0 12px' }}>Ready to Begin?</h2>
-            <p style={{ color: '#666', fontSize: 16, maxWidth: 500, margin: '0 auto', lineHeight: 1.6 }}>
+            <h2 style={{
+              fontSize: isMobile ? 24 : 32,
+              fontWeight: 800,
+              color: 'var(--primary-color)',
+              margin: '0 0 12px'
+            }}>Ready to Begin?</h2>
+            <p style={{
+              color: '#666',
+              fontSize: isMobile ? 14 : 16,
+              maxWidth: 500,
+              margin: '0 auto',
+              lineHeight: 1.6
+            }}>
               This mock test simulates the real PTE Academic experience. Please ensure you are in a quiet environment.
             </p>
           </div>
 
           {/* Section Info Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: isMobile ? 12 : 16
+          }}>
             {sections.map((sec) => (
               <div key={sec.title} style={{
                 background: sec.color,
                 borderRadius: 16,
-                padding: '20px',
+                padding: isMobile ? '12px' : '20px',
                 textAlign: 'center',
                 border: '1px solid rgba(0,0,0,0.02)'
               }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>{sec.icon}</div>
-                <div style={{ fontWeight: 700, fontSize: 16, color: '#333', marginBottom: 4 }}>{sec.title}</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: sec.textColor }}>{sec.time} • {sec.questions}</div>
+                <div style={{ fontSize: isMobile ? 24 : 28, marginBottom: 8 }}>{sec.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16, color: '#333', marginBottom: 2 }}>{sec.title}</div>
+                <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 600, color: sec.textColor }}>{sec.time} • {sec.questions}</div>
               </div>
             ))}
           </div>
@@ -98,17 +136,28 @@ const ExamIntroduction = () => {
           <div style={{
             background: '#f8f9fe',
             borderRadius: 16,
-            padding: '24px',
+            padding: isMobile ? '16px' : '24px',
             borderLeft: '4px solid var(--secondary-color)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              justifyContent: 'space-between',
+              alignItems: isMobile ? 'flex-start' : 'center',
+              gap: isMobile ? 16 : 0
+            }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--secondary-color)', textTransform: 'uppercase', marginBottom: 4 }}>Total Duration</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--primary-color)' }}>80 Minutes</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--secondary-color)', textTransform: 'uppercase', marginBottom: 4 }}>Total Duration</div>
+                <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: 'var(--primary-color)' }}>80 Minutes</div>
               </div>
-              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontSize: 13, color: '#555' }}>✅ Microphone Enabled</span>
-                <span style={{ fontSize: 13, color: '#555' }}>✅ Quiet Environment</span>
+              <div style={{
+                textAlign: isMobile ? 'left' : 'right',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4
+              }}>
+                <span style={{ fontSize: 12, color: '#555' }}>✅ Microphone Enabled</span>
+                <span style={{ fontSize: 13, color: '#555', display: isMobile ? 'none' : 'block' }}>✅ Quiet Environment</span>
               </div>
             </div>
           </div>
@@ -122,14 +171,14 @@ const ExamIntroduction = () => {
               color: 'var(--primary-color)',
               border: 'none',
               borderRadius: 12,
-              padding: '18px',
-              fontSize: 18,
+              padding: isMobile ? '16px' : '18px',
+              fontSize: isMobile ? 16 : 18,
               fontWeight: 700,
               cursor: 'pointer',
               boxShadow: '0 10px 20px rgba(250, 169, 22, 0.25)',
-              transition: 'transform 0.2s'
+              transition: 'all 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.01)'}
+            onMouseEnter={e => e.currentTarget.style.transform = isMobile ? 'none' : 'scale(1.01)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           >
             Begin Examination →

@@ -1,145 +1,137 @@
 /* Responsive design for PTE Mock Test */
 
-/* Mobile devices */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 15px;
+/* Base Fluid Typography & Layout Constraints */
+:root {
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 72px;
+  --mobile-header-height: 60px;
+}
+
+/* Global Responsive Overwrites */
+@media (max-width: 1024px) {
+  .dashboard-main {
+    flex-direction: column !important;
+    padding: 16px !important;
   }
 
-  .card {
-    padding: 20px;
+  .dashboard-sidebar-right {
+    width: 100% !important;
+    position: static !important;
+  }
+}
+
+/* Mobile Layout (< 768px) */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+    /* Hidden drawer style */
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  /* Responsive Grid Adjustments */
+  .modules-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Typography Scaling */
+  h1 {
+    font-size: 24px !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
   }
 
   .exam-title {
-    font-size: 20px;
+    font-size: 18px !important;
   }
 
-  .question-number {
-    font-size: 16px;
+  /* Component Specific Adjustments */
+  .stat-card {
+    padding: 16px !important;
   }
 
   .btn {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-
-  .main-content {
-    padding: 20px 0;
-  }
-
-  .exam-question {
-    padding: 15px;
-  }
-
-  .response-textarea {
-    min-height: 120px;
-  }
-
-  .timer {
-    font-size: 16px;
-    min-width: 80px;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 14px 20px !important;
   }
 
   .audio-controls {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
   }
 
   .record-button {
-    width: 45px;
-    height: 45px;
-    margin-bottom: 10px;
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  /* Hide Desktop Sidebar */
+  aside.sidebar-desktop {
+    display: none !important;
+  }
+
+  /* Mobile Overlay Sidebar */
+  aside.sidebar-mobile {
+    position: fixed !important;
+    left: -280px;
+    top: 0;
+    bottom: 0;
+    width: 280px !important;
+    z-index: 1000;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+  }
+
+  aside.sidebar-mobile.open {
+    left: 0;
+  }
+
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .mobile-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 
-/* Small mobile devices */
+/* Small Screens (< 480px) */
 @media (max-width: 480px) {
-  .container {
-    padding: 0 10px;
+  .header-top-bar {
+    padding: 0 16px !important;
   }
 
-  .exam-title {
-    font-size: 18px;
+  .practice-greeting {
+    text-align: center;
   }
 
-  .form-control {
-    padding: 10px;
-    font-size: 14px;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    font-size: 14px;
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
-  .response-textarea {
-    min-height: 100px;
-  }
-
-  .question-counter {
-    font-size: 14px;
+  .practice-greeting h1 {
+    font-size: 22px !important;
   }
 }
 
-/* Tablet devices */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .container {
-    padding: 0 25px;
-  }
-
-  .exam-question {
-    padding: 18px;
-  }
-
-  .response-textarea {
-    min-height: 140px;
-  }
-}
-
-/* Large screens */
-@media (min-width: 1200px) {
-  .container {
-    max-width: 1400px;
-  }
-
-  .exam-question {
-    padding: 25px;
-  }
-
-  .response-textarea {
-    min-height: 180px;
-  }
-}
-
-/* High DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-}
-
-/* Accessibility improvements */
+/* Accessibility & Utils */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-/* Focus indicators for accessibility */
-button:focus,
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid #2196f3;
-  outline-offset: 2px;
-}
-
-/* Screen reader only utility class */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -148,25 +140,5 @@ select:focus {
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
   border: 0;
-}
-
-/* Print styles */
-@media print {
-  body {
-    background-color: white;
-    color: black;
-  }
-
-  .header,
-  .navigation,
-  .footer {
-    display: none;
-  }
-
-  .exam-container {
-    box-shadow: none;
-    border: 1px solid #ccc;
-  }
 }
