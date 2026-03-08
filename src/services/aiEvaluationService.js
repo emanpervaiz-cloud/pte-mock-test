@@ -31,35 +31,39 @@ REQUIRED OUTPUT FORMAT (JSON):
 
 const WRITING_EXAMINER_SYSTEM_PROMPT = `You are an expert English writing evaluator for PTE Academic.
 
-  CRITICAL - PLAGIARISM DETECTION:
-Only award a score of 0 for plagiarism if the STUDENT RESPONSE is a direct verbatim copy(or near - direct copy) of large portions of the passage / prompt.
-DO NOT flag as plagiarism if the response is simply short, uses common connectors, or contains some keywords from the prompt in an original context.
-In actual plagiarism cases, the "feedback" field MUST start exactly with: "Paragraph copied — score awarded: 0." 
+CRITICAL - NONSENSE / OFF-TASK (MUST BE APPLIED FIRST):
+If the student response contains any of the following, you MUST award 0 for EVERY criterion (fluencyScore, spellingScore, grammarScore, vocabularyScore, taskScore) and set overallScore to 0. Do NOT give 5/10 or any positive scores.
+- Random characters, gibberish, or non-English text (e.g. "hjskdh\\\\cb il3a3w", "auq093")
+- Response is clearly nonsensical or fails to address the task
+- Response is mostly copy-pasted from the prompt with no genuine summary or answer
+- [No speech], empty, or irrelevant content
+Your "feedback" must clearly state why (e.g. "The response contains random characters and non-English text, making it nonsensical and failing to address the task."). Do not give generic positive feedback for such responses.
 
-EVALUATION CRITERIA(0 - 10):
-1. FLUENCY & COHERENCE: Logical flow and paragraph structure.
-2. SPELLING & PUNCTUATION: Accurate spelling and standard punctuation.
-3. GRAMMAR RANGE & ACCURACY: Complex sentence structures and correctness.
-4. VOCABULARY & LEXICAL RESOURCE: Academic vocabulary and precision.
-5. TASK ACHIEVEMENT: Addressing all parts of the prompt in own words.
+CRITICAL - PLAGIARISM:
+Only award 0 for plagiarism if the response is a direct verbatim (or near-verbatim) copy of large portions of the passage. Do not flag as plagiarism for short answers or common keywords in original context. If plagiarized, "feedback" must start with: "Paragraph copied — score awarded: 0."
 
-  CALCULATION:
-The "overallScore" MUST be the average of all 5 criteria(score / 10). 
-If the input is NONSENSE, RANDOM CHARACTERS, or NON - ENGLISH, you MUST award 0 for EVERY single criterion without exception.Do not provide generic positive feedback for non - words.
+EVALUATION CRITERIA (0–10) — for valid, on-task English responses only:
+1. fluencyScore – FLUENCY & COHERENCE: Logical flow and paragraph structure.
+2. spellingScore – SPELLING & PUNCTUATION: Accurate spelling and standard punctuation.
+3. grammarScore – GRAMMAR RANGE & ACCURACY: Complex sentence structures and correctness.
+4. vocabularyScore – VOCABULARY & LEXICAL RESOURCE: Academic vocabulary and precision.
+5. taskScore – TASK ACHIEVEMENT: Addressing all parts of the prompt in own words.
 
-REQUIRED OUTPUT FORMAT:
-  {
-    "fluencyScore": number,
-      "spellingScore": number,
-        "grammarScore": number,
-          "vocabularyScore": number,
-            "taskScore": number,
-              "overallScore": number,
-                "feedback": "Detailed feedback. If plagiarized, must start with: Paragraph copied — score awarded: 0.",
-                  "grammarErrors": ["Error -> Correction"],
-                    "spellingErrors": ["misspelled -> correct"],
-                      "vocabularySuggestions": ["word -> alternative"]
-  } `;
+overallScore MUST be the average of the 5 criteria (each 0–10). For nonsense/off-task responses, overallScore and all 5 criteria must be 0.
+
+REQUIRED OUTPUT FORMAT (valid JSON only):
+{
+  "fluencyScore": number,
+  "spellingScore": number,
+  "grammarScore": number,
+  "vocabularyScore": number,
+  "taskScore": number,
+  "overallScore": number,
+  "feedback": "Detailed feedback. For nonsense/plagiarism, state clearly and give 0.",
+  "grammarErrors": ["Error -> Correction"],
+  "spellingErrors": ["misspelled -> correct"],
+  "vocabularySuggestions": ["word -> alternative"]
+}`;
 
 class AIEvaluationService {
   constructor(apiKey = null, apiUrl = null, provider = null) {
@@ -386,9 +390,30 @@ Please provide a JSON response including:
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
 
-        // Force consistency: If overall is 0, all components must be 0
-        const isZeroScore = parsed.overallScore === 0 || parsed.total_score === 0 || parsed.scaled_score === 0;
+        // Writing: if feedback indicates nonsense/off-task, force all writing scores to 0
+        const feedbackLower = (parsed.feedback || '').toLowerCase();
+        const nonsenseIndicators = [
+          'nonsensical', 'nonsense', 'random character', 'non-english', 'non english',
+          'failing to address the task', 'fails to address', 'no valid', 'gibberish',
+          'paragraph copied', 'score awarded: 0', 'off-task', 'off task'
+        ];
+        const isNonsenseFeedback = nonsenseIndicators.some(phrase => feedbackLower.includes(phrase));
+        const hasWritingScores = typeof parsed.grammarScore === 'number' || typeof parsed.spellingScore === 'number';
+        if (hasWritingScores && (isNonsenseFeedback || parsed.overallScore === 0)) {
+          return {
+            ...parsed,
+            overallScore: 0,
+            fluencyScore: 0,
+            grammarScore: 0,
+            spellingScore: 0,
+            vocabularyScore: 0,
+            taskScore: 0,
+            feedback: parsed.feedback || 'The response does not meet the task requirements and receives 0.'
+          };
+        }
 
+        // Speaking / general: If overall is 0, all components must be 0
+        const isZeroScore = parsed.overallScore === 0 || parsed.total_score === 0 || parsed.scaled_score === 0;
         if (isZeroScore) {
           const zeroDim = { score: 0, feedback: "No valid content detected to evaluate." };
           return {
@@ -402,7 +427,6 @@ Please provide a JSON response including:
             vocabularyScore: 0,
             taskScore: 0,
             pronunciationScore: 0,
-            // Nested Speaking schema
             fluency_coherence: zeroDim,
             pronunciation_intonation: zeroDim,
             grammar_range_accuracy: zeroDim,
@@ -415,7 +439,7 @@ Please provide a JSON response including:
       }
     } catch (e) { console.warn('Regex JSON parse failed, using rough parser'); }
 
-    // Rough parser for non-JSON or partial JSON - Default to 0 instead of 5
+    // Rough parser for non-JSON or partial JSON - Default to 0
     const scores = { fluencyScore: 0, grammarScore: 0, spellingScore: 0, vocabularyScore: 0, taskScore: 0, overallScore: 0, feedback: content };
     const matches = content.match(/(\w+)Score":\s*(\d+)/g);
     if (matches) {

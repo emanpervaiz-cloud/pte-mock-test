@@ -127,7 +127,7 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                 label: 'Grammar Range & Accuracy',
                 icon: '📝',
                 color: '#2e7d32',
-                score: evaluation.grammarScore || 5,
+                score: evaluation.grammarScore ?? 5,
                 feedback: evaluation.grammarErrors?.length > 0
                     ? `Found ${evaluation.grammarErrors.length} grammar issues: ${evaluation.grammarErrors.slice(0, 2).join(', ')}${evaluation.grammarErrors.length > 2 ? '...' : ''}`
                     : 'Grammar analysis shows good sentence structure. Continue using varied sentence types.'
@@ -137,7 +137,7 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                 label: 'Spelling & Punctuation',
                 icon: '✏️',
                 color: '#e65100',
-                score: evaluation.spellingScore || 5,
+                score: evaluation.spellingScore ?? 5,
                 feedback: evaluation.spellingErrors?.length > 0
                     ? `Found ${evaluation.spellingErrors.length} spelling errors: ${evaluation.spellingErrors.slice(0, 2).join(', ')}${evaluation.spellingErrors.length > 2 ? '...' : ''}`
                     : 'Spelling and punctuation are accurate. Maintain careful proofreading habits.'
@@ -147,7 +147,7 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                 label: 'Vocabulary & Lexical Resource',
                 icon: '📚',
                 color: 'var(--primary-color)',
-                score: evaluation.vocabularyScore || 5,
+                score: evaluation.vocabularyScore ?? 5,
                 feedback: evaluation.vocabularySuggestions?.length > 0
                     ? `Vocabulary suggestions: ${evaluation.vocabularySuggestions.slice(0, 2).join(', ')}${evaluation.vocabularySuggestions.length > 2 ? '...' : ''}`
                     : 'Vocabulary usage is appropriate. Consider using more academic vocabulary for higher scores.'
@@ -188,8 +188,8 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 12, color: '#5a6270', fontWeight: 600, marginBottom: 4 }}>YOUR SCORE</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
-                            <span style={{ fontSize: isMobile ? 40 : 48, fontWeight: 800, color: getScoreColor(evaluation.overallScore || 0), lineHeight: 1 }}>
-                                {evaluation.overallScore || 0}
+                            <span style={{ fontSize: isMobile ? 40 : 48, fontWeight: 800, color: getScoreColor(evaluation.overallScore ?? 0), lineHeight: 1 }}>
+                                {evaluation.overallScore ?? 0}
                             </span>
                             <span style={{ fontSize: 18, fontWeight: 700, color: '#94a3b8' }}>/ 10</span>
                         </div>
