@@ -163,6 +163,7 @@ const WriteEssay = ({ question, onNext }) => {
         onGetScore={handleGetScore}
         hasResponse={wordCount >= 50}
         questionType="writing"
+        responseText={essay}
       />
 
       <div style={{ display: 'flex', marginTop: 8 }}>

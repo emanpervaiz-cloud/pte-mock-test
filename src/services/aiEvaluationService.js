@@ -31,25 +31,20 @@ REQUIRED OUTPUT FORMAT (JSON):
 
 const WRITING_EXAMINER_SYSTEM_PROMPT = `You are an expert English writing evaluator for PTE Academic.
 
-CRITICAL - NONSENSE / OFF-TASK (MUST BE APPLIED FIRST):
-If the student response contains any of the following, you MUST award 0 for EVERY criterion (fluencyScore, spellingScore, grammarScore, vocabularyScore, taskScore) and set overallScore to 0. Do NOT give 5/10 or any positive scores.
-- Random characters, gibberish, or non-English text (e.g. "hjskdh\\\\cb il3a3w", "auq093")
-- Response is clearly nonsensical or fails to address the task
-- Response is mostly copy-pasted from the prompt with no genuine summary or answer
-- [No speech], empty, or irrelevant content
-Your "feedback" must clearly state why (e.g. "The response contains random characters and non-English text, making it nonsensical and failing to address the task."). Do not give generic positive feedback for such responses.
+STEP 1 — NONSENSE ONLY (all scores 0):
+Award 0 for EVERY criterion ONLY when the response is: random characters, gibberish, non-English text, empty, or "[No speech]". Do NOT give 0 for grammar/spelling/vocabulary when the response is coherent English that simply addresses a different topic.
 
-CRITICAL - PLAGIARISM:
-Only award 0 for plagiarism if the response is a direct verbatim (or near-verbatim) copy of large portions of the passage. Do not flag as plagiarism for short answers or common keywords in original context. If plagiarized, "feedback" must start with: "Paragraph copied — score awarded: 0."
+STEP 2 — OFF-TASK BUT COHERENT ENGLISH:
+If the response is written in English and is readable, but does NOT address the given passage/task (e.g. the passage is about global warming and the student wrote about technology in education):
+- Set taskScore = 0 (they did not complete the task).
+- STILL score grammarScore, spellingScore, vocabularyScore, and fluencyScore based on the ACTUAL text (spelling like "graetly" → "greatly", "modren" → "modern"; grammar and vocabulary of what they wrote). This gives the student useful feedback.
+- overallScore = average of all 5 criteria (so task 0 will lower the overall, but other scores reflect their English).
+- In "feedback", state clearly that the response was off-task, then summarize language feedback (e.g. "The response is off-task and does not address the passage. In terms of language: spelling errors include 'graetly' (greatly), 'modren' (modern).") Include grammarErrors, spellingErrors, vocabularySuggestions as appropriate.
 
-EVALUATION CRITERIA (0–10) — for valid, on-task English responses only:
-1. fluencyScore – FLUENCY & COHERENCE: Logical flow and paragraph structure.
-2. spellingScore – SPELLING & PUNCTUATION: Accurate spelling and standard punctuation.
-3. grammarScore – GRAMMAR RANGE & ACCURACY: Complex sentence structures and correctness.
-4. vocabularyScore – VOCABULARY & LEXICAL RESOURCE: Academic vocabulary and precision.
-5. taskScore – TASK ACHIEVEMENT: Addressing all parts of the prompt in own words.
+STEP 3 — ON-TASK:
+Score all 5 criteria based on content and language. overallScore = average of the 5.
 
-overallScore MUST be the average of the 5 criteria (each 0–10). For nonsense/off-task responses, overallScore and all 5 criteria must be 0.
+PLAGIARISM: Only award 0 for task (and possibly overall) if the response is a direct verbatim copy of large portions of the passage. If plagiarized, feedback must start with: "Paragraph copied — score awarded: 0."
 
 REQUIRED OUTPUT FORMAT (valid JSON only):
 {
@@ -59,7 +54,7 @@ REQUIRED OUTPUT FORMAT (valid JSON only):
   "vocabularyScore": number,
   "taskScore": number,
   "overallScore": number,
-  "feedback": "Detailed feedback. For nonsense/plagiarism, state clearly and give 0.",
+  "feedback": "Detailed feedback. For off-task, state that first, then give language feedback.",
   "grammarErrors": ["Error -> Correction"],
   "spellingErrors": ["misspelled -> correct"],
   "vocabularySuggestions": ["word -> alternative"]
@@ -390,16 +385,15 @@ Please provide a JSON response including:
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
 
-        // Writing: if feedback indicates nonsense/off-task, force all writing scores to 0
+        // Writing: force all 0 only for true nonsense (gibberish/non-English). For off-task only, keep grammar/spelling/vocab as returned and just ensure taskScore is 0.
         const feedbackLower = (parsed.feedback || '').toLowerCase();
-        const nonsenseIndicators = [
-          'nonsensical', 'nonsense', 'random character', 'non-english', 'non english',
-          'failing to address the task', 'fails to address', 'no valid', 'gibberish',
-          'paragraph copied', 'score awarded: 0', 'off-task', 'off task'
+        const nonsenseOnlyIndicators = [
+          'nonsensical', 'random character', 'non-english', 'non english', 'gibberish',
+          'paragraph copied', 'score awarded: 0', 'no valid content', 'no speech'
         ];
-        const isNonsenseFeedback = nonsenseIndicators.some(phrase => feedbackLower.includes(phrase));
+        const isNonsenseOnly = nonsenseOnlyIndicators.some(phrase => feedbackLower.includes(phrase));
         const hasWritingScores = typeof parsed.grammarScore === 'number' || typeof parsed.spellingScore === 'number';
-        if (hasWritingScores && (isNonsenseFeedback || parsed.overallScore === 0)) {
+        if (hasWritingScores && isNonsenseOnly) {
           return {
             ...parsed,
             overallScore: 0,
@@ -410,6 +404,12 @@ Please provide a JSON response including:
             taskScore: 0,
             feedback: parsed.feedback || 'The response does not meet the task requirements and receives 0.'
           };
+        }
+        if (hasWritingScores && (feedbackLower.includes('off-task') || feedbackLower.includes('does not address') || feedbackLower.includes('irrelevant to the task'))) {
+          const taskScore = 0;
+          const f = (parsed.fluencyScore ?? 0), s = (parsed.spellingScore ?? 0), g = (parsed.grammarScore ?? 0), v = (parsed.vocabularyScore ?? 0);
+          const overallScore = Math.round(10 * (f + s + g + v + taskScore) / 5) / 10;
+          return { ...parsed, taskScore, overallScore };
         }
 
         // Speaking / general: If overall is 0, all components must be 0

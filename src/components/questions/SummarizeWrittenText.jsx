@@ -163,6 +163,7 @@ const SummarizeWrittenText = ({ question, onNext }) => {
         onGetScore={handleGetScore}
         hasResponse={wordCount >= 5}
         questionType="writing"
+        responseText={summary}
       />
 
       <div style={{ display: 'flex', marginTop: 8 }}>

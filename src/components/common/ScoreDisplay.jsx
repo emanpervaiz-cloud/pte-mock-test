@@ -4,7 +4,7 @@ import React from 'react';
  * ScoreDisplay — Reusable component to display AI evaluation results
  * Shows 5-dimension scores with feedback, band descriptor, strengths, and improvements
  */
-const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, questionType }) => {
+const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, questionType, responseText }) => {
     const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
 
     React.useEffect(() => {
@@ -123,6 +123,16 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
 
         const writingDimensions = [
             {
+                key: 'task',
+                label: 'Task Achievement',
+                icon: '🎯',
+                color: '#7c3aed',
+                score: evaluation.taskScore ?? 0,
+                feedback: (evaluation.taskScore ?? 0) === 0
+                    ? 'Your response must summarize or address the given passage. Off-topic or irrelevant content scores 0.'
+                    : 'Task addressed. You responded to the prompt appropriately.'
+            },
+            {
                 key: 'grammar',
                 label: 'Grammar Range & Accuracy',
                 icon: '📝',
@@ -178,6 +188,14 @@ const ScoreDisplay = ({ evaluation, loading, error, onGetScore, hasResponse, que
                         </div>
                     </div>
                 </div>
+
+                {/* Text analyzed (so user sees exactly what was scored) */}
+                {responseText && responseText.trim() && (
+                    <div style={{ padding: isMobile ? '16px 20px' : '20px 28px', borderBottom: '1px solid #e8ecf4', background: '#f8fafc' }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 8 }}>📄 Text analyzed</div>
+                        <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{responseText.trim()}</div>
+                    </div>
+                )}
 
                 {/* Writing Overall Score Section */}
                 <div style={{

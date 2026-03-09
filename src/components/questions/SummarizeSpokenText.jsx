@@ -199,6 +199,7 @@ const SummarizeSpokenText = ({ question, onNext }) => {
         onGetScore={handleGetScore}
         hasResponse={false}
         questionType="writing"
+        responseText={summary}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
