@@ -312,7 +312,7 @@ class ScoringEngine {
   }
 
   /**
-   * Reading: Accuracy-based scoring
+   * Reading: Accuracy-based scoring comparing response to correct answers
    */
   calculateReadingScore(answers) {
     const answeredCount = Object.keys(answers).length;
@@ -328,26 +328,48 @@ class ScoringEngine {
     for (const [qId, answer] of Object.entries(answers)) {
       let qScore = 10;
       const responses = answer.responses || answer.response;
+      const correct = answer.correct_answer;
 
       if (answer.type === 'fill_blanks' || answer.type === 'reading_fill_blanks' || answer.type === 'reading_writing_fill_blanks') {
-        // Score based on number of blanks filled
-        if (responses && typeof responses === 'object') {
-          const filledCount = Object.values(responses).filter(v => v && v !== '').length;
-          const totalBlanks = Object.keys(responses).length || 1;
-          const fillRatio = filledCount / totalBlanks;
-          qScore = this.clampPTE(Math.round(10 + fillRatio * 70));
+        if (responses && typeof responses === 'object' && correct) {
+          const blanks = Object.keys(responses);
+          let correctBlanks = 0;
+          blanks.forEach(b => {
+             // correct is usually an array of {blank: 1, correct: 'word'}
+             const correctWord = Array.isArray(correct) ? correct.find(c => c.blank == b)?.correct : correct[b];
+             if (this.compareAnswers(correctWord, responses[b])) correctBlanks++;
+          });
+          const totalBlanks = Array.isArray(correct) ? correct.length : (Object.keys(correct || {}).length || 1);
+          const fillRatio = correctBlanks / totalBlanks;
+          qScore = this.clampPTE(Math.round(10 + fillRatio * 80));
         }
-      } else if (answer.type === 'multiple_choice') {
-        // Score based on whether something was selected
-        if (Array.isArray(responses) && responses.length > 0) {
-          qScore = 55; // Base credit for answering
-        } else if (responses) {
-          qScore = 55;
+      } else if (answer.type === 'multiple_choice' || answer.type === 'reading_multiple_choice') {
+        if (Array.isArray(correct)) {
+          const studentArr = Array.isArray(responses) ? responses : (responses ? [responses] : []);
+          let earned = 0;
+          studentArr.forEach(ans => {
+            if (correct.includes(ans)) earned++;
+            else earned--;
+          });
+          const ratio = Math.max(0, earned) / correct.length;
+          qScore = this.clampPTE(Math.round(10 + ratio * 80));
+        } else if (correct) {
+          qScore = this.compareAnswers(correct, responses) ? 90 : 10;
         }
       } else if (answer.type === 'reorder_paragraph') {
-        // Score based on whether ordering was submitted
-        if (Array.isArray(responses) && responses.length > 0) {
-          qScore = 55; // Base credit for completing the task
+        if (Array.isArray(responses) && Array.isArray(correct) && responses.length > 0) {
+          let earned = 0;
+          for (let i = 0; i < responses.length - 1; i++) {
+            const studentPair = `${responses[i]}-${responses[i + 1]}`;
+            for (let j = 0; j < correct.length - 1; j++) {
+              if (studentPair === `${correct[j]}-${correct[j + 1]}`) {
+                earned++;
+                break;
+              }
+            }
+          }
+          const ratio = earned / Math.max(1, correct.length - 1);
+          qScore = this.clampPTE(Math.round(10 + ratio * 80));
         }
       }
 
@@ -385,6 +407,7 @@ class ScoringEngine {
       let qScore = 10;
       const response = answer.response;
       const responses = answer.responses;
+      const correct = answer.correct_answer;
 
       if (answer.type === 'text' || answer.type === 'summarize_spoken_text') {
         // Text-based: word count matters
@@ -393,27 +416,63 @@ class ScoringEngine {
         else if (wordCount >= 20) qScore = 45;
         else if (wordCount > 0) qScore = 25;
         else qScore = 10;
-      } else if (answer.type === 'multiple_choice') {
-        if (response || (Array.isArray(response) && response.length > 0)) qScore = 55;
+      } else if (answer.type === 'multiple_choice' || answer.type === 'listening_multiple_choice') {
+        if (Array.isArray(correct)) {
+          const studentArr = Array.isArray(response) ? response : (response ? [response] : []);
+          let earned = 0;
+          studentArr.forEach(ans => {
+            if (correct.includes(ans)) earned++;
+            else earned--;
+          });
+          const ratio = Math.max(0, earned) / correct.length;
+          qScore = this.clampPTE(Math.round(10 + ratio * 80));
+        } else if (correct) {
+          qScore = this.compareAnswers(correct, response) ? 90 : 10;
+        }
       } else if (answer.type === 'listening_fill_blanks') {
-        if (responses && typeof responses === 'object') {
-          const filledCount = Object.values(responses).filter(v => v && v !== '').length;
-          const totalBlanks = Object.keys(responses).length || 1;
-          qScore = this.clampPTE(Math.round(10 + (filledCount / totalBlanks) * 70));
+        if (responses && typeof responses === 'object' && correct) {
+          const blanks = Object.keys(responses);
+          let correctBlanks = 0;
+          blanks.forEach(b => {
+             const correctWord = Array.isArray(correct) ? correct.find(c => c.blank == b)?.correct : correct[b];
+             if (this.compareAnswers(correctWord, responses[b])) correctBlanks++;
+          });
+          const totalBlanks = Array.isArray(correct) ? correct.length : (Object.keys(correct || {}).length || 1);
+          qScore = this.clampPTE(Math.round(10 + (correctBlanks / totalBlanks) * 80));
         }
       } else if (answer.type === 'highlight_correct_summary') {
-        if (response) qScore = 55;
+        if (correct) qScore = this.compareAnswers(correct, response) ? 90 : 10;
       } else if (answer.type === 'select_missing_word') {
-        if (response) qScore = 55;
+        if (correct) qScore = this.compareAnswers(correct, response) ? 90 : 10;
       } else if (answer.type === 'highlight_incorrect_words') {
-        if (Array.isArray(response) && response.length > 0) qScore = 55;
+        if (Array.isArray(correct)) {
+          const studentArr = Array.isArray(response) ? response : [];
+          let earned = 0;
+          studentArr.forEach(ans => {
+            if (correct.includes(ans)) earned++;
+            else earned--;
+          });
+          const ratio = Math.max(0, earned) / Math.max(1, correct.length);
+          qScore = this.clampPTE(Math.round(10 + ratio * 80));
+        }
       } else if (answer.type === 'write_from_dictation') {
-        // Most important listening q — score by word count
-        const wordCount = typeof response === 'string' ? response.trim().split(/\s+/).filter(w => w).length : 0;
-        if (wordCount >= 5) qScore = 65;
-        else if (wordCount >= 2) qScore = 40;
-        else if (wordCount > 0) qScore = 20;
-        else qScore = 10;
+        if (correct) {
+          const correctWords = typeof correct === 'string' ? correct.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").split(/\s+/) : [];
+          const studentWords = typeof response === 'string' ? response.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").split(/\s+/) : [];
+          let earned = 0;
+          correctWords.forEach(w => {
+            if (studentWords.includes(w)) earned++;
+          });
+          const wordRatio = Math.max(0, earned) / Math.max(1, correctWords.length);
+          qScore = this.clampPTE(Math.round(10 + wordRatio * 80));
+        } else {
+          // Fallback if no correct answer
+          const wordCount = typeof response === 'string' ? response.trim().split(/\s+/).filter(w => w).length : 0;
+          if (wordCount >= 5) qScore = 65;
+          else if (wordCount >= 2) qScore = 40;
+          else if (wordCount > 0) qScore = 20;
+          else qScore = 10;
+        }
       }
 
       totalScore += qScore;
@@ -430,6 +489,16 @@ class ScoringEngine {
       breakdown,
       feedback: this.getListeningFeedback(scaledScore)
     };
+  }
+
+  compareAnswers(correct, student) {
+    if (correct === undefined || correct === null) return false;
+    if (student === undefined || student === null) return false;
+
+    if (typeof correct === 'string' && typeof student === 'string') {
+      return correct.trim().toLowerCase() === student.trim().toLowerCase();
+    }
+    return String(correct).trim().toLowerCase() === String(student).trim().toLowerCase();
   }
 
   /**

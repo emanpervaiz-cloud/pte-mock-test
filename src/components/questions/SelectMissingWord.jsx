@@ -34,7 +34,8 @@ const SelectMissingWord = ({ question, onNext }) => {
     saveAnswer(question.id, {
       questionId: question.id,
       section: 'listening',
-      type: 'select_missing_word',
+      
+      correct_answer: question.correct || question.answers || (question.options ? question.options.find(o => o.isCorrect)?.id : undefined) || question.correctResponse || question.transcript,
       response: selectedOption,
       meta: { audioPlayed: audioPlayed }
     });

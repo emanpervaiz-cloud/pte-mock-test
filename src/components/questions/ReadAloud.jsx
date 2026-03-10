@@ -72,7 +72,8 @@ const ReadAloud = ({ question, onNext }) => {
     saveAnswer(question.id, {
       questionId: question.id,
       section: 'speaking',
-      type: 'read_aloud',
+      
+      correct_answer: question.correct || question.answers || (question.options ? question.options.find(o => o.isCorrect)?.id : undefined) || question.correctResponse || question.transcript,
       response: blob,
       meta: { duration: recordingTime, hasAudio: !!blob, blobSize: blob?.size || 0 }
     });

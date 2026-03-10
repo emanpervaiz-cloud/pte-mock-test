@@ -44,7 +44,8 @@ const ListeningMultipleChoice = ({ question, onNext }) => {
     saveAnswer(question.id, {
       questionId: question.id,
       section: 'listening',
-      type: 'multiple_choice',
+      
+      correct_answer: question.correct || question.answers || (question.options ? question.options.find(o => o.isCorrect)?.id : undefined) || question.correctResponse || question.transcript,
       response: selectedOption,
       meta: { audioPlayed: audioPlayed }
     });
