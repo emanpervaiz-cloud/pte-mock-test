@@ -212,44 +212,77 @@ class AIEvaluationService {
    * MAIN ENTRY POINT: Writing Evaluation
    */
   async evaluateWriting(prompt, response, questionType) {
-    console.log('--- Writing Evaluation Chain ---');
+   console.log('=== WRITING EVALUATION STARTED ===');
+   console.log('Prompt:', prompt);
+   console.log('Response:', response);
+   console.log('Question Type:', questionType);
+   console.log('Available Keys - OpenRouter:', !!this.openRouterKey, 'Gemini:', !!this.geminiApiKey, 'OpenAI:', !!this.openAiKey);
 
     // 1. OpenRouter (Primary)
-    if (this.openRouterKey) {
-      try {
-        console.log('🚀 Trying OpenRouter (Writing)...');
-        const result = await this.evaluateWritingWithLLM(prompt, response, questionType, this.openRouterKey, this.openRouterUrl, 'openai/gpt-4o');
+   if (this.openRouterKey) {
+     try {
+       console.log('🚀 [ATTEMPT 1] OpenRouter for Writing...');
+       const result = await this.evaluateWritingWithLLM(prompt, response, questionType, this.openRouterKey, this.openRouterUrl, 'openai/gpt-4o');
+       console.log('✅ OpenRouter Success:', result);
         return { ...result, source: 'openrouter' };
-      } catch (e) { console.error('OpenRouter Writing Failed:', e.message); }
+      } catch (e) { 
+       console.error('❌ OpenRouter Writing Failed:', e.message);
+       console.error('Full error:', e);
+      }
     }
 
     // 2. Gemini
-    if (this.geminiApiKey) {
-      try {
-        console.log('🚀 Trying Gemini (Writing)...');
-        const userPrompt = `Evaluate this PTE writing response.\nRESPONSE: "${response}"\nQUESTION TYPE: ${questionType}\n\nPROMPT: ${prompt}`;
-        const resp = await this.callGemini(userPrompt, WRITING_EXAMINER_SYSTEM_PROMPT);
-        const parsed = this.parseLLMResponse(resp);
+   if (this.geminiApiKey) {
+     try {
+       console.log('🚀 [ATTEMPT 2] Gemini for Writing...');
+       const userPrompt = `Evaluate this PTE writing response.\nRESPONSE: "${response}"\nQUESTION TYPE: ${questionType}\n\nPROMPT: ${prompt}`;
+       const resp = await this.callGemini(userPrompt, WRITING_EXAMINER_SYSTEM_PROMPT);
+       const parsed = this.parseLLMResponse(resp);
+       console.log('✅ Gemini Success:', parsed);
         return { ...parsed, source: 'gemini' };
-      } catch (e) { console.error('Gemini Writing Failed:', e.message); }
+      } catch (e) { 
+       console.error('❌ Gemini Writing Failed:', e.message);
+       console.error('Full error:', e);
+      }
     }
 
     // 3. OpenAI Direct
-    if (this.openAiKey) {
-      try {
-        console.log('🚀 Trying OpenAI (Writing)...');
-        const result = await this.evaluateWritingWithLLM(prompt, response, questionType, this.openAiKey, this.openAiUrl, 'gpt-4o');
+   if (this.openAiKey) {
+     try {
+       console.log('🚀 [ATTEMPT 3] OpenAI for Writing...');
+       const result = await this.evaluateWritingWithLLM(prompt, response, questionType, this.openAiKey, this.openAiUrl, 'gpt-4o');
+       console.log('✅ OpenAI Success:', result);
         return { ...result, source: 'openai' };
-      } catch (e) { console.error('OpenAI Writing Failed:', e.message); }
+      } catch (e) { 
+       console.error('❌ OpenAI Writing Failed:', e.message);
+       console.error('Full error:', e);
+      }
     }
 
     // 4. Python Server
-    try {
-      const res = await this.evaluateWithPythonServer(prompt, response, 'writing', questionType);
-      if (res.success) return { ...res.result, source: 'python-server' };
-    } catch (e) { console.error('Python Server Failed:', e.message); }
+   try {
+     console.log('🚀 [ATTEMPT 4] Python Server...');
+     const res = await this.evaluateWithPythonServer(prompt, response, 'writing', questionType);
+     if (res.success) {
+       console.log('✅ Python Server Success:', res.result);
+        return { ...res.result, source: 'python-server' };
+      }
+    } catch (e) { 
+     console.error('❌ Python Server Failed:', e.message);
+    }
 
-    return { ...this.getFallbackWritingEvaluation(), source: 'fallback-final' };
+    // Final Fallback
+   console.warn('⚠️ ALL PROVIDERS FAILED - Using fallback');
+   const fallback = { ...this.getFallbackWritingEvaluation(), source: 'fallback-final' };
+   console.warn('Fallback scores:', {
+      overall: fallback.overallScore,
+      task: fallback.taskScore,
+      grammar: fallback.grammarScore,
+      spelling: fallback.spellingScore,
+      vocabulary: fallback.vocabularyScore,
+      fluency: fallback.fluencyScore
+    });
+    return fallback;
   }
 
   async evaluateWritingWithLLM(prompt, response, questionType, apiKey, apiUrl, model) {
