@@ -297,6 +297,41 @@ class AIEvaluationService {
   async evaluateReading(questions) { return this.evaluateObjectiveSection('reading', questions); }
   async evaluateListening(questions) { return this.evaluateObjectiveSection('listening', questions); }
 
+  async evaluateListeningQuestion(question, response) {
+    const isCorrect = (response === question.correct || response === (question.correct_answer || question.answers?.[0]?.correct));
+    const systemPrompt = `You are a PTE Academic Listening tutor. Provide feedback on an objective question.
+    REQUIRED OUTPUT FORMAT (JSON):
+    {
+      "overallScore": number (10 for correct, 0-2 for incorrect),
+      "taskScore": number,
+      "grammarScore": 10,
+      "spellingScore": 10,
+      "vocabularyScore": 10,
+      "feedback": "Explanation of the correct answer and why it fits the context."
+    }`;
+
+    const userPrompt = `Question Type: ${question.type}
+    Prompt: ${question.instruction}
+    Context/Transcript: ${question.context || question.transcript || ''}
+    Correct Answer: ${question.correct || question.correct_answer}
+    Student Answer: ${response}
+    Status: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`;
+
+    try {
+      if (this.openRouterKey) {
+        const resp = await this.callChatLLM(systemPrompt, userPrompt, this.openRouterKey, this.openRouterUrl, 'openai/gpt-4o');
+        return JSON.parse(resp.match(/\{[\s\S]*\}/)?.[0] || '{}');
+      }
+      if (this.geminiApiKey) {
+        const resp = await this.callGemini(userPrompt, systemPrompt);
+        return JSON.parse(resp.match(/\{[\s\S]*\}/)?.[0] || '{}');
+      }
+      return { overallScore: isCorrect ? 10 : 0, feedback: isCorrect ? "Correct! Good job." : "Incorrect. Try again." };
+    } catch (e) {
+      return { overallScore: isCorrect ? 10 : 0, feedback: "Result recorded." };
+    }
+  }
+
   async evaluateObjectiveSection(section, questions) {
     const objective = this.calculateObjectiveOnlyScore(questions);
     try {

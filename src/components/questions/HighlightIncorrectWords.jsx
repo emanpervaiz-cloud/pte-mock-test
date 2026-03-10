@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useExam } from '../../context/ExamContext';
 import AudioPlayer from '../common/AudioPlayer';
+import ScoreDisplay from '../common/ScoreDisplay';
+import AIEvaluationService from '../../services/aiEvaluationService';
 
 const HighlightIncorrectWords = ({ question, onNext }) => {
   const { saveAnswer } = useExam();
@@ -9,14 +11,30 @@ const HighlightIncorrectWords = ({ question, onNext }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  // AI Scoring States
+  const [evaluation, setEvaluation] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState(null);
+  const aiService = new AIEvaluationService();
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Reset states when question changes
+  useEffect(() => {
+    setEvaluation(null);
+    setEvalLoading(false);
+    setEvalError(null);
+    setIncorrectWords([]);
+    setIsSubmitted(false);
+    setAudioPlayed(false);
+  }, [question.id]);
+
   const handleWordClick = (index) => {
-    if (isSubmitted) return; // Prevent changes after submission
+    if (isSubmitted) return;
     if (incorrectWords.includes(index)) {
       setIncorrectWords(incorrectWords.filter(i => i !== index));
     } else {
@@ -28,19 +46,51 @@ const HighlightIncorrectWords = ({ question, onNext }) => {
     setAudioPlayed(true);
   };
 
+  const handleGetScore = async () => {
+    if (incorrectWords.length === 0 || evalLoading) return;
+    
+    setEvalLoading(true);
+    setEvalError(null);
+    
+    try {
+      // Get the actual words that were selected
+      const words = question.transcript.split(' ');
+      const responseWords = incorrectWords.map(idx => words[idx]);
+      const result = await aiService.evaluateListeningQuestion(question, responseWords.join(', '));
+      setEvaluation(result);
+
+      // Store AI evaluation for ResultsPage
+      try {
+        const aiEvaluations = JSON.parse(localStorage.getItem('pte_ai_evaluations') || '{}');
+        aiEvaluations[question.id] = result;
+        localStorage.setItem('pte_ai_evaluations', JSON.stringify(aiEvaluations));
+      } catch (storageError) {
+        console.error('Failed to save AI evaluation:', storageError);
+      }
+    } catch (err) {
+      console.error('AI scoring error:', err);
+      setEvalError('Could not get AI explanation. Please try again.');
+    } finally {
+      setEvalLoading(false);
+    }
+  };
+
   const handleSubmit = () => {
+    if (isSubmitted) {
+      onNext();
+      return;
+    }
+
     // Save the answer
     saveAnswer(question.id, {
       questionId: question.id,
       section: 'listening',
-      
       correct_answer: question.correct || question.answers || (question.options ? question.options.find(o => o.isCorrect)?.id : undefined) || question.correctResponse || question.transcript,
       response: incorrectWords,
       meta: { audioPlayed: audioPlayed }
     });
 
-    // Move to next question
-    onNext();
+    setIsSubmitted(true);
   };
 
   const renderTranscriptWithClickableWords = () => {
@@ -112,25 +162,69 @@ const HighlightIncorrectWords = ({ question, onNext }) => {
         <div style={{ fontStyle: 'italic', color: '#64748b' }}>Note: You can only play the audio once.</div>
       </div>
 
-      <div style={{ display: 'flex' }}>
-        <button
-          onClick={handleSubmit}
-          disabled={incorrectWords.length === 0}
-          style={{
-            width: isMobile ? '100%' : 'auto',
-            padding: '14px 40px', borderRadius: 12,
-            background: incorrectWords.length === 0 ? '#e2e8f0' : 'var(--primary-color)',
-            color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
-            cursor: incorrectWords.length === 0 ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(13, 59, 102, 0.15)'
-          }}
-        >
-          {isSubmitted ? 'Next Question →' : 'Submit Answer'}
-        </button>
+      <div style={{ display: 'flex', gap: 12 }}>
+        {!isSubmitted ? (
+          <button
+            onClick={handleSubmit}
+            disabled={incorrectWords.length === 0}
+            style={{
+              flex: isMobile ? 1 : 'none',
+              padding: '14px 40px', borderRadius: 12,
+              background: incorrectWords.length === 0 ? '#e2e8f0' : 'var(--primary-color)',
+              color: '#fff', border: 'none', fontWeight: 700, fontSize: 16,
+              cursor: incorrectWords.length === 0 ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 12px rgba(13, 59, 102, 0.15)'
+            }}
+          >
+            Submit Answer
+          </button>
+        ) : (
+          <button
+            onClick={onNext}
+            style={{
+              flex: isMobile ? 1 : 'none',
+              padding: '14px 40px', borderRadius: 12,
+              background: '#f1f5f9',
+              color: 'var(--primary-color)', border: '1px solid var(--primary-color)', 
+              fontWeight: 700, fontSize: 16,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            Next Question →
+          </button>
+        )}
       </div>
 
-      {isSubmitted && (
+      {isSubmitted && !evaluation && !evalLoading && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
+            <button
+                onClick={handleGetScore}
+                style={{
+                    padding: '12px 24px', borderRadius: 12,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                    color: '#fff', border: 'none',
+                    fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
+                    display: 'flex', alignItems: 'center', gap: 8
+                }}
+            >
+                ✨ Get AI Explanation
+            </button>
+        </div>
+      )}
+
+      <ScoreDisplay 
+          evaluation={evaluation} 
+          loading={evalLoading} 
+          error={evalError} 
+          onGetScore={handleGetScore}
+          hasResponse={isSubmitted}
+          questionType="writing"
+      />
+
+      {isSubmitted && !evaluation && !evalLoading && (
         <div style={{
           marginTop: 24,
           padding: '20px',
