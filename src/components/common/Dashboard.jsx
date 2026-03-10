@@ -2,18 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useExam } from '../../context/ExamContext';
 import { AuthService } from '../../services/authService';
-import AuthModal from './AuthModal';
+import DashboardLayout from '../layout/DashboardLayout';
 import ModuleCard from '../dashboard/ModuleCard';
 import SidebarOverview from '../dashboard/SidebarOverview';
-
-const NAV_ITEMS = [
-  { icon: '📊', label: 'Dashboard', path: '/', active: true },
-  { icon: '📝', label: 'Practice', path: '/landing' },
-  { icon: '📋', label: 'Section Test', path: '/exam/speaking' },
-  { icon: '🎓', label: 'Mock Test', path: '/intro' },
-  { icon: '📚', label: 'Vocab Book', path: '/vocab' },
-  { icon: '📁', label: 'Materials', path: '/materials' }
-];
 
 function getHistory() {
   try {
@@ -30,10 +21,7 @@ const Dashboard = () => {
   const [targetScore, setTargetScore] = useState(65);
   const [showTargetModal, setShowTargetModal] = useState(false);
   const [tempTarget, setTempTarget] = useState(65);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [authOpen, setAuthOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -47,11 +35,6 @@ const Dashboard = () => {
     setUser(AuthService.getUser());
   }, []);
 
-  const handleLogout = () => {
-    AuthService.logout();
-    navigate('/login');
-  };
-
   const avgScore = history.length > 0
     ? Math.round(history.reduce((s, t) => s + (t.overall || 0), 0) / history.length)
     : 0;
@@ -61,7 +44,6 @@ const Dashboard = () => {
   const handleStartTest = () => navigate('/intro');
   const handleStartMockTest = () => navigate('/mock-test');
 
-  // Define modules dynamically based on user history
   const modules = [
     {
       module_id: 'mod_listening', module_name: 'Listening', icon: '🎧',
@@ -93,283 +75,68 @@ const Dashboard = () => {
     }
   ].map(mod => {
     const progress_percentage = (mod.practiced / mod.total_items) * 100;
-    // Calculate average score for this specific module from history
     const modScores = history.filter(h => h[mod.route] !== undefined).map(h => h[mod.route]);
     const average_score = modScores.length > 0 ? Math.round(modScores.reduce((a, b) => a + b, 0) / modScores.length) : 0;
-
     return { ...mod, progress_percentage, average_score };
   });
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
-      {/* Sidebar - Desktop */}
-      <aside className="sidebar-desktop" style={{
-        width: sidebarOpen ? 240 : 72,
-        background: 'var(--bg-color)',
-        borderRight: '1px solid var(--accent-color)',
-        display: isMobile ? 'none' : 'flex',
-        flexDirection: 'column',
-        transition: 'width 0.25s ease',
-        flexShrink: 0,
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        zIndex: 100,
-        boxShadow: 'var(--shadow-sm)',
-        overflow: 'hidden',
+    <DashboardLayout activePath="/">
+      <div className="dashboard-main" style={{
+        padding: isMobile ? '20px 16px' : '32px',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: 32,
       }}>
-        {/* Logo */}
-        <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--accent-color)' }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 8,
-            background: 'var(--primary-color)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 800, fontSize: 16, flexShrink: 0,
-          }}>P</div>
-          {sidebarOpen && <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--primary-color)', letterSpacing: '-0.5px' }}>THE MIGRATION</span>}
-        </div>
-
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '16px 0' }}>
-          {NAV_ITEMS.map((item) => (
-            <div
-              key={item.label}
-              onClick={() => { item.path && navigate(item.path); if (isMobile) setMobileMenuOpen(false); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 14,
-                padding: '12px 20px', cursor: 'pointer', position: 'relative',
-                background: item.active ? 'var(--accent-color)' : 'transparent',
-                borderRight: item.active ? '4px solid var(--secondary-color)' : '4px solid transparent',
-                color: item.active ? 'var(--primary-color)' : 'var(--text-secondary)',
-                fontWeight: item.active ? 700 : 500,
-                fontSize: 15,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => { if (!item.active) { e.currentTarget.style.background = 'var(--accent-color)'; e.currentTarget.style.color = 'var(--primary-color)'; } }}
-              onMouseLeave={e => { if (!item.active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; } }}
-            >
-              <span style={{ fontSize: 20, flexShrink: 0 }}>{item.icon}</span>
-              {sidebarOpen && (
-                <>
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span style={{
-                      marginLeft: 'auto', fontSize: 11, background: '#ef4444',
-                      color: '#fff', borderRadius: 4, padding: '2px 6px', fontWeight: 600,
-                    }}>{item.badge}</span>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </nav>
-
-        {/* Collapse toggle */}
-        <div
-          onClick={() => setSidebarOpen(o => !o)}
-          style={{
-            padding: '16px 20px', cursor: 'pointer', borderTop: '1px solid var(--accent-color)',
-            display: 'flex', alignItems: 'center', gap: 12, color: '#94a3b8', fontSize: 14, fontWeight: 500,
-            transition: 'color 0.2s'
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = 'var(--primary-color)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
-        >
-          <span style={{ fontSize: 18 }}>{sidebarOpen ? '◀' : '▶'}</span>
-          {sidebarOpen && <span>Collapse</span>}
-        </div>
-      </aside>
-
-      {/* Sidebar - Mobile drawer */}
-      {isMobile && (
-        <>
-          <div
-            className={`mobile-overlay ${mobileMenuOpen ? 'open' : ''}`}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <aside className={`sidebar-mobile ${mobileMenuOpen ? 'open' : ''}`} style={{
-            background: 'var(--bg-color)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100vh',
+        {/* Main Module Grid Column */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '24px' : '32px' }}>
+          
+          {/* Greeting Section */}
+          <div className="practice-greeting" style={{ 
+            background: '#fff', padding: isMobile ? '24px' : '32px', borderRadius: '20px', 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)', border: '1px solid var(--accent-color)'
           }}>
-            <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--accent-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: 8,
-                  background: 'var(--primary-color)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontWeight: 800, fontSize: 14,
-                }}>P</div>
-                <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--primary-color)' }}>THE MIGRATION</span>
-              </div>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: 24, padding: 4 }}
-              >×</button>
+            <h1 style={{ margin: '0 0 8px', fontSize: isMobile ? '22px' : '28px', fontWeight: 800, color: 'var(--primary-color)' }}>
+              Welcome back, {user ? user.name : 'Student'} 👋
+            </h1>
+            <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>
+              Track your progress, practice modules, and achieve your target score of {targetScore}.
+            </p>
+          </div>
+
+          {/* Modules Grid */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0, fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--primary-color)' }}>Practice Modules</h2>
             </div>
-            <nav style={{ flex: 1, padding: '16px 0' }}>
-              {NAV_ITEMS.map((item) => (
-                <div
-                  key={item.label}
-                  onClick={() => { item.path && navigate(item.path); setMobileMenuOpen(false); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 14,
-                    padding: '16px 20px', cursor: 'pointer',
-                    background: item.active ? 'var(--accent-color)' : 'transparent',
-                    color: item.active ? 'var(--primary-color)' : 'var(--text-secondary)',
-                    fontWeight: item.active ? 700 : 500,
-                    fontSize: 16,
-                  }}
-                >
-                  <span style={{ fontSize: 22 }}>{item.icon}</span>
-                  <span>{item.label}</span>
-                </div>
+
+            <div className="modules-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '20px'
+            }}>
+              {modules.map(mod => (
+                <ModuleCard
+                  key={mod.module_id}
+                  module={mod}
+                  onStartPractice={() => handleStartPractice(mod.route)}
+                />
               ))}
-            </nav>
-            <div style={{ padding: '20px', borderTop: '1px solid var(--accent-color)' }}>
-              {user && (
-                <button
-                  onClick={handleLogout}
-                  style={{ width: '100%', padding: '12px', borderRadius: '10px', background: '#fef2f2', color: '#ef4444', fontWeight: 700, border: '1px solid #fee2e2' }}
-                >Logout</button>
-              )}
             </div>
-          </aside>
-        </>
-      )}
-
-      {/* Main Content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* Top Bar */}
-        <header style={{
-          background: 'var(--bg-color)', borderBottom: '1px solid var(--accent-color)',
-          padding: isMobile ? '0 16px' : '0 32px', height: 64, display: 'flex', alignItems: 'center',
-          gap: 16, position: 'sticky', top: 0, zIndex: 90,
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          {isMobile && (
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: '4px' }}
-            >☰</button>
-          )}
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <span style={{ background: 'rgba(13, 59, 102, 0.08)', color: 'var(--primary-color)', borderRadius: '6px', padding: '4px 12px', fontSize: 13, fontWeight: 700 }}>PTE Academic</span>
-            {!isMobile && (
-              <button
-                onClick={() => navigate('/landing')}
-                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 14, cursor: 'pointer', padding: '6px 12px', borderRadius: 6, fontWeight: 500 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-color)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'none'}
-              >Practice Library ▾</button>
-            )}
           </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
-            {user ? (
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                {!isMobile && (
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{user.name}</div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>Student</div>
-                  </div>
-                )}
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%', background: '#e2e8f0',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700, color: '#475569'
-                }}>
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                {!isMobile && (
-                  <button
-                    onClick={handleLogout}
-                    style={{
-                      padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0',
-                      background: '#fff', color: '#ef4444', fontWeight: 600, cursor: 'pointer',
-                      fontSize: 13, transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-color)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-color)'}
-                  >
-                    Logout
-                  </button>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={() => navigate('/login')}
-                style={{
-                  padding: '8px 20px', borderRadius: '8px',
-                  background: 'var(--primary-color)',
-                  color: '#fff', border: 'none', fontWeight: 600, cursor: 'pointer'
-                }}
-              >
-                Sign in
-              </button>
-            )}
-          </div>
-        </header>
+        </div>
 
-        {/* Page body */}
-        <div className="dashboard-main" style={{
-          flex: 1,
-          padding: isMobile ? '20px 16px' : '32px',
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: 24,
-          overflowY: 'auto'
-        }}>
-
-          {/* Main Module Grid Column */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '20px' : '32px' }}>
-
-            {/* Greeting Section */}
-            <div className="practice-greeting">
-              <h1 style={{ margin: '0 0 8px', fontSize: isMobile ? '22px' : '28px', fontWeight: 800, color: 'var(--primary-color)' }}>
-                Welcome back, {user ? user.name : 'Student'} 👋
-              </h1>
-              <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-secondary)' }}>
-                Track your progress, practice modules, and achieve your target score of {targetScore}.
-              </p>
-            </div>
-
-            {/* Modules Grid */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ margin: 0, fontSize: isMobile ? '18px' : '20px', fontWeight: 700, color: 'var(--primary-color)' }}>Practice Modules</h2>
-              </div>
-
-              <div className="modules-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '20px'
-              }}>
-                {modules.map(mod => (
-                  <ModuleCard
-                    key={mod.module_id}
-                    module={mod}
-                    onStartPractice={() => handleStartPractice(mod.route)}
-                  />
-                ))}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Sidebar Overview */}
-          <div className="dashboard-sidebar-right" style={{ width: isMobile ? '100%' : '320px', flexShrink: 0 }}>
-            <SidebarOverview
-              history={history}
-              targetScore={targetScore}
-              avgScore={avgScore}
-              lastScore={lastScore}
-              onStartTest={handleStartTest}
-              onStartMockTest={handleStartMockTest}
-              onShowTargetModal={() => { setTempTarget(targetScore); setShowTargetModal(true); }}
-            />
-          </div>
-
+        {/* Right Sidebar Overview */}
+        <div className="dashboard-sidebar-right" style={{ width: isMobile ? '100%' : '320px', flexShrink: 0 }}>
+          <SidebarOverview
+            history={history}
+            targetScore={targetScore}
+            avgScore={avgScore}
+            lastScore={lastScore}
+            onStartTest={handleStartTest}
+            onStartMockTest={handleStartMockTest}
+            onShowTargetModal={() => { setTempTarget(targetScore); setShowTargetModal(true); }}
+          />
         </div>
       </div>
 
@@ -385,7 +152,7 @@ const Dashboard = () => {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: 'var(--bg-color)',
+              background: '#fff',
               borderRadius: isMobile ? '16px' : '24px',
               padding: isMobile ? '24px' : '32px',
               width: isMobile ? '90%' : '520px',
@@ -397,7 +164,6 @@ const Dashboard = () => {
             }}>
             <h3 style={{ margin: '0 0 20px', fontSize: isMobile ? '18px' : '22px', fontWeight: 800, color: '#0f172a', textAlign: 'center' }}>🎯 Set Your Goal</h3>
 
-            {/* Current Target Display */}
             <div style={{ textAlign: 'center', fontSize: isMobile ? '40px' : '48px', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '8px' }}>
               {tempTarget}
             </div>
@@ -410,99 +176,21 @@ const Dashboard = () => {
               style={{ width: '100%', marginBottom: '28px', accentColor: 'var(--primary-color)', cursor: 'pointer' }}
             />
 
-            {/* PTE Band Levels Reference */}
             <div style={{ marginBottom: '24px' }}>
-              <h4 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 700, color: '#374151' }}>📊 PTE Band Levels & Requirements</h4>
-
+              <h4 style={{ margin: '0 0 16px', fontSize: '14px', fontWeight: 700, color: '#374151' }}>📊 PTE Band Levels</h4>
               {[
-                {
-                  band: 'PTE 90 (Perfect)',
-                  range: '90',
-                  color: '#059669',
-                  requirements: [
-                    'Speaking: Native-like fluency & pronunciation',
-                    'Writing: Complex structures, academic vocabulary',
-                    'Reading: Advanced inference & vocabulary',
-                    'Listening: Complete comprehension of academic content'
-                  ]
-                },
-                {
-                  band: 'PTE 79+ (Band 8)',
-                  range: '79-89',
-                  color: '#0891b2',
-                  requirements: [
-                    'Speaking: Fluent with minor hesitations',
-                    'Writing: Varied sentence structures, precise vocabulary',
-                    'Reading: Strong comprehension of complex texts',
-                    'Listening: Understand main ideas and most details'
-                  ]
-                },
-                {
-                  band: 'PTE 65+ (Band 7)',
-                  range: '65-78',
-                  color: '#7c3aed',
-                  requirements: [
-                    'Speaking: Clear communication with some fluency issues',
-                    'Writing: Good grammar range, adequate vocabulary',
-                    'Reading: Good understanding of academic texts',
-                    'Listening: Understand main ideas and key details'
-                  ]
-                },
-                {
-                  band: 'PTE 50+ (Band 6)',
-                  range: '50-64',
-                  color: '#d97706',
-                  requirements: [
-                    'Speaking: Basic communication, noticeable accent',
-                    'Writing: Simple structures, some grammatical errors',
-                    'Reading: Understand main ideas with some difficulty',
-                    'Listening: Catch main ideas, miss some details'
-                  ]
-                },
-                {
-                  band: 'PTE 36+ (Band 5)',
-                  range: '36-49',
-                  color: '#dc2626',
-                  requirements: [
-                    'Speaking: Limited vocabulary, frequent pauses',
-                    'Writing: Basic sentences, frequent errors',
-                    'Reading: Limited comprehension of complex texts',
-                    'Listening: Understand only basic information'
-                  ]
-                }
+                { band: 'PTE 79+ (Band 8)', range: '79-89', color: '#0891b2' },
+                { band: 'PTE 65+ (Band 7)', range: '65-78', color: '#7c3aed' },
+                { band: 'PTE 50+ (Band 6)', range: '50-64', color: '#d97706' }
               ].map((level, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    border: `2px solid ${tempTarget >= parseInt(level.range) ? level.color : '#e5e7eb'}`,
-                    borderRadius: '12px',
-                    padding: '12px 16px',
-                    marginBottom: '12px',
-                    background: tempTarget >= parseInt(level.range) ? `${level.color}08` : '#f9fafb',
-                    opacity: tempTarget >= parseInt(level.range) ? 1 : 0.6
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <span style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: '#fff',
-                      background: level.color,
-                      padding: '2px 8px',
-                      borderRadius: '4px'
-                    }}>
-                      {level.band}
-                    </span>
-                    <span style={{ fontSize: '12px', color: '#6b7280' }}>Score: {level.range}</span>
-                    {tempTarget >= parseInt(level.range) && tempTarget < (idx === 0 ? 91 : parseInt(['90', '79', '65', '50', '36'][idx - 1])) && (
-                      <span style={{ marginLeft: 'auto', fontSize: '11px', color: level.color, fontWeight: 600 }}>✓ Your Target</span>
-                    )}
-                  </div>
-                  <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#4b5563', lineHeight: '1.6' }}>
-                    {level.requirements.map((req, ridx) => (
-                      <li key={ridx}>{req}</li>
-                    ))}
-                  </ul>
+                <div key={idx} style={{ 
+                  display: 'flex', justifyContent: 'space-between', padding: '10px 14px', 
+                  background: tempTarget >= parseInt(level.range) ? `${level.color}10` : '#f8fafc',
+                  borderRadius: '10px', marginBottom: '8px', border: '1px solid',
+                  borderColor: tempTarget >= parseInt(level.range) ? level.color : '#e2e8f0'
+                }}>
+                  <span style={{ fontWeight: 600, color: tempTarget >= parseInt(level.range) ? level.color : '#64748b' }}>{level.band}</span>
+                  <span style={{ fontSize: 13, color: '#64748b' }}>{level.range}</span>
                 </div>
               ))}
             </div>
@@ -512,32 +200,21 @@ const Dashboard = () => {
                 onClick={() => setShowTargetModal(false)}
                 style={{
                   flex: 1, padding: '12px', border: '1px solid #cbd5e1', background: '#fff', color: '#475569',
-                  borderRadius: '10px', cursor: 'pointer', fontWeight: 600, transition: 'background 0.2s',
+                  borderRadius: '10px', cursor: 'pointer', fontWeight: 600
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-              >
-                Cancel
-              </button>
+              >Cancel</button>
               <button
                 onClick={() => { setTargetScore(tempTarget); setShowTargetModal(false); }}
                 style={{
-                  flex: 1, padding: '12px', border: 'none',
-                  background: 'var(--primary-color)',
-                  color: '#fff', borderRadius: '10px', cursor: 'pointer', fontWeight: 600,
-                  transition: 'opacity 0.2s',
+                  flex: 1, padding: '12px', border: 'none', background: 'var(--primary-color)',
+                  color: '#fff', borderRadius: '10px', cursor: 'pointer', fontWeight: 600
                 }}
-                onMouseEnter={e => e.currentTarget.style.opacity = 0.9}
-                onMouseLeave={e => e.currentTarget.style.opacity = 1}
-              >
-                Save Target
-              </button>
+              >Save Target</button>
             </div>
           </div>
         </div>
       )}
-      {authOpen && <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />}
-    </div>
+    </DashboardLayout>
   );
 };
 

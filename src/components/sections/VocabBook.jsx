@@ -1,27 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import vocabDataJson from './pte_basic_vocab.json';
+import DashboardLayout from '../layout/DashboardLayout';
 
 const VocabBook = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filter, setFilter] = useState('All');
 
-    // Parse and map the new JSON structure to something easy to display
     const VOCAB_DATA = useMemo(() => {
         const basicList = vocabDataJson?.basic_vocabulary || [];
         return basicList.map(item => ({
             id: item.id || Math.random(),
             word: item.word || 'Unknown Word',
-            type: item.type || 'N/A', // e.g. 'adjective', 'noun/verb'
+            type: item.type || 'N/A',
             definition: item.meaning || 'No definition available.',
             example: item.example_sentence || 'No example available.',
             synonyms: item.synonym || [],
-            antonyms: item.antonym || [],
             collocations: item.collocations || [],
             pteTasks: item.pte_task || []
         }));
     }, []);
 
-    // Create a normalized type string for filtering
     const getFilterType = (typeStr) => {
         if (!typeStr || typeof typeStr !== 'string') return 'Other';
         const lower = typeStr.toLowerCase();
@@ -40,95 +38,108 @@ const VocabBook = () => {
     });
 
     return (
-        <div style={{ padding: '24px 32px', maxWidth: 1200, margin: '0 auto', fontFamily: "'Inter', sans-serif" }}>
+        <DashboardLayout activePath="/vocab">
+            <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
+                {/* Header */}
+                <div style={{ marginBottom: 32 }}>
+                    <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--primary-color)', marginBottom: 8 }}>📚 Vocab Book</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>Master high-frequency words for your PTE Academic exam preparation.</p>
+                </div>
 
-            {/* Header */}
-            <div style={{ marginBottom: 32 }}>
-                <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--primary-color)', marginBottom: 8 }}>📚 {vocabDataJson.database || "Vocab Book"}</h2>
-                <p style={{ color: '#666', fontSize: 15 }}>{vocabDataJson.description || "Master high-frequency words for your PTE Academic exam."}</p>
-            </div>
-
-            {/* Controls */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-                <input
-                    type="text"
-                    placeholder="🔍 Search words..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                        padding: '12px 16px', borderRadius: 8, border: '1px solid #e0e0e0',
-                        fontSize: 14, width: 300, outline: 'none',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                    }}
-                />
-                <div style={{ display: 'flex', gap: 8 }}>
-                    {['All', 'Adj', 'Verb', 'Noun', 'Adv'].map(type => (
-                        <button
-                            key={type}
-                            onClick={() => setFilter(type)}
+                {/* Controls */}
+                <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
+                        <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Search words..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
-                                padding: '8px 16px', borderRadius: 20, border: 'none',
-                                background: filter === type ? 'var(--primary-color)' : 'var(--accent-color)',
-                                color: filter === type ? '#fff' : 'var(--primary-color)',
-                                fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                                transition: 'all 0.2s'
+                                width: '100%', padding: '12px 16px 12px 42px', borderRadius: 12, 
+                                border: '1px solid var(--accent-color)', fontSize: 14, outline: 'none',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.02)', background: '#fff'
                             }}
+                        />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                        {['All', 'Adj', 'Verb', 'Noun', 'Adv'].map(type => (
+                            <button
+                                key={type}
+                                onClick={() => setFilter(type)}
+                                style={{
+                                    whiteSpace: 'nowrap', padding: '10px 18px', borderRadius: 12, border: 'none',
+                                    background: filter === type ? 'var(--primary-color)' : '#fff',
+                                    color: filter === type ? '#fff' : 'var(--text-secondary)',
+                                    boxShadow: filter === type ? '0 4px 12px rgba(13, 59, 102, 0.2)' : '0 2px 4px rgba(0,0,0,0.02)',
+                                    fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s',
+                                    border: filter === type ? 'none' : '1px solid var(--accent-color)'
+                                }}
+                            >
+                                {type}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+                    {filteredData.map(item => (
+                        <div key={item.id} style={{
+                            background: '#fff', borderRadius: 16, padding: '24px',
+                            border: '1px solid var(--accent-color)',
+                            boxShadow: 'var(--shadow-sm)',
+                            transition: 'all 0.3s ease',
+                            display: 'flex', flexDirection: 'column'
+                        }}
+                            className="vocab-card"
                         >
-                            {type}
-                        </button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                                <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--primary-color)', letterSpacing: '-0.5px' }}>{item.word}</h3>
+                                <span style={{
+                                    background: 'var(--accent-color)', color: 'var(--primary-color)', fontSize: 11, fontWeight: 700,
+                                    padding: '4px 10px', borderRadius: 8, textTransform: 'uppercase'
+                                }}>{item.type}</span>
+                            </div>
+                            <p style={{ margin: '0 0 16px', color: '#475569', fontSize: 14, lineHeight: 1.6 }}>{item.definition}</p>
+
+                            {item.synonyms.length > 0 && (
+                                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 16, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                    <strong style={{ color: 'var(--primary-color)' }}>Synonyms:</strong> 
+                                    {item.synonyms.map(s => <span key={s} style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>{s}</span>)}
+                                </div>
+                            )}
+
+                            <div style={{ 
+                                background: 'var(--accent-color)', padding: '14px', borderRadius: 12, 
+                                borderLeft: '4px solid var(--secondary-color)', marginTop: 'auto',
+                                position: 'relative', overflow: 'hidden'
+                            }}>
+                                <span style={{ position: 'absolute', right: 8, top: 4, opacity: 0.1, fontSize: 24 }}>"</span>
+                                <p style={{ margin: 0, fontSize: 13, color: 'var(--primary-color)', fontStyle: 'italic', fontWeight: 500, lineHeight: 1.5 }}>{item.example}</p>
+                            </div>
+                        </div>
                     ))}
                 </div>
-            </div>
 
-            {/* Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-                {filteredData.map(item => (
-                    <div key={item.id} style={{
-                        background: '#fff', borderRadius: 12, padding: '20px',
-                        border: '1px solid #f0f0f0',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                        transition: 'transform 0.2s, box-shadow 0.2s',
-                        cursor: 'default',
-                        display: 'flex',
-                        flexDirection: 'column'
-                    }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.06)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
-                        }}
-                    >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#333' }}>{item.word}</h3>
-                            <span style={{
-                                background: '#f3e5f5', color: '#7b1fa2', fontSize: 11, fontWeight: 600,
-                                padding: '4px 8px', borderRadius: 6, textTransform: 'capitalize'
-                            }}>{item.type}</span>
-                        </div>
-                        <p style={{ margin: '0 0 12px', color: '#555', fontSize: 14, lineHeight: 1.5 }}>{item.definition}</p>
-
-                        {item.synonyms.length > 0 && (
-                            <div style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>
-                                <strong>Synonyms:</strong> {item.synonyms.join(', ')}
-                            </div>
-                        )}
-
-                        <div style={{ background: 'var(--accent-color)', padding: '10px 12px', borderRadius: 8, borderLeft: '3px solid var(--secondary-color)', marginTop: 'auto' }}>
-                            <p style={{ margin: 0, fontSize: 13, color: '#444', fontStyle: 'italic' }}>"{item.example}"</p>
-                        </div>
+                {filteredData.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '80px 40px', color: '#94a3b8' }}>
+                        <div style={{ fontSize: 48, marginBottom: 16 }}>🔎</div>
+                        <p style={{ fontSize: 18, fontWeight: 600 }}>No words found</p>
+                        <p>Try adjusting your search or filters to find what you're looking for.</p>
                     </div>
-                ))}
+                )}
             </div>
-
-            {filteredData.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
-                    No words found matching your search or filter.
-                </div>
-            )}
-        </div>
+            <style>{`
+                .vocab-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 12px 24px rgba(13, 59, 102, 0.08);
+                }
+                @media (max-width: 640px) {
+                    .vocab-card { padding: 20px; }
+                }
+            `}</style>
+        </DashboardLayout>
     );
 };
 
