@@ -158,52 +158,25 @@ const PracticePage = () => {
                 <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--primary-color)' }}>{section.label}</h3>
               </div>
 
-              {/* Task list - simplified */}
-              <div style={{ padding: '16px 0', flex: 1 }}>
-                {section.tasks.map((task, idx) => {
-                  const taskId = `${section.key}-${idx}`;
-                  const isHovered = hoveredTask === taskId;
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => navigate(section.route)}
-                      onMouseEnter={() => setHoveredTask(taskId)}
-                      onMouseLeave={() => setHoveredTask(null)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '10px 24px', cursor: 'pointer',
-                        background: isHovered ? 'var(--accent-color)' : 'transparent',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: section.color, opacity: 0.6 }} />
-                      <span style={{
-                        fontSize: 14, color: isHovered ? 'var(--primary-color)' : '#475569',
-                        fontWeight: isHovered ? 600 : 500,
-                        flex: 1,
-                      }}>
-                        {task.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Footer */}
-              <div style={{ padding: '0 24px 24px' }}>
+              {/* Footer - Only Practice Button */}
+              <div style={{ padding: '32px 24px 32px' }}>
                 <button
                   onClick={() => navigate(section.route)}
                   style={{
-                    width: '100%', padding: '14px',
+                    width: '100%', padding: '16px',
                     background: section.color,
                     color: '#fff',
                     border: 'none',
-                    borderRadius: 12, fontSize: 14, fontWeight: 700,
+                    borderRadius: 12, fontSize: 16, fontWeight: 700,
                     cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: `0 4px 14px ${section.color}40`
+                    boxShadow: `0 4px 14px ${section.color}40`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
                   }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                 >
-                  Start Practice
+                  <span>Start Practice</span>
+                  <span>→</span>
                 </button>
               </div>
             </div>
