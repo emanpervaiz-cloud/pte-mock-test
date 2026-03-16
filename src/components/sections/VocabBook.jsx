@@ -68,7 +68,7 @@ const VocabBook = () => {
                                 key={type}
                                 onClick={() => setFilter(type)}
                                 style={{
-                                    whiteSpace: 'nowrap', padding: '10px 18px', borderRadius: 12, border: 'none',
+                                    whiteSpace: 'nowrap', padding: '10px 18px', borderRadius: 12,
                                     background: filter === type ? 'var(--primary-color)' : '#fff',
                                     color: filter === type ? '#fff' : 'var(--text-secondary)',
                                     boxShadow: filter === type ? '0 4px 12px rgba(13, 59, 102, 0.2)' : '0 2px 4px rgba(0,0,0,0.02)',
