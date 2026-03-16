@@ -183,7 +183,7 @@ const ReadingFillBlanks = ({ question, onNext }) => {
         padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)',
         fontStyle: 'italic', display: isSubmitted ? 'none' : 'block'
       }}>
-        <strong>Instructions:</strong> Complete the text with the most appropriate words from the options bank. Each word can only be used once.
+        <strong>Instructions:</strong> Complete the text with the most appropriate words for each blank. Each word can only be used once.
       </div>
 
       {isSubmitted && (

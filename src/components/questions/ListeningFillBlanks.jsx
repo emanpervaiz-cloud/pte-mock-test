@@ -186,34 +186,11 @@ const ListeningFillBlanks = ({ question, onNext }) => {
         />
       </div>
 
-      {!isSubmitted && (
-        <div style={{
-          background: '#f8fafc',
-          borderRadius: 16,
-          padding: isMobile ? '16px' : '20px 24px',
-          border: '1px solid #e2e8f0'
-        }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 13, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Available Options:
-          </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: isMobile ? 100 : 'none', overflowY: 'auto', padding: '4px' }}>
-            {availableOptions.map((option, index) => (
-              <span key={index} style={{
-                background: '#fff', padding: '6px 12px', borderRadius: 8,
-                fontSize: 13, color: 'var(--primary-color)', fontWeight: 600,
-                border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-              }}>
-                {option}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div style={{
         padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)'
       }}>
-        <div style={{ marginBottom: 4 }}><strong>Instructions:</strong> Complete the text with the words from the bank.</div>
+        <div style={{ marginBottom: 4 }}><strong>Instructions:</strong> Complete the text with the correct words.</div>
         <div style={{ fontStyle: 'italic', color: '#64748b' }}>Note: You can only play the audio once.</div>
       </div>
 
