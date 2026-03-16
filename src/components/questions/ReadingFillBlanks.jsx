@@ -178,41 +178,6 @@ const ReadingFillBlanks = ({ question, onNext }) => {
         </div>
       </div>
 
-      <div style={{
-        background: '#f8fafc',
-        borderRadius: 16,
-        padding: isMobile ? '16px' : '20px 24px',
-        border: '1px solid #e2e8f0'
-      }}>
-        <h3 style={{ margin: '0 0 12px', fontSize: 14, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Available Options:
-        </h3>
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 8,
-          maxHeight: isMobile ? 120 : 'none',
-          overflowY: 'auto',
-          padding: '4px'
-        }}>
-          {availableOptions.length > 0 ? availableOptions.map((option, index) => (
-            <span key={index} style={{
-              background: '#fff',
-              padding: '6px 12px',
-              borderRadius: 8,
-              fontSize: 13,
-              color: 'var(--primary-color)',
-              fontWeight: 600,
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}>
-              {option}
-            </span>
-          )) : (
-            <span style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>All words placed</span>
-          )}
-        </div>
-      </div>
 
       <div style={{
         padding: '0 8px', fontSize: 13, color: 'var(--text-secondary)',
