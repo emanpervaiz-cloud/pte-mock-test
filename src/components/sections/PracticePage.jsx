@@ -117,63 +117,49 @@ const PracticePage = () => {
           </p>
         </div>
 
-        {/* Legend */}
-        <div style={{ display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center', background: '#fff', padding: '12px 20px', borderRadius: '12px', border: '1px solid var(--accent-color)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, fontSize: 13, color: 'var(--text-secondary)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <ARROW_UP /> <span>High frequency</span>
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <DASH /> <span>Medium frequency</span>
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <ARROW_DOWN /> <span>Low frequency</span>
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <AiBadge /> <span>AI evaluated</span>
-            </span>
-          </div>
-        </div>
-
         {/* Grid */}
         <div className="practice-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: 20,
+          gap: 24,
         }}>
           {PRACTICE_DATA.map((section) => (
             <div
               key={section.key}
               style={{
                 background: '#fff',
-                borderRadius: 16,
+                borderRadius: 20,
                 border: '1px solid var(--accent-color)',
-                boxShadow: 'var(--shadow-sm)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                 overflow: 'hidden',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                transition: 'transform 0.2s',
               }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
               {/* Section header */}
               <div style={{
-                padding: '20px',
+                padding: '24px',
                 borderBottom: '1px solid var(--accent-color)',
-                display: 'flex', alignItems: 'center', gap: 12,
-                background: section.bgColor + '40' // adding 25% opacity
+                display: 'flex', alignItems: 'center', gap: 14,
+                background: section.bgColor + '30'
               }}>
                 <div style={{
-                  width: 40, height: 40, borderRadius: 10,
+                  width: 44, height: 44, borderRadius: 12,
                   background: section.bgColor,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, flexShrink: 0,
+                  fontSize: 22, flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
                 }}>
                   {section.icon}
                 </div>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--primary-color)' }}>{section.label}</h3>
+                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--primary-color)' }}>{section.label}</h3>
               </div>
 
-              {/* Task list */}
-              <div style={{ padding: '12px 0', flex: 1 }}>
+              {/* Task list - simplified */}
+              <div style={{ padding: '16px 0', flex: 1 }}>
                 {section.tasks.map((task, idx) => {
                   const taskId = `${section.key}-${idx}`;
                   const isHovered = hoveredTask === taskId;
@@ -185,41 +171,37 @@ const PracticePage = () => {
                       onMouseLeave={() => setHoveredTask(null)}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '12px 20px', cursor: 'pointer',
+                        padding: '10px 24px', cursor: 'pointer',
                         background: isHovered ? 'var(--accent-color)' : 'transparent',
                         transition: 'all 0.2s ease',
-                        borderLeft: isHovered ? `4px solid ${section.color}` : '4px solid transparent'
                       }}
                     >
-                      {renderIndicator(task.indicator)}
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: section.color, opacity: 0.6 }} />
                       <span style={{
                         fontSize: 14, color: isHovered ? 'var(--primary-color)' : '#475569',
-                        fontWeight: isHovered ? 600 : 400,
+                        fontWeight: isHovered ? 600 : 500,
                         flex: 1,
                       }}>
                         {task.label}
                       </span>
-                      {task.ai && <AiBadge />}
                     </div>
                   );
                 })}
               </div>
 
               {/* Footer */}
-              <div style={{ padding: '16px 20px 20px' }}>
+              <div style={{ padding: '0 24px 24px' }}>
                 <button
                   onClick={() => navigate(section.route)}
                   style={{
-                    width: '100%', padding: '12px',
+                    width: '100%', padding: '14px',
                     background: section.color,
                     color: '#fff',
                     border: 'none',
-                    borderRadius: 10, fontSize: 14, fontWeight: 700,
+                    borderRadius: 12, fontSize: 14, fontWeight: 700,
                     cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: `0 4px 12px ${section.color}30`
+                    boxShadow: `0 4px 14px ${section.color}40`
                   }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                 >
                   Start Practice
                 </button>
