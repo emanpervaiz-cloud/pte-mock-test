@@ -150,7 +150,7 @@ const RepeatSentence = ({ question, onNext }) => {
             src={question.audioUrl || '/placeholder-audio.mp3'}
             title="Listen to the sentence carefully"
           />
-          {question.transcript && (
+          {false && question.transcript && (
             <div style={{
               marginTop: 20, padding: '16px 20px', background: '#f8f9fe',
               borderRadius: 12, border: '1px dashed #d1d5db'
